@@ -82,7 +82,7 @@ wchar_t Font::CMap::map(unsigned long c) const
 			switch(c) {
 				case 0xA8: return 0x401;
 				case 0xB8: return 0x451;
-				default: return 0x410 + (c - 0xC0);
+				default: if(c<0x7F) return c; printf("WinAnsiEncoding: %04X -> %04X\n", (unsigned int)c, (0x410 + (c - 0xC0))); return 0x410 + (c - 0xC0);
 			}
 			break;
 		default:
