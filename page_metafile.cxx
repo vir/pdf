@@ -63,6 +63,7 @@ static void do_it(const char * fname, int pagenum)
     PDF::Page * p=new PDF::Page();
     if(p)
     {
+			p->debug(5);
       cout << pagenum << "th page:" << endl;
       p->load(doc.get_page_node(pagenum));
       std::cout << p->dump() << std::endl;
