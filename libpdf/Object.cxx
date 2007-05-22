@@ -283,8 +283,8 @@ static std::string read_o_string(std::istream & f, bool alt)
       {
         // XXX handle () counting etc.
         s+=c;
-				if(f.peek()==')') break;
       }
+			if(f.peek()==')') break;
     }
   } while(f.peek() != EOF);
 //  } while(f.peek() != EOF && (escape || f.peek() != ')'));
