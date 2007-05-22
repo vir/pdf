@@ -11,9 +11,23 @@ class Font
     class CMap
     {
       private:
+				class Range
+				{
+					private:
+						long begin, end;
+						wchar_t res;
+					public:
+						Range(long l1, long l2, wchar_t wc):begin(l1),end(l2),res(wc) {}
+						bool load(std::istream & s);
+						bool yours(long c) const { return(c>=begin && c<=end); }
+						wchar_t map(long c) const { return res+(c-begin); }
+				};
         std::map<long,wchar_t> charmap;
+				std::vector<Range> charranges;
 				enum { RealMap, IdentityH, WinAnsiEncoding, UnknownEncoding } maptype;
 				unsigned int charwidth;
+				bool Font::CMap::load_bfchar(std::istream & s);
+				bool Font::CMap::load_bfrange(std::istream & s);
       public:
         CMap():maptype(UnknownEncoding),charwidth(1) {}
         ~CMap() {}
