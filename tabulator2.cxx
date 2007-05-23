@@ -49,7 +49,7 @@ class Tabulator:public PDF::Media
     virtual void Text(Point pos, const PDF::Font * font, std::wstring text);
     virtual void Line(const Point & p1, const Point & p2);
     void dump() const;
-    void chew();
+    void chew(bool skip_headers=false);
 };
 
 void Tabulator::dump() const
@@ -72,13 +72,43 @@ class Coord
     operator double() const { return v; }
 };
 
-void Tabulator::chew()
+class Cell
+{
+	private:
+		map<PDF::Point, string> t;
+	public:
+		bool is_header;
+		Cell():is_header(false) {}
+		void addtext(const PDF::Point & p, const string & s) { t[p]=s; }
+		string celltext()
+		{
+      string r;
+			map<PDF::Point, string>::const_iterator tpit;
+      for(tpit=t.begin(); tpit!=t.end(); tpit++)
+      {
+        // remove hyphenation XXX \todo mess with unicode hypheation character (if any?)
+        if(!r.empty() && r[r.size()-1]=='-') r.resize(r.size()-1);
+        r+=tpit->second;
+      }
+			return r;
+		}
+		string html()
+		{
+			if(!is_header) {
+				return string("<td>")+celltext()+"</td>";
+			} else {
+				return string("<th>")+celltext()+"</th>";
+			}
+		}
+};
+
+void Tabulator::chew(bool skip_headers)
 {
   clog << "Chewing..." << endl;
   map<Coord, vector<PLine> > h_knots, v_knots;
 	map<Coord, vector<PLine> >::iterator xit;
   vector<PLine>::iterator it;
-	double header_y=0;
+	double header_y=-1E50;
   
   // get an array of x coords of vertical lines
   for(it=v_lines.begin(); it!=v_lines.end(); it++) { h_knots[it->p1.x].push_back(*it); }
@@ -88,13 +118,14 @@ void Tabulator::chew()
   // get an array of y coords of dhorizontal lines
   for(it=h_lines.begin(); it!=h_lines.end(); it++) {
 		v_knots[it->p1.y].push_back(*it);
-		if(!header_y || header_y>it->p1.y) header_y=it->p1.y;
+		if(header_y<it->p1.y) { clog << "Set header_y to " << it->p1.y << endl; header_y=it->p1.y; }
 	}
 	/* 
 	 * We have no horizontal lines, so
 	 * let's assume lines some little space (eg. 4 units) above text, that falls
 	 * into first column
 	 */
+	const double small_offset=4;
 	if(h_knots.size() >= 2) {
 		xit=h_knots.begin(); xit++; /* pointer to second verical line */
 		clog << "Second vertical line is at x " << xit->first << endl;
@@ -102,7 +133,7 @@ void Tabulator::chew()
 		while(tit!=all_text.end()) { /* check all text */
 			if(tit->first.x < double(xit->first)) {
 				clog << "Adding line above text string @" << tit->first.dump() << "(" << tit->second << ")" << endl;
-				v_knots[tit->first.y].push_back(PLine(Point(tit->first.x, tit->first.y+10), Point(tit->first.x+500, tit->first.y+10)));
+				v_knots[tit->first.y-small_offset].push_back(PLine(Point(tit->first.x, tit->first.y-small_offset), Point(tit->first.x+500, tit->first.y-small_offset)));
 			}
 			tit++;
 		}
@@ -115,8 +146,7 @@ void Tabulator::chew()
   map<Coord, vector<PLine> >::iterator rit; // table rows iterator
   for(rit=v_knots.begin(); rit!=v_knots.end(); rit++)
   {
-    vector< TextLines* > row; row.resize(h_knots.size()-1);
-    for(unsigned int i=0; i<h_knots.size()-1; i++) row[i]=new TextLines;
+    vector< Cell > row; row.resize(h_knots.size()-1);
     
     //while(tit!=all_text.end() && tit->first.y < reinterpret_cast<double>(rit->first))
     while(tit!=all_text.end() && tit->first.y < double(rit->first))
@@ -126,37 +156,27 @@ void Tabulator::chew()
       unsigned int col;
       for(xit++, col=0; xit!=h_knots.end(); xit++, col++)
       {
-        TextLines * celltext=row[col];
         if(tit->first.x < double(xit->first))
         {
 //					cout << "<!-- text @ " << tit->first.dump() << " (" << tit->second << ") falls before V-line @ " << double(xit->first) << " -->" << endl;
-          (*celltext)[tit->first]=tit->second;
+					row[col].addtext(tit->first, tit->second);
+					if(tit->first.y<header_y) row[col].is_header=true;
           break;
         }
       }
       tit++;
     }
     
-    cout << "<tr>";
-//    cout << "<!-- row size=" << row.size() << " -->";
-    for(unsigned int col=0; col<row.size(); col++)
-    {
-      cout << "<td>";
-      TextLines * textpart=row[col];
-//      cout << "<!-- column=" << col << "-->";
-      string celltext;
-      for(TextLines::iterator tpit=textpart->begin(); tpit!=textpart->end(); tpit++)
-      {
-        // remove hyphenation XXX \todo mess with unicode hypheation character (if any?)
-        if(!celltext.empty() && celltext[celltext.size()-1]=='-') celltext.resize(celltext.size()-1);
-        celltext+=tpit->second;
-      }
-      cout << celltext << "</td>";
-    }
-    cout << "</tr>" << endl;
-    
-//    cout << "-----------------------------------------------" << endl;
-    for(unsigned int i=0; i<h_knots.size()-1; i++) delete row[i];
+		if( !(skip_headers && (row[0].is_header || row[0].celltext().length()==0)) ) {
+			cout << "<tr>";
+	//    cout << "<!-- row size=" << row.size() << " -->";
+			for(unsigned int col=0; col<row.size(); col++)
+			{
+	//      cout << "<!-- column=" << col << "-->";
+				cout << row[col].html();
+			}
+			cout << "</tr>" << endl;
+		}
   }
 }
 
@@ -208,7 +228,7 @@ void convert_page(PDF::Document & doc, unsigned int pagenum)
     p->draw(mf);
     // lets see what we've got...
     mf->dump();
-    mf->chew(); // do the final pretty structure construction!
+    mf->chew(true); // do the final pretty structure construction!
     delete mf;
 
     delete p;
@@ -242,8 +262,8 @@ static void do_it(const char * fname)
 //    doc.dump();
 
 	cout << "<html><body><table>" << endl;
-//	for(unsigned int page=0; page < doc.get_pages_count(); page++) // all needed
-  for(unsigned int page=0; page < 2; page++)
+	for(unsigned int page=0; page < doc.get_pages_count(); page++) // all needed
+//	for(unsigned int page=0; page < 2; page++)
 	{
 		convert_page(doc, page);
 	}
