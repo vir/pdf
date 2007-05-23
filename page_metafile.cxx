@@ -65,7 +65,7 @@ static void do_it(const char * fname, int pagenum)
     {
 			p->debug(5);
       cout << pagenum << "th page:" << endl;
-      p->load(doc.get_page_node(pagenum));
+      p->load(doc.get_page_node(pagenum-1));
       std::cout << p->dump() << std::endl;
 
       // lets see what we've got...
