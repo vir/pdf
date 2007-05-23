@@ -15,7 +15,7 @@ INCLUDEDIR = -Ilibpdf
 #CXXFLAGS += " -L/usr/local/gcc-3.4.3/lib -L/usr/local/gcc-3.4.3/lib/gcc/i686-pc-linux-gnu/3.4.3/"
 #LDFLAGS = -L/usr/local/gcc-3.4.3/lib/gcc/i686-pc-linux-gnu/3.4.3/
 
-all: subdirs main dump_object page_metafile
+all: subdirs main dump_object page_metafile tabulator2 page_to_html
 
 .SUFFIXES: .so .cxx
 
@@ -30,10 +30,16 @@ main: ${OBJS_MAIN}
 #	gcc -rdynamic -ldl -lpthread -o $@ $^
 #	strip $@
 
+tabulator2: tabulator2.o libpdf/libpdf.a utf8.o
+	$(LINK.cpp) -lz  -o $@ $^
+
 dump_object: dump_object.o libpdf/libpdf.a # File.o Object.o Document.o Filter_Flate.o
 	$(LINK.cpp) -lz -o $@ $^
 
 page_metafile: page_metafile.o libpdf/libpdf.a utf8.o
+	$(LINK.cpp) -lz -o $@ $^
+
+page_to_html: page_to_html.o libpdf/libpdf.a utf8.o
 	$(LINK.cpp) -lz -o $@ $^
 
 #libpdf/libpdf.a:
