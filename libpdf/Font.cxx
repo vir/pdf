@@ -58,7 +58,7 @@ bool Font::CMap::load_bfchar(std::istream & s)
 #endif
 			unsigned long n=((unsigned char)s1[0])<<8|((unsigned char)s1[1]);
 			wchar_t c=((unsigned char)s2[0])<<8|((unsigned char)s2[1]);
-			printf("Appending translation from %04X to %04X\n", (unsigned int)n, (unsigned int)c);
+//			printf("Appending translation from %04X to %04X\n", (unsigned int)n, (unsigned int)c);
 			charmap[n]=c;
 		}
 	}
@@ -85,7 +85,7 @@ bool Font::CMap::load_bfrange(std::istream & s)
 
 		if(i==3) {
 			charranges.push_back(Range(rsp[0], rsp[1], (wchar_t)rsp[2]));
-			printf("Appending range translation from %04X--%04X to %04X--%04X\n", (unsigned int)rsp[0], (unsigned int)rsp[0], (unsigned int)rsp[2], (unsigned int)(rsp[2]+(rsp[1]-rsp[0])));
+//			printf("Appending range translation from %04X--%04X to %04X--%04X\n", (unsigned int)rsp[0], (unsigned int)rsp[0], (unsigned int)rsp[2], (unsigned int)(rsp[2]+(rsp[1]-rsp[0])));
 			i=0;
 		}
 	}
