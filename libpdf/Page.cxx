@@ -33,6 +33,25 @@ Page::~Page()
   if(gs) delete gs;
 }
 
+static Rect get_box(OH boxnode)
+{
+	boxnode.expand();
+	Array * a=boxnode.cast<Array *>("*Box is not an array ?!?");
+	if(a->size()!=4) throw std::string("Rect. array must contin 4 elements");
+	double da[4];
+	for(int i=0; i<4; i++) {
+		Real * rn=dynamic_cast<Real *>(a->at(i));
+		if(rn) {
+			da[i]=rn->value();
+		} else {
+			Integer * in=dynamic_cast<Integer *>(a->at(i));
+			if(!in) throw std::string("Not a number in rectangle array?!?");
+			da[i]=in->value();
+		}
+	}
+	return Rect(da);
+}
+
 /** \brief Loads all page data from page node
  */
 bool Page::load(OH pagenode)
@@ -42,10 +61,16 @@ bool Page::load(OH pagenode)
   if(m_debug) std::clog << "Page node: " << pagenode.obj()->dump() << std::endl;
   // find page size
   {
+    OH mediabox_h=pagenode.find("CropBox");
+		if(mediabox_h) {
+			media_box = get_box(mediabox_h);
+		}
     OH cropbox_h=pagenode.find("CropBox");
-    cropbox_h.expand();
-    //currently unused// Array * a=cropbox_h.cast<Array *>("CropBox is not an array ?!?");
-    /// \todo extract dimentions from cropbox
+		if(cropbox_h) {
+			crop_box = get_box(cropbox_h);
+		} else {
+			crop_box = media_box;
+		}
   }
   // load contents
   {
@@ -179,6 +204,7 @@ void Page::draw(Media * m)
 
   enum { M_PAGE, M_PATH, M_TEXT, M_CLIP, M_IMAGE } mode=M_PAGE;
   
+	m->Size(media_box.size()); /* XXX use returned value to set up ctm or, better, pass ref to ctm into Media::Size() */
   for(std::vector<Operator *>::iterator it=operators.begin(); it!=operators.end(); it++)
   {
     Operator * op=*it;

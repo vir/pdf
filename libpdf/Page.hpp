@@ -12,6 +12,7 @@
 
 #include "Object.hpp"
 #include "Point.hpp"
+#include "Rect.hpp"
 
 namespace PDF {
 
@@ -52,6 +53,7 @@ class Page
     class Operator;
     class GraphicsState;
     //class Path;
+		Rect media_box, crop_box;
     typedef std::vector<Point> Path;
     
     // graphics state
