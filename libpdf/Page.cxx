@@ -57,12 +57,24 @@ bool Page::load(OH pagenode)
       std::clog << "? Page: no contents" << std::endl;
     }
     else
-    {
-      Stream * stream=contents_h.cast<Stream *>("Page content is not a Stream object. It is not supported.");
-      std::vector<char> data;
-      stream->get_data(data);
-      parse(data);
-    }
+		{
+			std::vector<char> pagedata;
+			Stream * stream;
+			if((stream=dynamic_cast<Stream *>(contents_h.obj()))) {
+				stream->get_data(pagedata);
+			} else {
+				contents_h.cast<Array *>("Page content is not a Stream and not an Array. That is wrong. I give up.");
+				std::vector<char> data;
+				for(unsigned int i=0; i<contents_h.size(); i++) {
+					OH s = contents_h[i];
+					s.expand();
+					stream=s.cast<Stream *>("Page content is not a stream?!?!!?");
+					stream->get_data(data);
+					pagedata.insert(pagedata.end(), data.begin(), data.end());
+				}
+			}
+			parse(pagedata);
+		}
   }
   
   // load resources
@@ -330,7 +342,13 @@ void Page::draw(Media * m)
            */
           if(!tobj->accumulated_text.empty())
           {
-            m->Text(gs->ctm.translate(tobj->lm.translate(Point(0,0))), gs->text_state.Tf, tobj->accumulated_text);
+						double x_offs=0;
+						while(tobj->accumulated_text[0] == (wchar_t)' ') { /* append Tw*number_of_initial_spaces */
+							x_offs+=gs->text_state.Tw;
+							if(tobj->accumulated_text.length()<=1) break;
+							tobj->accumulated_text.erase(0,1);
+						}
+            m->Text(gs->ctm.translate(tobj->lm.translate(Point(x_offs,0))), gs->text_state.Tf, tobj->accumulated_text);
             tobj->accumulated_text.resize(0);
           }
           // ... and executete other operators
@@ -338,9 +356,13 @@ void Page::draw(Media * m)
         
         /* check other text object operators */
         if(op->name() == "ET") { if(tobj) delete tobj; tobj=NULL; mode=M_PAGE; }
-        else if(op->name() == "Tc" || op->name() == "Tw") {} // not very useful char/word spacings
+        else if(op->name() == "Tc") {} // not very useful char spacing
         else if(op->name() == "Ts" || op->name() == "Tz") {} // also, rise and scaling
         else if(op->name() == "Tr") {} // also, render mode
+				else if(op->name() == "Tw") // set word spacing - useful if text begins with space(s)
+				{
+					gs->text_state.Tw=op->number(0);
+				}
         else if(op->name() == "Tf") // set current font
         {
           const Object * o=op->arg(0);
@@ -359,7 +381,7 @@ void Page::draw(Media * m)
         }
         else if(op->name() == "Td") // XXX SEE ON PAGE 368 XXX Scaled or unscaled??
         {
-          tobj->lm.offset(op->point(0));
+          tobj->lm.offset_unscaled(op->point(0));
           tobj->tm=tobj->lm;
         }
 				else if(op->name() == "TL") /* TL and TD added 2007-05-18 and untested! */
@@ -369,7 +391,7 @@ void Page::draw(Media * m)
 				else if(op->name() == "TD") // tx ty TD === -ty TL; tx ty TD
 				{
 					gs->text_state.Tl=-op->number(1);
-          tobj->lm.offset(op->point(0));
+          tobj->lm.offset_unscaled(op->point(0));
           tobj->tm=tobj->lm;
 				}
         else { std::clog << "Ignoring operator " << op->dump() << " in text mode" << std::endl; }

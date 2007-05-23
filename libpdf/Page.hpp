@@ -39,6 +39,7 @@ class CTM
     }
     void set_unity() { a=d=1.0; b=c=e=f=0.0; }
     void offset(Point p) { e+=p.x; f+=p.y; }
+    void offset_unscaled(Point p) { e+=a*p.x + c*p.y; f+=b*p.x + d*p.y; }
     void offset(double ox, double oy) { e+=ox; e+=oy; }
     void scale(double sx, double sy=0) { a*=sx; d*=sy?sy:sx; }
 };
@@ -147,7 +148,7 @@ class Page::GraphicsState {
     // color
     struct {
       // Tc // char spacing (Tc)=0
-      // Tw // word spacing (Tw)=0
+      double Tw; // word spacing (Tw)=0
       // Th // horizontal scaling (Tz)=100
       double Tl; // leading (TL)=0
       Font * Tf; // text font (Tf)
