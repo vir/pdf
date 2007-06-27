@@ -146,7 +146,8 @@ wchar_t Font::CMap::map(unsigned long c) const
 				default:
 					if(c<0x7F) return c;
 //					printf("WinAnsiEncoding: %04X -> %04X\n", (unsigned int)c, (unsigned int)(0x410 + (c - 0xC0)));
-					return 0x410 + (c - 0xC0);
+//					return 0x410 + (c - 0xC0); // Convert cp1251 to unicode
+					return c;
 			}
 			break;
 		default:
