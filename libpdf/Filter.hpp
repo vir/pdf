@@ -11,6 +11,7 @@ class Filter
 {
   public:
 		virtual ~Filter() {};
+		static Filter * Create(std::string name);
     virtual bool Encode(const std::vector<char> & src, std::vector<char> & dst)=0;
     virtual bool Decode(const std::vector<char> & src, std::vector<char> & dst)=0;
 };
@@ -20,6 +21,15 @@ class FlateFilter:public Filter
 {
   public:
 		virtual ~FlateFilter() {};
+    virtual bool Encode(const std::vector<char> & src, std::vector<char> & dst);
+    virtual bool Decode(const std::vector<char> & src, std::vector<char> & dst);
+};
+
+/// Base85 converter
+class Base85Filter:public Filter
+{
+  public:
+		virtual ~Base85Filter() {};
     virtual bool Encode(const std::vector<char> & src, std::vector<char> & dst);
     virtual bool Decode(const std::vector<char> & src, std::vector<char> & dst);
 };

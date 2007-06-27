@@ -1,7 +1,7 @@
 .SUFFIXES: .a .so .cxx
 .PHONY : clean docs
 #---------------------------------------------------------------------------
-SOURCES = File.cxx Object.cxx Document.cxx Filter_Flate.cxx Page.cxx Font.cxx ObjectsCache.cxx
+SOURCES = File.cxx Object.cxx Document.cxx Filter.cxx Filter_Flate.cxx Filter_Base85.cxx Page.cxx Font.cxx ObjectsCache.cxx
 OBJS = $(SOURCES:.cxx=.o)
 DEPS = $(SOURCES:.cxx=.d)
 

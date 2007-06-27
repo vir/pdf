@@ -379,18 +379,53 @@ bool Stream::get_data(std::vector<char> & buf)
     buf=data;
     return true;
   }
-  // filter present
-  Name * n=dynamic_cast<Name *>(o);
-  if(!n) throw std::string("Stream filter " + o->dump() + " is not implemented");
 
-  Filter * filter;
-  if(n->value() == "FlateDecode") { filter=new FlateFilter(); }
-  else throw std::string("Unimplemented stream filter ")+n->value();
+	std::vector<Filter *> filters;
 
-  bool r=filter->Decode(data, buf);
-  
-  delete filter;
-  return r;
+	Array * a;
+	if(( a = dynamic_cast<Array *>(o) )) { // filter chain
+		for(Array::ConstIterator it = a->get_const_iterator(); a->check_iterator(it); it++) {
+			o = *it;
+
+			Name * n=dynamic_cast<Name *>(o);
+			if(!n) throw std::string("Stream filter " + o->dump() + " is not implemented");
+
+			Filter * filter = Filter::Create(n->value());
+			if(!filter) throw std::string("Unimplemented stream filter ")+n->value();
+
+			filters.push_back(filter);
+		}
+	} else { // single filter
+		Name * n=dynamic_cast<Name *>(o);
+		if(!n) throw std::string("Stream filter " + o->dump() + " is not implemented");
+
+		Filter * filter = Filter::Create(n->value());
+		if(!filter) throw std::string("Unimplemented stream filter ")+n->value();
+
+		filters.push_back(filter);
+	}
+
+	// pass data thrugh all filters
+	
+	std::vector<char> *s, *d;
+	s = NULL;
+	for(unsigned int i = 0; i < filters.size(); i++)
+	{
+		if(i == filters.size() - 1) d = &buf;
+		else d = new std::vector<char>;
+
+		bool r = filters[i]->Decode(i?*s:data, *d);
+
+		delete s;
+		s = d;
+		d = NULL;
+	}
+
+	// delete all filters
+	for(unsigned int i = 0; i < filters.size(); i++)
+		delete filters[i]; 
+
+  return true;
 }
 
 } // namespace PDF
