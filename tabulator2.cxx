@@ -28,6 +28,7 @@ class Tabulator:public PDF::Media
   private:
     double pheight;
   public:
+		bool output_csv;
     typedef PDF::Point Point;
     class PLine // we already have "Line" :(
     {
@@ -39,7 +40,7 @@ class Tabulator:public PDF::Media
     typedef map<Point, string> TextLines;
     TextLines all_text;
 
-    Tabulator():pheight(0) {  }
+    Tabulator():pheight(0),output_csv(true) {  }
     virtual ~Tabulator()   {  };
     virtual Point Size(Point unity)
     {
@@ -101,6 +102,22 @@ class Cell
 			}
 		}
 };
+
+static string optional_quote(string s)
+{
+	unsigned int l=s.find_first_not_of(" ");
+	if(l) s.erase(0, l);
+	l=s.find_last_not_of(" ");
+	if(l!=s.npos) s.resize(l+1);
+	l=0;
+	while((l=s.find("\"", l))!=s.npos) {
+		s.insert(l, "\\");
+		l+=2;
+	}
+	s.insert(0, "\"");
+	s.append("\"");
+	return s;
+}
 
 void Tabulator::chew(bool skip_headers)
 {
@@ -168,14 +185,16 @@ void Tabulator::chew(bool skip_headers)
     }
     
 		if( !(skip_headers && (row[0].is_header || row[0].celltext().length()==0)) ) {
-			cout << "<tr>";
+			if(!output_csv) cout << "<tr>";
 	//    cout << "<!-- row size=" << row.size() << " -->";
 			for(unsigned int col=0; col<row.size(); col++)
 			{
 	//      cout << "<!-- column=" << col << "-->";
-				cout << row[col].html();
+				if(output_csv) { cout << optional_quote(row[col].celltext()); if(col<row.size()-1) cout << ";"; }
+				else cout << row[col].html();
 			}
-			cout << "</tr>" << endl;
+			if(output_csv) cout << endl;
+			else cout << "</tr>" << endl;
 		}
   }
 }
