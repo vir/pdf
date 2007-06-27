@@ -26,8 +26,8 @@ class Font
 				std::vector<Range> charranges;
 				enum { RealMap, IdentityH, WinAnsiEncoding, UnknownEncoding } maptype;
 				unsigned int charwidth;
-				bool Font::CMap::load_bfchar(std::istream & s);
-				bool Font::CMap::load_bfrange(std::istream & s);
+				bool load_bfchar(std::istream & s);
+				bool load_bfrange(std::istream & s);
       public:
         CMap():maptype(UnknownEncoding),charwidth(1) {}
         ~CMap() {}
@@ -57,7 +57,7 @@ class Font
     wchar_t to_unicode(int c) const;
     std::string dump() const { return to_unicode_map.dump(); }
 		std::string name() const { return fontname; }
-		std::wstring Font::extract_text(const String * so) const;
+		std::wstring extract_text(const String * so) const;
 };
 
 
