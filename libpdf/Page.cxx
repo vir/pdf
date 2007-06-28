@@ -190,11 +190,45 @@ std::string Page::dump() const
   return ss.str();
 }
 
-typedef struct {
-  CTM tm;
-  CTM lm;
-  std::wstring accumulated_text; // work around multiple Tj in one text object
-} TextObject;
+/** Work around mutiple text-showing operators in same text object.
+ *  if so, concatenate them and output them all together.
+ */
+class TextObject
+{
+	private:
+		const Page::GraphicsState * gs;
+		Media * media;
+	public:
+		TextObject(const Page::GraphicsState * g, Media * m):gs(g),media(m) {}
+		CTM tm;
+		CTM lm;
+		std::wstring accumulated_text; // work around multiple Tj in one text object
+		void Append(const String * str)
+		{
+			double w;
+			std::wstring s=gs->text_state.Tf->extract_text(str, &w);
+		 // XXX update text matrix!!!
+			accumulated_text+=s;
+		}
+		void Kerning(long k) {}
+		void NewLine() {
+			accumulated_text+='\n';
+			lm.offset(0, gs->text_state.Tl);
+			tm = lm;
+		}
+		void Flush() {
+			if(accumulated_text.empty()) return;
+
+			double x_offs=0;
+			while(accumulated_text[0] == (wchar_t)' ') { /* append Tw*number_of_initial_spaces */
+				x_offs+=gs->text_state.Tw;
+				if(accumulated_text.length()<=1) break;
+				accumulated_text.erase(0,1);
+			}
+			media->Text(gs->ctm.translate(lm.translate(Point(x_offs,0))), gs->text_state.Tf, accumulated_text);
+			accumulated_text.resize(0);
+		}
+};
 
 std::wstring extract_text(const String * so, const Font * f);
 void Page::draw(Media * m)
@@ -303,7 +337,7 @@ void Page::draw(Media * m)
         else { std::clog << "Ignoring operator " << op->dump() << " in path construction mode" << std::endl; }
         break;
       case M_TEXT:
-        if(!tobj) tobj=new TextObject;
+        if(!tobj) tobj=new TextObject(gs, m);
         /* Check text showing operators first */
         if(op->name() == "Tj") // output text
         {
@@ -312,10 +346,9 @@ void Page::draw(Media * m)
           const String * str=dynamic_cast<const String *>(o);
           if(str)
           {
-            std::wstring s=extract_text(str, gs->text_state.Tf);
             /*m->Text(gs->ctm.translate(tobj->tm.translate(Point(0,0))), s);
             // XXX update text matrix!!! */
-            tobj->accumulated_text+=s;
+						tobj->Append(str);
           }
           break;
         }
@@ -327,16 +360,22 @@ void Page::draw(Media * m)
           const Array * a=dynamic_cast<const Array *>(o);
           if(a)
           {
-            std::wstring s;
+            //std::wstring s;
             for(Array::ConstIterator it=a->get_const_iterator(); a->check_iterator(it); it++)
             {
     //        std::clog << "Arg" << i << ": " << o->type() << std::endl;
               const String * str=dynamic_cast<const String *>(*it);
-              if(str) s+=extract_text(str, gs->text_state.Tf);
+              if(str) tobj->Append(str);
+							else {
+								const Integer * i = dynamic_cast<const Integer *>(*it);
+								if(i) tobj->Kerning(i->value());
+								else {
+									std::clog << "Unexpected object " << (*it)->type() << " in string (TJ)" << std::endl;
+								}
+							}
             }
             /*m->Text(gs->ctm.translate(tobj->tm.translate(Point(0,0))), s);
             // XXX update text matrix!!!*/
-            tobj->accumulated_text+=s;
           }
           break;
         }
@@ -347,36 +386,19 @@ void Page::draw(Media * m)
           const String * str=dynamic_cast<const String *>(o);
           if(str)
           {
-            std::wstring s=extract_text(str, gs->text_state.Tf);
-            tobj->lm.offset(0, gs->text_state.Tl); tobj->tm=tobj->lm;
-            tobj->accumulated_text+='\n';
-            tobj->accumulated_text+=s;
+            tobj->NewLine();
+						tobj->Append(str);
           }
           break;
         }
         else if(op->name() == "T*") // XXX it is not a text-showing operator!
         {
-          tobj->accumulated_text+='\n';
-          tobj->lm.offset(0, gs->text_state.Tl); tobj->tm=tobj->lm;
+					tobj->NewLine();
           break;
         }
         else
         {
-          /*
-           *  work around mutiple text-showing operators in same text object.
-           * if so, concatenate them and output them all together.
-           */
-          if(!tobj->accumulated_text.empty())
-          {
-						double x_offs=0;
-						while(tobj->accumulated_text[0] == (wchar_t)' ') { /* append Tw*number_of_initial_spaces */
-							x_offs+=gs->text_state.Tw;
-							if(tobj->accumulated_text.length()<=1) break;
-							tobj->accumulated_text.erase(0,1);
-						}
-            m->Text(gs->ctm.translate(tobj->lm.translate(Point(x_offs,0))), gs->text_state.Tf, tobj->accumulated_text);
-            tobj->accumulated_text.resize(0);
-          }
+					tobj->Flush();
           // ... and executete other operators
         }
         

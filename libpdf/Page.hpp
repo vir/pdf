@@ -32,7 +32,7 @@ class CTM
     double a, b, c, d, e, f;
   public:
     CTM() { set_unity(); }
-    Point translate(const Point & p)
+    Point translate(const Point & p) const
     {
       Point t(a*p.x + c*p.y + e, b*p.x + d*p.y + f);
 //      std::clog << "Translate " << p.dump() << " to " << t.dump() << std::endl;
@@ -52,6 +52,7 @@ class Page
   private:
     class Operator;
     class GraphicsState;
+		friend class TextObject;
     //class Path;
 		Rect media_box, crop_box;
     typedef std::vector<Point> Path;
