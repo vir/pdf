@@ -175,6 +175,28 @@ bool Font::load(OH fontnode)
 {
   fontnode.expand();
   std::clog << "Font " << fontname << " Node: " << fontnode.obj()->dump() << std::endl;
+
+	// extract characters' widths
+	OH widths = fontnode.find("Widths");
+	if(widths) {
+		int firstchar = 0;
+		widths.expand();
+
+		OH fc = fontnode.find("FirstChar");
+		if(fc) {
+			Integer * i = fc.cast<Integer *>("FirstChar is not an integer?!?");
+			firstchar = i->value();
+		}
+
+		for(unsigned int i = 0; i < widths.size(); i++) {
+			OH aeh = widths[i];
+			Integer * ip = aeh.cast<Integer *>("Non-integer char width not supported");
+			if(ip && ip->value())
+				charwidths[i + firstchar] = ip->value();
+		}
+	}
+
+	// Mess with to-Unicode-mapping
   OH ucmap=fontnode.find("ToUnicode");
 	if(ucmap) {
 		ucmap.expand();
@@ -205,18 +227,24 @@ wchar_t Font::to_unicode(int c) const
   return to_unicode_map.map(c);
 }
 
-std::wstring Font::extract_text(const String * so) const
+std::wstring Font::extract_text(const String * so, double * twid) const
 {
 	unsigned int cw=to_unicode_map.cbytes();
   std::string s=so->value();
   std::wstring ws;
   if(s.length() % cw) throw std::string("String lenth is not even number");
+	if(twid) *twid = 0;
   for(unsigned int i=0; i<s.length(); i+=cw)
   {
     unsigned long c=0;
 		for(unsigned int k=0; k<cw; k++) {
 			c<<=8;
 			c|=(unsigned char)s[i+k];
+		}
+		if(twid) {
+			std::map<int, unsigned long>::const_iterator it = charwidths.find(c);
+			if(it != charwidths.end())
+				*twid += it->second;
 		}
 		wchar_t res=to_unicode_map.map(c);
 //printf("Map(%s)(%d): %04X -> %04X\n", fontname.c_str(), cw, (unsigned int)c, (unsigned int)res);
@@ -226,6 +254,7 @@ std::wstring Font::extract_text(const String * so) const
 			ws.push_back(0x40);
 		}
   }
+	if(twid) *twid/=1000; /* font units is 1/1000 of text units */
   return ws;
 }
 

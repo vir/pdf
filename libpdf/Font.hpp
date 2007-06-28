@@ -50,6 +50,7 @@ class Font
     };
     CMap to_unicode_map;
 		std::string fontname;
+		std::map<int, unsigned long> charwidths;
   public:
     Font(std::string name="");
     bool load(OH fontnode);
@@ -57,7 +58,7 @@ class Font
     wchar_t to_unicode(int c) const;
     std::string dump() const { return to_unicode_map.dump(); }
 		std::string name() const { return fontname; }
-		std::wstring extract_text(const String * so) const;
+		std::wstring extract_text(const String * so, double * twid = NULL) const;
 };
 
 
