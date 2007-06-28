@@ -147,14 +147,14 @@ void Tabulator::Line(const Point & xp1, const Point & xp2)
     {
       PLine l(p1, p2); if(p2.y < p1.y) l=PLine(p2, p1);
       v_lines.push_back(l);
-      clog << "V-Line" << p1.dump() << "-" << p2.dump() << endl;
+//      clog << "V-Line" << p1.dump() << "-" << p2.dump() << endl;
     }
   }
   else if(compare(p1.y, p2.y) == 0)
   {
     PLine l(p1, p2); if(p2.x < p1.x) l=PLine(p2, p1);
     h_lines.push_back(l);
-    clog << "H-Line" << p1.dump() << "-" << p2.dump() << endl;
+//    clog << "H-Line" << p1.dump() << "-" << p2.dump() << endl;
   }
 }
 
@@ -164,7 +164,9 @@ void convert_page(PDF::Document & doc, unsigned int pagenum)
   if(p)
   {
     clog << "Page " << pagenum << endl;
-    p->load(doc.get_page_node(pagenum));
+		PDF::OH pn = doc.get_page_node(pagenum);
+		cout << "<!-- Page " << pagenum << " - " << pn->dump() << " -->" << endl;
+    p->load(pn);
 //      std::cout << p->dump() << std::endl;
 
     Tabulator * mf=new Tabulator();
@@ -205,12 +207,14 @@ static void do_it(const char * fname)
 //    PDF::Object::m_debug=true;
 //    doc.dump();
 
-//  for(unsigned int page=10; page < doc.get_pages_count(); page++) // all needed
-  for(unsigned int page=1; page < 10; page++)
+	cout << "<table>" << endl;
+  for(unsigned int page=1; page < doc.get_pages_count(); page++) // all needed
+//  for(unsigned int page=1; page < 10; page++)
 //  for(unsigned int page=10; page < 83; page++)
   {
     convert_page(doc, page);
   }
+	cout << "</table>" << endl;
 
 //  delete oc;
 
