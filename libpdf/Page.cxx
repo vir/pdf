@@ -193,40 +193,61 @@ std::string Page::dump() const
 /** Work around mutiple text-showing operators in same text object.
  *  if so, concatenate them and output them all together.
  */
-class TextObject
+class Page::TextObject
 {
 	private:
 		const Page::GraphicsState * gs;
 		Media * media;
 	public:
-		TextObject(const Page::GraphicsState * g, Media * m):gs(g),media(m) {}
 		CTM tm;
 		CTM lm;
 		std::wstring accumulated_text; // work around multiple Tj in one text object
+		double total_width;
+
+		TextObject(const Page::GraphicsState * g, Media * m):gs(g),media(m),total_width(0) {}
 		void Append(const String * str)
 		{
 			double w;
+			String tmp;
+			if(!gs->text_state.Tf->is_multibyte() && gs->text_state.Tw != 0) { /* output words separately appending Tw space between */
+				tmp = *str;
+				String * sp;
+				while((sp = tmp.cut_word())) {
+					std::wstring s=gs->text_state.Tf->extract_text(sp, &w);
+					//w+=s.length() * gs->text_state.Tc; // XXX TODO Implement Tc
+					accumulated_text+=s;
+					total_width+=w;
+					Flush();
+					tm.offset_unscaled(gs->text_state.Tw, 0);
+					delete sp;
+				}
+				str = &tmp;
+			}
 			std::wstring s=gs->text_state.Tf->extract_text(str, &w);
-		 // XXX update text matrix!!!
 			accumulated_text+=s;
+			total_width+=w;
+		 // XXX update text matrix!!!
 		}
-		void Kerning(long k) {}
+		void Kerning(double k) {}
 		void NewLine() {
 			accumulated_text+='\n';
-			lm.offset(0, gs->text_state.Tl);
+			lm.offset_unscaled(0, gs->text_state.Tl);
 			tm = lm;
 		}
 		void Flush() {
 			if(accumulated_text.empty()) return;
-
 			double x_offs=0;
+#if 0
 			while(accumulated_text[0] == (wchar_t)' ') { /* append Tw*number_of_initial_spaces */
 				x_offs+=gs->text_state.Tw;
 				if(accumulated_text.length()<=1) break;
 				accumulated_text.erase(0,1);
 			}
-			media->Text(gs->ctm.translate(lm.translate(Point(x_offs,0))), gs->text_state.Tf, accumulated_text);
+#endif
+			media->Text(gs->ctm.translate(tm.translate(Point(x_offs,0))), gs->text_state.Tf, accumulated_text);
+			tm.offset(total_width, 0);
 			accumulated_text.resize(0);
+			total_width = 0;
 		}
 };
 
@@ -368,7 +389,9 @@ void Page::draw(Media * m)
               if(str) tobj->Append(str);
 							else {
 								const Integer * i = dynamic_cast<const Integer *>(*it);
+								const Real * r = dynamic_cast<const Real *>(*it);
 								if(i) tobj->Kerning(i->value());
+								else if(r) tobj->Kerning(r->value());
 								else {
 									std::clog << "Unexpected object " << (*it)->type() << " in string (TJ)" << std::endl;
 								}

@@ -41,7 +41,8 @@ class CTM
     void set_unity() { a=d=1.0; b=c=e=f=0.0; }
     void offset(Point p) { e+=p.x; f+=p.y; }
     void offset_unscaled(Point p) { e+=a*p.x + c*p.y; f+=b*p.x + d*p.y; }
-    void offset(double ox, double oy) { e+=ox; e+=oy; }
+    void offset(double ox, double oy) { e+=ox; f+=oy; }
+    void offset_unscaled(double ox, double oy) { e+=a*ox + c*oy; f+=b*ox + d*oy; }
     void scale(double sx, double sy=0) { a*=sx; d*=sy?sy:sx; }
 };
   
@@ -52,7 +53,7 @@ class Page
   private:
     class Operator;
     class GraphicsState;
-		friend class TextObject;
+		class TextObject;
     //class Path;
 		Rect media_box, crop_box;
     typedef std::vector<Point> Path;
