@@ -59,6 +59,7 @@ class Font
     std::string dump() const { return to_unicode_map.dump(); }
 		std::string name() const { return fontname; }
 		std::wstring extract_text(const String * so, double * twid = NULL) const;
+		bool is_multibyte() const { return to_unicode_map.cbytes()!=1; }
 };
 
 
