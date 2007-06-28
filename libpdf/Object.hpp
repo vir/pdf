@@ -73,6 +73,7 @@ template <class T> class ObjSimpleT:public Object
   protected:
     T my_value;
   public:
+    ObjSimpleT() { }
     ObjSimpleT(T v):my_value(v) { }
     virtual ~ObjSimpleT() {}
     virtual T value() const { return my_value; }
@@ -92,8 +93,17 @@ class Boolean:public ObjSimpleT<bool>
 class String:public ObjSimpleT<std::string>
 {
   public:
+    String():ObjSimpleT<std::string>() {}
     String(std::string s):ObjSimpleT<std::string>(s) {}
     virtual std::string dump(int level=0) const { return std::string("(")+my_value+std::string(")"); }
+		String * cut_word()
+		{
+			unsigned int ind = my_value.find(' ');
+			if(ind == std::string::npos) return NULL;
+			String * r = new String(std::string(my_value, 0, ind));
+			my_value.erase(0, ind + 1);
+			return r;
+		}
 };
 /// PDF Object: Name --- represents some kind of name
 class Name:public ObjSimpleT<std::string>
