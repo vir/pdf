@@ -14,6 +14,7 @@ class Filter
 		static Filter * Create(std::string name);
     virtual bool Encode(const std::vector<char> & src, std::vector<char> & dst)=0;
     virtual bool Decode(const std::vector<char> & src, std::vector<char> & dst)=0;
+		virtual const char * Name()=0;
 };
 
 /// Zlib wrapper (FlateFilter)
@@ -23,6 +24,7 @@ class FlateFilter:public Filter
 		virtual ~FlateFilter() {};
     virtual bool Encode(const std::vector<char> & src, std::vector<char> & dst);
     virtual bool Decode(const std::vector<char> & src, std::vector<char> & dst);
+		virtual const char * Name() { return "FlateFilter"; };
 };
 
 /// Base85 converter
@@ -32,6 +34,7 @@ class Base85Filter:public Filter
 		virtual ~Base85Filter() {};
     virtual bool Encode(const std::vector<char> & src, std::vector<char> & dst);
     virtual bool Decode(const std::vector<char> & src, std::vector<char> & dst);
+		virtual const char * Name() { return "Base85Filter"; };
 };
 
 }; // namespace PDF
