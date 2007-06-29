@@ -194,21 +194,28 @@ class Dictionary:public Object
     unsigned long size() const { return d.size(); }
 };
 
+class File;
+
 /// PDF Object: Stream --- large/binary data container.
 class Stream:public Object
 {
 /// \todo Make "more valid" stream (see http://www.cplusplus.com/ref/iostream/streambuf/)
   private:
+		File * source;
     Dictionary * dict;
+		std::istream * file;
+		unsigned long soffset;
     std::vector<char> data;
   public:
-    Stream(Dictionary * d, std::vector<char> & b) { dict=d; data=b; }
+    Stream(Dictionary * d, std::vector<char> & b):source(NULL),file(NULL) { dict=d; data=b; }
+		Stream(Dictionary * d, std::istream * strm, unsigned long offs):source(NULL),dict(d),file(strm),soffset(offs) { }
     virtual ~Stream() { if(dict) delete dict; }
     std::string dump(int level=0) const
     {
-      std::stringstream ss;
-      ss << "Stream(" << data.size() << " bytes)";
-      return ss.str();
+			return std::string("Stream: ") + dict->dump();
+//      std::stringstream ss;
+//      ss << "Stream(" << data.size() << " bytes)";
+//      return ss.str();
     }
     bool get_data(std::vector<char> & buf);
     std::string value()
@@ -217,6 +224,7 @@ class Stream:public Object
       get_data(v);
       return std::string(v.begin(),v.end());
     }
+		void set_source(File * f) { source = f; }
 };
 
 /// PDF Psewdo-object: Reference to an Indirect object.

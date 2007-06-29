@@ -8,6 +8,7 @@
 #include "Object.hpp"
 #include "Exceptions.hpp"
 #include "Filter.hpp" // for stream
+#include "File.hpp" // for loading indirect object in stream's dictionary
 
 #define NOT_IMPLEMENTED(a) \
  throw std::string(__FILE__ ": Not implemented: "a);
@@ -110,9 +111,13 @@ std::string Object::type() const
 
   Object * r=read(f); // read the object
   
-  skip_whitespace(f);
-  s=read_token(f);
-  if(s!="endobj") throw FormatException("Error at object end", f.tellg());
+	if(dynamic_cast<Stream *>(r) == NULL) // skip some checks for stream object as we do not read them
+	{
+		skip_whitespace(f);
+
+		s=read_token(f);
+		if(s!="endobj") throw FormatException("Error at object end", f.tellg());
+	}
 
 //  std::cerr << "Read indirect object (" << objnum << "," << objgen << ")" << std::endl;
   r->indirect=true;
@@ -198,21 +203,24 @@ std::string Object::type() const
             std::string s=read_token(f, alt);
             if(s == "stream")
             {
-              c=f.get(); if(c!='\x0A') c=f.get();
+              c=f.get(); if(c=='\x0D') c=f.get();
               if(c!='\x0A') throw FormatException("No newline after 'stream' keyword?", f.tellg());
 
+# if 0  // we no longer read whole stream contents at once
               Integer * intref=dynamic_cast<Integer *>(o);
               if(!intref) throw FormatException("Stream length is not an integer", savepos);
-
               long length=intref->value();
+
               std::vector<char> buf;
               buf.resize(length);
-              
               f.read(&buf[0], length);
+
               skip_whitespace(f, alt);
               s=read_token(f, alt);
               if(s!="endstream") throw FormatException("Invlaid stream end", f.tellg());
               return new Stream(r, buf);
+#endif
+              return new Stream(r, &f, f.tellg());
             } else f.seekg(savepos);
           }
           return r;
@@ -372,13 +380,33 @@ static std::string read_token(std::istream & f, bool robust)
 /// Fetches unencoded stream data
 bool Stream::get_data(std::vector<char> & buf)
 {
-  Object * o=dict->find("Filter");
-  if(!o)
-  {
-    std::cerr << "no filter in stream object" << std::endl;
-    buf=data;
-    return true;
-  }
+	unsigned long length;
+	Object * o;
+	Integer * integer;
+	ObjRef * oref;
+	if(!(o=dict->find("Length"))) throw FormatException("Stream object without Length attribute", soffset);
+	if((oref = dynamic_cast<ObjRef *>(o))) {
+		if(!source) throw std::string("Fount ObjRef inside stream dictionary and no source is defined.");
+		o = source->load_object(oref->ref());
+	}
+	if((integer = dynamic_cast<Integer *>(o))) {
+		length = integer->value();
+		data.resize(length);
+		file->seekg(soffset);
+		file->read(&data[0], length);
+
+		skip_whitespace(*file, false);
+		if(read_token(*file, false) != "endstream") throw FormatException("Invlaid token at stream end", file->tellg());
+	} else {
+		throw FormatException(std::string("Invalid stream Length type ") + o->type(), soffset);
+	}
+	if(oref) delete o;
+
+	if(!(o=dict->find("Filter"))) {
+		std::cerr << "no filter in stream object" << std::endl;
+		buf=data;
+		return true;
+	}
 
 	std::vector<Filter *> filters;
 
@@ -415,6 +443,7 @@ bool Stream::get_data(std::vector<char> & buf)
 		else d = new std::vector<char>;
 
 		bool r = filters[i]->Decode(i?*s:data, *d);
+		if(!r) throw std::string("Stream filter error: ") + filters[i]->Name();
 
 		delete s;
 		s = d;

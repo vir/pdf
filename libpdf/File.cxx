@@ -90,6 +90,9 @@ Object * File::load_object(const ObjId & oi)
   {
     file.seekg(it->second);
     r=Object::read_indirect(file);
+
+		Stream * str;
+		if((str = dynamic_cast<Stream *>(r))) { str->set_source(this); }
   }
   else r=new Null();
 	if(m_debug>2) std::clog << "Loaded object: " << r->dump() << std::endl;

@@ -19,6 +19,7 @@ namespace PDF {
  */
 class File
 {
+	friend class Object;
   private:
     std::string filename;
     std::fstream file;
