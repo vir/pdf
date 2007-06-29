@@ -84,6 +84,14 @@ class OH
       Array * a=cast<Array*>("Can't [index] - not an array");
       return OH(m_cache, a->at(index));
     }
+		/// Get name or string content
+		std::string strvalue() const
+		{
+			const String * s = cast<const String *>();
+			if(s) return s->value();
+			const Name * n = cast<const Name *>(std::string("can't extract string value from ") + obj()->type());
+			return n->value();
+		}
     /// Replace indirect object reference with real object
     bool expand()
     {
