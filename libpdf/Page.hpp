@@ -151,7 +151,7 @@ class Page::GraphicsState {
     // color_space
     // color
     struct {
-      // Tc // char spacing (Tc)=0
+      double Tc; // char spacing (Tc)=0
       double Tw; // word spacing (Tw)=0
       // Th // horizontal scaling (Tz)=100
       double Tl; // leading (TL)=0

@@ -57,7 +57,6 @@ static Rect get_box(OH boxnode)
 bool Page::load(OH pagenode)
 {
 //  std::clog << "@Page::load()" << std::endl;
-//  std::cerr << "Page node type: " << pagenode.obj()->type() << std::endl;
   if(m_debug) std::clog << "Page node: " << pagenode.obj()->dump() << std::endl;
   // find page size
   {
@@ -75,7 +74,6 @@ bool Page::load(OH pagenode)
   // load contents
   {
     OH contents_h=pagenode.find("Contents");
-    std::clog << "Contents object: " << contents_h->dump() << std::endl;
     contents_h.expand();
     if(!contents_h)
     {
@@ -111,16 +109,13 @@ bool Page::load(OH pagenode)
     }
     else
     {
-//      std::clog << "Found resources:" << std::endl;
       // load fonts
       resources_h.expand();
       OH fonts_h=resources_h.find("Font");
       if(!!fonts_h)
       {
         Dictionary * fonts_d=fonts_h.cast<Dictionary *>("Fonts node is not a Dictionary");
-        if(m_debug>1) std::clog << "Page fonts: " << fonts_d->dump() << std::endl;
 
-#if 1 // load fonts
         // load all fonts' objects
         for( Dictionary::Iterator it=fonts_d->get_iterator(); fonts_d->check_iterator(it); it++)
         {
@@ -129,7 +124,6 @@ bool Page::load(OH pagenode)
           f->load(font_h);
           fonts[it->first]=f;
         }
-#endif
       }
       else
       {
@@ -138,7 +132,6 @@ bool Page::load(OH pagenode)
     }
   }
 
-//  std::clog << "@leaving Page::load()" << std::endl;
   return true;
 }
 
@@ -184,8 +177,7 @@ std::string Page::dump() const
   ss << "\t" << fonts.size() << " fonts" << std::endl;
   for(std::map<std::string,Font *>::const_iterator it=fonts.begin(); it!=fonts.end(); it++)
   {
-    ss << "Font " << it->first << ":" << std::endl;
-    ss << it->second->dump();
+    ss << "Font " << it->first << ": "  << it->second->dump();
   }
   return ss.str();
 }
@@ -214,7 +206,7 @@ class Page::TextObject
 				String * sp;
 				while((sp = tmp.cut_word())) {
 					std::wstring s=gs->text_state.Tf->extract_text(sp, &w);
-					//w+=s.length() * gs->text_state.Tc; // XXX TODO Implement Tc
+					w+=s.length() * gs->text_state.Tc; // XXX TODO Take Th into account!
 					accumulated_text+=s;
 					total_width+=w;
 					Flush();
@@ -225,10 +217,17 @@ class Page::TextObject
 			}
 			std::wstring s=gs->text_state.Tf->extract_text(str, &w);
 			accumulated_text+=s;
+			w+=s.length() * gs->text_state.Tc; // XXX TODO Take Th into account!
 			total_width+=w;
 		 // XXX update text matrix!!!
 		}
-		void Kerning(double k) {}
+		void Kerning(double k) { // offset next char back by k glyph space units
+			k/=1000;
+			if(k > 0.5 || k < -0.5) { // XXX TODO caompare with avg charwidth or so
+				Flush();
+				tm.offset_unscaled(-k, 0);
+			}
+		}
 		void NewLine() {
 			accumulated_text+='\n';
 			lm.offset_unscaled(0, gs->text_state.Tl);
@@ -236,15 +235,7 @@ class Page::TextObject
 		}
 		void Flush() {
 			if(accumulated_text.empty()) return;
-			double x_offs=0;
-#if 0
-			while(accumulated_text[0] == (wchar_t)' ') { /* append Tw*number_of_initial_spaces */
-				x_offs+=gs->text_state.Tw;
-				if(accumulated_text.length()<=1) break;
-				accumulated_text.erase(0,1);
-			}
-#endif
-			media->Text(gs->ctm.translate(tm.translate(Point(x_offs,0))), gs->text_state.Tf, accumulated_text);
+			media->Text(gs->ctm.translate(tm.translate(Point(0,0))), gs->text_state.Tf, accumulated_text);
 			tm.offset(total_width, 0);
 			accumulated_text.resize(0);
 			total_width = 0;
@@ -429,7 +420,10 @@ void Page::draw(Media * m)
         if(op->name() == "ET") { if(tobj) delete tobj; tobj=NULL; mode=M_PAGE; }
         else if(op->name() == "Tc") {} // not very useful char spacing
         else if(op->name() == "Ts" || op->name() == "Tz") {} // also, rise and scaling
-        else if(op->name() == "Tr") {} // also, render mode
+        else if(op->name() == "Tr") // char spacing
+				{
+					gs->text_state.Tc=op->number(0);
+				}
 				else if(op->name() == "Tw") // set word spacing - useful if text begins with space(s)
 				{
 					gs->text_state.Tw=op->number(0);
@@ -459,7 +453,7 @@ void Page::draw(Media * m)
 				{
 					gs->text_state.Tl=op->number(0);
 				}
-				else if(op->name() == "TD") // tx ty TD === -ty TL; tx ty TD
+				else if(op->name() == "TD") // tx ty TD === -ty TL; tx ty Td
 				{
 					gs->text_state.Tl=-op->number(1);
           tobj->lm.offset_unscaled(op->point(0));
