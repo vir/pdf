@@ -164,6 +164,7 @@ wchar_t Font::CMap::map(unsigned long c) const
 
 Font::Font(std::string name)
 	:fontname(name)
+	,fontflags(0)
 {
 }
 
@@ -174,7 +175,25 @@ Font::~Font()
 bool Font::load(OH fontnode)
 {
   fontnode.expand();
-  std::clog << "Font " << fontname << " Node: " << fontnode.obj()->dump() << std::endl;
+//  std::clog << "Font " << fontname << " Node: " << fontnode.obj()->dump() << std::endl;
+	fontobjid = fontnode.obj()->dump_objattr();
+
+	// extract some (useful ?) info
+	OH inf;
+	inf = fontnode.find("Subtype");
+	if(inf) {
+		fonttype = inf.strvalue();
+	}
+	inf = fontnode.find("BaseFont");
+	if(inf) {
+		basefont = inf.strvalue();
+	}
+	if((inf = fontnode.find("FontDescriptor"))) {
+		inf.expand();
+		OH inf2 = inf.find("Flags");
+		const Integer * i = inf2.cast<const Integer *>("Font flags must be an integer");
+		if(i) fontflags = i->value();
+	}
 
 	// extract characters' widths
 	OH widths = fontnode.find("Widths");
@@ -258,6 +277,43 @@ std::wstring Font::extract_text(const String * so, double * twid) const
   return ws;
 }
 
+std::string Font::dump() const
+{
+	char * ffl[] = {
+		"FixedPitch", // bit 1 in reference
+		"Serif",
+		"Symbolic",
+		"Script",
+		NULL,
+		"Nonsymbolic", // 6
+		"Italic",
+		NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+		"AllCaps", // 17
+		"SmallCaps",
+		"ForceBold",
+	};
+	std::stringstream ss;
+	ss << fontobjid << ' ' << fonttype << " " << to_unicode_map.cbytes() << "-byte font, " << charwidths.size() << " char widhs, base: " << basefont;
+	ss << ", Flags: " << fontflags;
+	if(fontflags) {
+		bool comma = false;
+		ss << " (";
+		for(unsigned int i = 0; i < 8*sizeof(fontflags); i++) {
+			if(fontflags & 1<<i) {
+				if(comma) ss << ',';
+				if(i < sizeof(ffl)/sizeof(ffl[0]) && ffl[i]) {
+					ss << ffl[i];
+				} else {
+					ss << i+1;
+				}
+				comma = true;
+			}
+		}
+		ss << ")";
+	}
+	ss << std::endl;
+	return ss.str();
+}
 
 }; // naespacs PDF
 

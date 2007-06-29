@@ -49,14 +49,17 @@ class Font
         }
     };
     CMap to_unicode_map;
-		std::string fontname;
+		std::string fontname, fontobjid;
 		std::map<int, unsigned long> charwidths;
+		std::string fonttype, basefont;
+		long fontflags;
   public:
     Font(std::string name="");
     bool load(OH fontnode);
     ~Font();
     wchar_t to_unicode(int c) const;
-    std::string dump() const { return to_unicode_map.dump(); }
+//    std::string dump() const { return to_unicode_map.dump(); }
+    std::string dump() const;
 		std::string name() const { return fontname; }
 		std::wstring extract_text(const String * so, double * twid = NULL) const;
 		bool is_multibyte() const { return to_unicode_map.cbytes()!=1; }
