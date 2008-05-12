@@ -9,14 +9,22 @@
 #include "Exceptions.hpp"
 #include "Filter.hpp" // for stream
 #include "File.hpp" // for loading indirect object in stream's dictionary
+#include <string.h>
 
 #define NOT_IMPLEMENTED(a) \
  throw std::string(__FILE__ ": Not implemented: "a);
 
 namespace PDF {
 
-const static char * Whitespace="\x09\x0A\x0C\x0D\x20"; // plus '0x00' char!
-const static char * Delimiter="()<>[]{}/%";
+inline bool is_a_whitespace(char c)
+{
+	return strchr("\x09\x0A\x0C\x0D\x20", c) != NULL; // plus '0x00' char!
+}
+
+inline bool is_a_delimiter(char c)
+{
+	return (bool)strchr("()<>[]{}/%", c) != NULL;
+}
 
 unsigned int Object::m_debug=0;
 
@@ -71,7 +79,7 @@ std::string Object::type() const
   
   char c=f.peek();
   if(alt && c == EOF) return r;
-  if(std::strchr(Delimiter, c)) r=read_delimited(f, alt); // string/name/array/dict/stream
+  if(is_a_delimiter(c)) r=read_delimited(f, alt); // string/name/array/dict/stream
   else if((c>='0' && c<='9') || c=='.' || c=='-' || c=='+') r=read_o_digits(f, alt); // int/real/reference
   else r=read_o_chars(f, alt); // boolean/error
   if(!r) throw FormatException("Error reading object at offset ", objstart);
@@ -228,7 +236,7 @@ std::string Object::type() const
         else // hex string
         {
           std::string s;
-          s.push_back(c); // put back first character, extracted in dict. check
+	  s+=c; // put back first character, extracted in dict. check
           do {
             skip_whitespace(f, alt);
             s+=read_token(f, alt);
@@ -240,7 +248,7 @@ std::string Object::type() const
           for(unsigned int i=0; i<s.length(); i+=2)
           {
             char c=(hex_to_int(s[i]) << 4) | hex_to_int(s[i+1]);
-            r.push_back(c);
+            r+=c;
           }
           return new String(r);
         }
@@ -353,7 +361,7 @@ static Object * read_o_chars(std::istream & f, bool alt)
 inline void skip_whitespace(std::istream & f, bool robust)
 {
   while(f.peek()!=EOF
-      && (std::strchr(Whitespace,f.peek()) || f.peek()=='\0'))
+      && (is_a_whitespace(f.peek()) || f.peek()=='\0'))
   {
     f.ignore();
   }
@@ -368,8 +376,8 @@ static std::string read_token(std::istream & f, bool robust)
   do {
     f >> c;
     s+=c;
-  } while(!std::strchr(Delimiter, f.peek())
-      && !std::strchr(Whitespace, f.peek())
+  } while(! is_a_delimiter(f.peek())
+      && !is_a_whitespace(f.peek())
       && f.peek()!='\0'
       && f.peek()!=EOF);
   if(!robust && f.peek() == EOF) throw FormatException("Unexpected EOF");
