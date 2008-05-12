@@ -23,7 +23,7 @@ inline bool is_a_whitespace(char c)
 
 inline bool is_a_delimiter(char c)
 {
-	return (bool)strchr("()<>[]{}/%", c) != NULL;
+	return strchr("()<>[]{}/%", c) != NULL;
 }
 
 unsigned int Object::m_debug=0;
@@ -157,12 +157,13 @@ std::string Object::type() const
 			{
 				Array * a=new Array();
 				skip_whitespace(f, alt);
-        do {
+				while(f.peek() != ']')
+        {
 					Object * o=read(f, alt);
 					if(o) a->push(o);
 					else if(alt) throw FormatException("EOF inside an array", start);
 					skip_whitespace(f, alt);
-				} while(f.peek() != ']');
+				}
         f.ignore(); // skip ']'
         return a;
       }
