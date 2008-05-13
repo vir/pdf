@@ -446,7 +446,8 @@ bool Stream::get_data(std::vector<char> & buf)
 	
 	std::vector<char> *s, *d;
 	s = NULL;
-	for(unsigned int i = 0; i < filters.size(); i++)
+	unsigned int i;
+	for(i = 0; i < filters.size(); i++)
 	{
 		if(i == filters.size() - 1) d = &buf;
 		else d = new std::vector<char>;
@@ -460,7 +461,7 @@ bool Stream::get_data(std::vector<char> & buf)
 	}
 
 	// delete all filters
-	for(unsigned int i = 0; i < filters.size(); i++)
+	for(i = 0; i < filters.size(); i++)
 		delete filters[i]; 
 
   return true;
