@@ -136,9 +136,9 @@ void File::dump() const
   {
     std::clog << "  object (" << it->first.num << "," << it->first.gen << ") is at " << it->second << std::endl;
   }
-  for(std::vector<ObjId>::const_iterator it=root_refs.begin(); it!= root_refs.end(); it++)
+  for(int i = 0; i < root_refs.size(); i++)
   {
-    std::clog << "Root Element: (" << (*it).num << "," << (*it).gen << ")" << std::endl;
+    std::clog << "Root Element: (" << root_refs[i].num << "," << root_refs[i].gen << ")" << std::endl;
   }
 }
 
@@ -150,7 +150,7 @@ bool File::read_xref_table_part(long off)
   file.seekg(off, std::ios::beg);
   getline(file, s, GETLINE_ENDL); // get 'xref' header
 //  std::clog << "Read first xref header: " << s << std::endl;
-  if(s.find("xref")!=0) { std::cerr << "Error in xref table" << std::endl; return -1; }
+  if(s.find("xref")!=0) { std::cerr << "Error in xref table" << std::endl; return false; }
   getline(file, s, GETLINE_ENDL); // get numbers
 //  std::clog << "Read first line of xref: " << s << std::endl;
   int sep=s.find_first_of(" \t");
