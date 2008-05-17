@@ -14,28 +14,56 @@ using namespace std;
 class Metafile:public PDF::Media
 {
   private:
-    ofstream s;
+    ostream & s;
   public:
     typedef PDF::Point Point;
-    Metafile(string fn="")
-    {
-      if(fn.length()) s.open(fn.c_str(), ios::out);
-      else            s.open("/dev/stderr", ios::out);
-    }
+    Metafile(ostream & out):s(out) { }
     virtual ~Metafile() { };
-    virtual Point Size(Point unity) { return unity; }
-    virtual void Text(Point pos, const PDF::Font * font, std::wstring text);
+		virtual void SetFont(const PDF::Font * font, double size);
+    virtual void Text(Point pos, std::wstring text);
     virtual void Line(const Point & p1, const Point & p2);
+		virtual void Debug(string s);
+#if 1
+		PDF::CTM m;
+    virtual void Size(Point size)
+		{
+			m.set_unity();
+# if 1
+			/* Rotate landscape page 90deg CW */
+			m.rotate(90.0);
+			m.scale(-1, 1);
+//			m.offset(size.y, 0);
+# elif 0
+			/* Normal page layout, invert coordinates for html's upsidedown y axis */
+			m.scale(1, -1);
+			m.offset(0, size.y);
+# else
+			/* Upsidedown html */
+# endif
+			m.dump();
+		}
+		virtual const PDF::CTM & Matrix() { return m; }
+#endif
 };
 
-void Metafile::Text(Point pos, const PDF::Font * font, std::wstring text)
+void Metafile::SetFont(const PDF::Font * font, double size)
 {
-  s << "Text" << pos.dump() << "(" << font->name() << ")[" << ws2utf8(text) << "]" << endl;
+	s << "SetFone(" << font->name() << ", " << size << ")" << endl;
+}
+
+void Metafile::Text(Point pos, std::wstring text)
+{
+  s << "Text" << pos.dump() << "[" << ws2utf8(text) << "]" << endl;
 }
 
 void Metafile::Line(const Point & p1, const Point & p2)
 {
   s << "Line" << p1.dump() << "-" << p2.dump() << endl;
+}
+
+void Metafile::Debug(string msg)
+{
+	s << "Debug[ " << msg << " ]" << endl;
 }
 
 static void do_it(const char * fname, int pagenum)
@@ -64,13 +92,18 @@ static void do_it(const char * fname, int pagenum)
     if(p)
     {
 			p->debug(5);
-      cout << pagenum << "th page:" << endl;
+      cerr << "Loading " << pagenum << "th page:" << endl;
       p->load(doc.get_page_node(pagenum-1));
-      std::cout << p->dump() << std::endl;
+      std::cerr << p->dump() << std::endl;
 
       // lets see what we've got...
-//      Metafile * mf=new Metafile();
-      Metafile * mf=new Metafile("pagedump.txt");
+/*
+			ofstream s;
+      if(fn.length()) s.open(fn.c_str(), ios::out);
+      else            s.open("/dev/stderr", ios::out);
+*/
+      Metafile * mf=new Metafile(cout);
+			clog << "Drawing page" << endl;
       p->draw(mf);
       delete mf;
 
