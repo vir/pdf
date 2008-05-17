@@ -42,12 +42,12 @@ class Tabulator:public PDF::Media
 
     Tabulator():pheight(0),output_csv(true) {  }
     virtual ~Tabulator()   {  };
-    virtual Point Size(Point unity)
+    virtual void Size(Point unity)
     {
       clog << "SetPageSize(" << unity.dump() << endl;
-      pheight=unity.y; return unity;
+      pheight=unity.y;
     }
-    virtual void Text(Point pos, const PDF::Font * font, std::wstring text);
+    virtual void Text(Point pos, std::wstring text);
     virtual void Line(const Point & p1, const Point & p2);
     void dump() const;
     void chew(bool skip_headers=false);
@@ -199,7 +199,7 @@ void Tabulator::chew(bool skip_headers)
   }
 }
 
-void Tabulator::Text(Point pos, const PDF::Font *, std::wstring text)
+void Tabulator::Text(Point pos, std::wstring text)
 {
   pos.y=pheight-pos.y;// upsidedown
 //  clog << "Text" << pos.dump() << "[" << ws2utf8(text) << "]" << endl;

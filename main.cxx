@@ -31,12 +31,12 @@ class Tabulator:public PDF::Media
 
     Tabulator():pheight(0) {}
     virtual ~Tabulator() { };
-    virtual Point Size(Point unity)
+    virtual void Size(Point unity)
     {
       clog << "SetPageSize(" << unity.dump() << endl;
-      pheight=unity.y; return unity;
+      pheight=unity.y;
     }
-    virtual void Text(Point pos, const PDF::Font * font, std::wstring text);
+    virtual void Text(Point pos, std::wstring text);
     virtual void Line(const Point & p1, const Point & p2);
     void dump() const;
     void chew();
@@ -124,7 +124,7 @@ void Tabulator::chew()
   }
 }
 
-void Tabulator::Text(Point pos, const PDF::Font *, std::wstring text)
+void Tabulator::Text(Point pos, std::wstring text)
 {
   pos.y=pheight-pos.y;// upsidedown
 //  clog << "Text" << pos.dump() << "[" << ws2utf8(text) << "]" << endl;
@@ -208,7 +208,8 @@ static void do_it(const char * fname)
 //    doc.dump();
 
 	cout << "<table>" << endl;
-  for(unsigned int page=1; page < doc.get_pages_count(); page++) // all needed
+//  for(unsigned int page=0; page < doc.get_pages_count(); page++) // all needed
+  for(unsigned int page=0; page < 1; page++) // all needed
 //  for(unsigned int page=1; page < 10; page++)
 //  for(unsigned int page=10; page < 83; page++)
   {
