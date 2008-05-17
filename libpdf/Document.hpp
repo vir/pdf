@@ -65,7 +65,8 @@ class Document
     ~Document();
     /// sets debug level, returns previous debug level
     int debug(int d) { int t=m_debug; m_debug=d; return t; }
-    OH get_page_node(long pagenum);
+		const ObjId & get_page_objid(long pagenum) { return all_pages[pagenum]; }
+    OH get_page_node(long pagenum) { return get_object(get_page_objid(pagenum)); }
     unsigned int get_pages_count() const { return all_pages.size(); }
     void dump();
     OH get_object(const ObjId & id);

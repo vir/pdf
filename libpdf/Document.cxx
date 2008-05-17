@@ -42,13 +42,6 @@ Document::~Document()
 {
 }
 
-/// retrieves page (new object)
-OH Document::get_page_node(long pagenum)
-{
-//  std::clog << "@Document::get_page(" << pagenum << ")" << std::endl;
-  return get_object(all_pages[pagenum]);
-}
-
 /// Outputs document contents for debug purposes
 void Document::dump()
 {
