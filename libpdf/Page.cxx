@@ -1,10 +1,3 @@
-
-
-//#include <fstream>
-//#include <string>
-//#include <map>
-//#include <vector>
-//#include <sstream>
 #include <iostream>
 #include <string>
 
@@ -16,7 +9,7 @@
 
 namespace PDF {
 
-Page::Page():m_debug(0)
+Page::Page():m_debug(0),m_operators_number_limit(0)
 {
   gs=new GraphicsState();
 }
@@ -56,7 +49,6 @@ static Rect get_box(OH boxnode)
  */
 bool Page::load(OH pagenode)
 {
-//  std::clog << "@Page::load()" << std::endl;
   if(m_debug) std::clog << "Page node: " << pagenode.obj()->dump() << std::endl;
   // find page size
   {
@@ -77,7 +69,7 @@ bool Page::load(OH pagenode)
     contents_h.expand();
     if(!contents_h)
     {
-      std::clog << "? Page: no contents" << std::endl;
+      std::cerr << "Page: no contents" << std::endl;
     }
     else
 		{
@@ -86,7 +78,8 @@ bool Page::load(OH pagenode)
 			if((stream=dynamic_cast<Stream *>(contents_h.obj()))) {
 				stream->get_data(pagedata);
 			} else {
-				contents_h.cast<Array *>("Page content is not a Stream and not an Array. That is wrong. I give up.");
+				if(!dynamic_cast<Array *>(contents_h.obj()))
+					throw std::string("Page content is not a Stream and not an Array. That is wrong. I give up.");
 				std::vector<char> data;
 				for(unsigned int i=0; i<contents_h.size(); i++) {
 					OH s = contents_h[i];
@@ -219,7 +212,6 @@ class Page::TextObject
 			accumulated_text+=s;
 			w+=s.length() * gs->text_state.Tc; // XXX TODO Take Th into account!
 			total_width+=w;
-		 // XXX update text matrix!!!
 		}
 		void Kerning(double k) { // offset next char back by k glyph space units
 			k/=1000;
@@ -235,25 +227,51 @@ class Page::TextObject
 		}
 		void Flush() {
 			if(accumulated_text.empty()) return;
-			media->Text(gs->ctm.translate(tm.translate(Point(0,0))), gs->text_state.Tf, accumulated_text);
-			tm.offset(total_width, 0);
+			media->Text(
+				gs->ctm.translate(tm.translate(Point(0,0))),
+				calc_rotation_angle(),
+				accumulated_text
+			);
+			tm.offset_unscaled(total_width, 0);
 			accumulated_text.resize(0);
 			total_width = 0;
 		}
+		double calc_rotation_angle() const
+		{
+			return tm.get_rotation_angle() + gs->ctm.get_rotation_angle();
+		}
 };
 
-std::wstring extract_text(const String * so, const Font * f);
 void Page::draw(Media * m)
 {
   Path * curpath=NULL;
   TextObject * tobj=NULL;
 
-  enum { M_PAGE, M_PATH, M_TEXT, M_CLIP, M_IMAGE } mode=M_PAGE;
+  enum { M_PAGE, M_PATH, M_TEXT, M_IMAGE } mode=M_PAGE;
   
-	m->Size(media_box.size()); /* XXX use returned value to set up ctm or, better, pass ref to ctm into Media::Size() */
-  for(std::vector<Operator *>::iterator it=operators.begin(); it!=operators.end(); it++)
+	m->Size(media_box.size());
+	gs->ctm = m->Matrix();
+
+	unsigned int operators_num = operators.size();
+	if(m_operators_number_limit && m_operators_number_limit < operators_num)
+		operators_num = m_operators_number_limit;
+  for(unsigned int operator_index = 0; operator_index < operators_num; operator_index++)
+//	for(std::vector<Operator *>::iterator it=operators.begin(); it!=operators.end(); it++)
   {
-    Operator * op=*it;
+//    Operator * op=*it;
+    Operator * op = operators[operator_index];;
+		if(1) {
+			std::stringstream ss;
+			ss << operator_index << ": " << op->dump();
+			m->Debug(ss.str());
+		}
+
+		/* Check for any-mode-operators */
+		if(op->name() == "cm") {
+			gs->ctm *= op->matrix();
+			continue;
+		}
+
     switch(mode)
     {
       case M_PAGE:
@@ -271,19 +289,22 @@ void Page::draw(Media * m)
         {
           if(gs) delete gs;
           if(!gstack.empty()) { gs=gstack.top(); gstack.pop(); }
-          else { gs=new GraphicsState(); std::cerr << "GraphicsState stack underrun" << std::endl; }
+          else { gs=new GraphicsState(); std::cerr << "GraphicsState stack underrun" << std::endl; gs->ctm = m->Matrix(); }
           break;
         }
-        else { std::clog << "Ignoring operator " << op->dump() << " in page mode" << std::endl; }
+        else
+				{
+					m->Debug(std::string("Ignoring operator ") + op->dump() + " in page mode");
+					break;
+				}
         /* NO BREAK!!! */
-      case M_CLIP:
       case M_PATH: /*=============== path construction =====================*/
         if(op->name() == "m") // moveto
         {
           if(curpath)
           {
             /// \todo Implement full path with subpaths
-            std::cerr << "Deleting live path!!!" << std::endl;
+            std::cerr << "Deleting live path!!!" << curpath->dump() << std::endl;
             delete curpath;
           }
           curpath=new Path;
@@ -317,10 +338,6 @@ void Page::draw(Media * m)
           delete curpath; curpath=NULL;
           mode=M_PAGE;
         }
-        else if(op->name() == "W" || op->name() == "W*")
-        {
-          mode=M_CLIP;
-        }
         else if(op->name() == "s" || op->name() == "S"
             || op->name() == "f" || op->name() == "F" || op->name() == "f*"
             || op->name() == "B" || op->name() == "B*"
@@ -329,10 +346,7 @@ void Page::draw(Media * m)
 					if(curpath) {
 						/* paint path */
 #if 0
-						std::clog << "Drawing path: ";
-						for(unsigned int i=0; i<curpath->size()-1; i++)
-							std::clog << "p" << curpath->at(i).dump();
-						std::clog << std::endl;
+						std::clog << "Drawing path: " << curpath->dump() << std::endl;
 #endif
 						for(unsigned int i=0; i<curpath->size()-1; i++)
 						{
@@ -342,11 +356,14 @@ void Page::draw(Media * m)
 							m->Line(gs->ctm.translate(curpath->at(curpath->size()-1)), gs->ctm.translate(curpath->at(0)));
 						delete curpath; curpath=NULL;
 					} else {
-						std::clog << "Attempted to draw (" << op->dump() << ") non-existent path" << std::endl;
+						std::cerr << "Attempted to draw (" << op->dump() << ") non-existent path" << std::endl;
 					}
           mode=M_PAGE;
         }
-        else { std::clog << "Ignoring operator " << op->dump() << " in path construction mode" << std::endl; }
+        else
+				{
+					m->Debug(std::string("Ignoring operator ") + op->dump() + " in path construction mode");
+				}
         break;
       case M_TEXT:
         if(!tobj) tobj=new TextObject(gs, m);
@@ -354,12 +371,9 @@ void Page::draw(Media * m)
         if(op->name() == "Tj") // output text
         {
           if(!gs->text_state.Tf) throw std::string("No font set");
-          const Object * o=op->arg(0);
-          const String * str=dynamic_cast<const String *>(o);
+          const String * str=dynamic_cast<const String *>(op->arg(0));
           if(str)
           {
-            /*m->Text(gs->ctm.translate(tobj->tm.translate(Point(0,0))), s);
-            // XXX update text matrix!!! */
 						tobj->Append(str);
           }
           break;
@@ -367,15 +381,12 @@ void Page::draw(Media * m)
         else if(op->name() == "TJ")
         {
           if(!gs->text_state.Tf) throw std::string("No font set");
-    //      std::clog << "Found TJ!" << std::endl;
           const Object * o=op->arg(0);
           const Array * a=dynamic_cast<const Array *>(o);
           if(a)
           {
-            //std::wstring s;
             for(Array::ConstIterator it=a->get_const_iterator(); a->check_iterator(it); it++)
             {
-    //        std::clog << "Arg" << i << ": " << o->type() << std::endl;
               const String * str=dynamic_cast<const String *>(*it);
               if(str) tobj->Append(str);
 							else {
@@ -384,12 +395,10 @@ void Page::draw(Media * m)
 								if(i) tobj->Kerning(i->value());
 								else if(r) tobj->Kerning(r->value());
 								else {
-									std::clog << "Unexpected object " << (*it)->type() << " in string (TJ)" << std::endl;
+									std::cerr << "Unexpected object " << (*it)->type() << " in string (TJ)" << std::endl;
 								}
 							}
             }
-            /*m->Text(gs->ctm.translate(tobj->tm.translate(Point(0,0))), s);
-            // XXX update text matrix!!!*/
           }
           break;
         }
@@ -435,31 +444,35 @@ void Page::draw(Media * m)
 //          std::clog << "Set current font to " << n->value() << std::endl;
           if(n) gs->text_state.Tf=fonts.find(n->value())->second;
           gs->text_state.Tfs=op->number(1);
+					m->SetFont(gs->text_state.Tf, gs->text_state.Tfs);
         }
         else if(op->name() == "Tm")
         {
-          // XXX set whole matrix!
-          tobj->lm.set_unity();
-          tobj->lm.scale(op->number(0), op->number(3));
-          tobj->lm.offset(op->point(4));
-          tobj->tm=tobj->lm;
+					tobj->Flush();
+					tobj->tm = tobj->lm = op->matrix();
         }
-        else if(op->name() == "Td") // XXX SEE ON PAGE 368 XXX Scaled or unscaled??
+        else if(op->name() == "Td")
         {
+					tobj->Flush();
+//					CTM m(1, 0, 0, 1, op->number(0), op->number(1)); tobj->lm = m * tobj->lm;
           tobj->lm.offset_unscaled(op->point(0));
           tobj->tm=tobj->lm;
         }
-				else if(op->name() == "TL") /* TL and TD added 2007-05-18 and untested! */
+				else if(op->name() == "TL")
 				{
 					gs->text_state.Tl=op->number(0);
 				}
 				else if(op->name() == "TD") // tx ty TD === -ty TL; tx ty Td
 				{
 					gs->text_state.Tl=-op->number(1);
+					tobj->Flush();
           tobj->lm.offset_unscaled(op->point(0));
           tobj->tm=tobj->lm;
 				}
-        else { std::clog << "Ignoring operator " << op->dump() << " in text mode" << std::endl; }
+        else
+				{
+					m->Debug(std::string("Ignoring operator ") + op->dump() + " in text mode");
+				}
         break;
       case M_IMAGE:
         if(op->name() == "EI") mode=M_PAGE;
@@ -470,24 +483,23 @@ void Page::draw(Media * m)
         break;
     } // switch(mode)
   }
-}
-
-std::wstring extract_text(const String * so, const Font * f)
-{
-#if 0
-  std::string s=so->value();
-  std::wstring ws;
-  if(s.length() % 2) throw std::string("String lenth is not even number");
-  for(unsigned int i=0; i<s.length(); i+=2)
-  {
-    unsigned long c=((unsigned char)s[i])<<8 | (unsigned char)s[i+1];
-    wchar_t wc=f->to_unicode(c);
-    ws.push_back(wc);
-  }
-  return ws;
-#else
-	return f->extract_text(so);
-#endif
+	/* Output some debugging information */
+	if(m_operators_number_limit) {
+		std::clog << "=== Page drawing finished (" << operators_num << " operators executed) ===" << std::endl;
+		if(gs)
+			std::clog << "CTM:" << std::endl << gs->ctm.dump();
+		if(tobj) {
+			std::clog << "Line matrix:" << std::endl << tobj->lm.dump();
+			std::clog << "Text matrix:" << std::endl << tobj->tm.dump();
+		}
+		if(curpath)
+			std::clog << "Current path: " << curpath->dump() << std::endl;
+		if(m_operators_number_limit < operators.size()) {
+			std::clog << "Next operator: " << operators[m_operators_number_limit]->dump() << std::endl;
+		}
+	}
+	if(tobj) delete tobj;
+	if(curpath) delete curpath;
 }
 
 }; // namespace PDF
