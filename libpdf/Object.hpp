@@ -13,11 +13,11 @@ namespace PDF {
 /// Indirect object identifier
 class ObjId
 {
-  public:
-    long num, gen;
-//    ObjId(long n=0, long g=0):num(n),gen(g) {}
-    bool operator ==(const ObjId & other) const { return (num==other.num) && (gen==other.gen); }
-    bool operator <(const ObjId & other) const { return (num==other.num)?gen<other.gen:num<other.num; }
+	public:
+		long num, gen;
+//		ObjId(long n=0, long g=0):num(n),gen(g) {}
+		bool operator ==(const ObjId & other) const { return (num==other.num) && (gen==other.gen); }
+		bool operator <(const ObjId & other) const { return (num==other.num)?gen<other.gen:num<other.num; }
 		std::string dump() const { std::stringstream ss; ss << "(" << num << "," << gen << ")"; return ss.str(); }
 };
 
@@ -146,6 +146,7 @@ class Array:public Object
     bool check_iterator(const ConstIterator & it) const { return it!=d.end(); }
     unsigned long size() const { return d.size(); }
     Object * at(unsigned long i) { return d.at(i); }
+    const Object * at(unsigned long i) const { return d.at(i); }
 };
 
 /// PDF Object: Map --- maps Names to other Objects.
