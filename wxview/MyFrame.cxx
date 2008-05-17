@@ -13,15 +13,25 @@ enum {
 	MenuRotate_Last = Rotate_270,
 };
 
+const int ID_TOOLBAR = 500;
+const int ID_SPIN_PAGE = 510;
+const int ID_SPIN_OPLIMIT = 511;
+
 BEGIN_EVENT_TABLE(MyFrame, wxFrame)
 	EVT_MENU      (File_Quit,     MyFrame::OnQuit)
 	EVT_MENU      (File_About,    MyFrame::OnAbout)
 	EVT_MENU_RANGE(MenuRotate_First,   MenuRotate_Last,   MyFrame::OnRotate)
+	EVT_SPINCTRL  (ID_SPIN_PAGE,  MyFrame::OnPageSpinCtrl)
+	EVT_SPINCTRL  (ID_SPIN_OPLIMIT, MyFrame::OnOplimitSpinCtrl)
 END_EVENT_TABLE()
 
 MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
 	: wxFrame((wxFrame *)NULL, wxID_ANY, title, pos, size, wxDEFAULT_FRAME_STYLE | wxNO_FULL_REPAINT_ON_RESIZE)
 {
+	m_pagespin = NULL;
+	m_oplimitspin = NULL;
+
+	/* Add Menu */
 	wxMenu *menuFile = new wxMenu;
 	menuFile->AppendSeparator();
 	menuFile->Append(File_About, _T("&About...\tCtrl-A"), _T("Show about dialog"));
@@ -40,11 +50,22 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
 
 	SetMenuBar(menuBar);
 
+	/* Add Toolbar */
+	AddToolbar();
+
+	/* Add Status Bar */
 	CreateStatusBar(2);
 	SetStatusText(_T("Welcome to wxWidgets!"));
 
+	/* And finally owr main widget */
 	m_canvas = new MyCanvas( this );
 	m_canvas->SetScrollbars( 10, 10, 100, 240 );
+}
+
+MyFrame::~MyFrame()
+{
+	delete m_oplimitspin;
+	delete m_pagespin;
 }
 
 void MyFrame::OnQuit(wxCommandEvent& WXUNUSED(event))
@@ -64,7 +85,7 @@ void MyFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
 
 void MyFrame::OnRotate(wxCommandEvent& event)
 {
-//    m_canvas->DoRotate((event.GetId() - MenuRotate_First));
+	m_canvas->Rotate(event.GetId() - MenuRotate_First);
 }
 
 void MyFrame::PrepareDC(wxDC& dc)
@@ -75,5 +96,45 @@ void MyFrame::PrepareDC(wxDC& dc)
 	dc.SetUserScale( m_xUserScale, m_yUserScale );
 	dc.SetMapMode( m_mapMode );
 #endif
+}
+
+#include "MyDocument.hpp"
+
+void MyFrame::AddToolbar()
+{
+	wxToolBarBase *toolBar = CreateToolBar(wxTB_FLAT/* | wxTB_DOCKABLE*/ | wxTB_HORIZONTAL | wxTB_TEXT | wxTB_NOICONS, ID_TOOLBAR);
+
+	m_pagespin = new wxSpinCtrl( toolBar, ID_SPIN_PAGE, _T("")/*, wxDefaultPosition, wxSize(40,wxDefaultCoord)*/ );
+	m_pagespin->SetRange(1, theDocument->GetPagesNum());
+	m_pagespin->SetValue(40);
+	toolBar->AddControl(m_pagespin);
+
+	toolBar->AddTool(wxID_EXIT, _T("Exit"), wxBitmap(), _T("Exit application"));
+//    toolBar->AddTool(wxID_OPEN, _T("Open"), toolBarBitmaps[Tool_open], _T("Open file"));
+
+	m_oplimitspin = new wxSpinCtrl( toolBar, ID_SPIN_OPLIMIT, _T("")/*, wxDefaultPosition, wxSize(40,wxDefaultCoord)*/ );
+	m_oplimitspin->SetRange(0, 10000);
+	m_oplimitspin->SetValue(0);
+	toolBar->AddControl(m_oplimitspin);
+
+	toolBar->Realize();
+}
+
+void MyFrame::OnPageSpinCtrl(wxSpinEvent& event)
+{
+	if(m_pagespin) {
+		theDocument->LoadPage(m_pagespin->GetValue());
+		std::clog << "Page switched to " << m_pagespin->GetValue() << std::endl;
+		m_canvas->Refresh();
+	}
+}
+
+void MyFrame::OnOplimitSpinCtrl(wxSpinEvent& event)
+{
+	if(m_oplimitspin) {
+		PDF::Page * p = theDocument->GetPageObject();
+		p->set_operators_number_limit(m_oplimitspin->GetValue());
+		m_canvas->Refresh();
+	}
 }
 

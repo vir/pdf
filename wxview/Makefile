@@ -8,12 +8,11 @@ all: wxview
 .cxx.o:
 	$(CXX) -Wall -pipe -g -c -I${LIBPDFDIR} `wx-config --cxxflags` -o $*.o $<
 
-wxview: wxview.o MyFrame.o MyCanvas.o ${LIBPDFDIR}/libpdf.a
+wxview: wxview.o MyFrame.o MyCanvas.o MyDocument.o ${LIBPDFDIR}/libpdf.a
 	$(LINK.cpp) `wx-config --libs` -lz -o $@ $^
 #	strip $@
 
 clean:
-	for d in ${SUBDIRS}; do make -C $$d clean; done
 	rm -f ${OBJS_ALL} ${BINS} ${DLLS} .depend core *.o
 
 .depend:
