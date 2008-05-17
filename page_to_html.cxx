@@ -4,6 +4,7 @@
  *
  */
 #include <iostream>
+#include <iomanip> /* for setiosflags and so */
 #include <string>
 
 #include "PDF.hpp"
@@ -18,31 +19,62 @@ using namespace std;
 class Metafile:public PDF::Media
 {
   private:
+		PDF::CTM m;
+		PDF::Font * curfont;
     ofstream s;
+		double abs(double x) { return x<0?-x:x; }
   public:
     typedef PDF::Point Point;
-    Metafile(string fn="")
+    Metafile(string fn=""):curfont(NULL)
     {
       if(fn.length()) s.open(fn.c_str(), ios::out);
       else            s.open("/dev/stderr", ios::out);
 			s << "<html><head><style type=\"text/css\">" << endl;
 			s << "div { display:block; position:absolute; }" << endl;
+			s << "div.line { background-color:black; }" << endl;
 			s << "</style></head><body>" << endl;
+			s << setiosflags(ios::fixed) << setprecision(0);
     }
     virtual ~Metafile() { s << "</body></html>" << endl; s.close(); };
-    virtual Point Size(Point unity) { return unity; }
-    virtual void Text(Point pos, const PDF::Font * font, std::wstring text);
+    virtual void Text(Point pos, std::wstring text);
     virtual void Line(const Point & p1, const Point & p2);
+    virtual void Size(Point size)
+		{
+			m.set_unity();
+#if 0
+			/* Rotate landscape page 90deg CW */
+			m.rotate(90.0);
+			m.scale(-1, 1);
+//			m.offset(size.y, 0);
+#elif 1
+			/* Normal page layout, invert coordinates for html's upsidedown y axis */
+			m.scale(1, -1);
+			m.offset(0, size.y);
+#else
+			/* Upsidedown html */
+#endif
+			m.dump();
+		}
+		virtual const PDF::CTM & Matrix() { return m; }
 };
 
-void Metafile::Text(Point pos, const PDF::Font * font, std::wstring text)
+void Metafile::Text(Point pos, std::wstring text)
 {
-  s << "<div style=\"left:" << pos.x << "px; top:" << pos.y << "px;\" class=\"" << font->name() << "\">" << ws2utf8(text) << "</div>" << endl;
+  s << "<div style=\"left:" << pos.x << "px; top:" << pos.y << "px;\" class=\"" << (curfont?curfont->name():"[default]") << "\">" << ws2utf8(text) << "</div>" << endl;
 }
 
 void Metafile::Line(const Point & p1, const Point & p2)
 {
-  s << "<!-- Line" << p1.dump() << "-" << p2.dump() << " -->"<< endl;
+	const double prc = 2.0;
+	double l = p1.x<p2.x?p1.x:p2.x;
+	double t = p1.y<p2.y?p1.y:p2.y;
+	double w = abs(p1.x - p2.x);
+	double h = abs(p1.y - p2.y);
+	if(h < prc || w < prc) {
+		s << "<div class=\"line\" style=\"left:" << l << "px; top:" << t << "px; width:" << (w?w:1.0) << "px; height:" << (h?h:1.0) << "px;\"></div>" << endl;
+	} else {
+		s << "<!-- Line" << p1.dump() << "-" << p2.dump() << " -->"<< endl;
+	}
 }
 
 static void do_it(const char * fname, int pagenum)
@@ -72,7 +104,7 @@ static void do_it(const char * fname, int pagenum)
     {
 			p->debug(5);
       cout << pagenum << "th page:" << endl;
-      p->load(doc.get_page_node(pagenum));
+      p->load(doc.get_page_node(pagenum-1));
       std::cout << p->dump() << std::endl;
 
       // lets see what we've got...
