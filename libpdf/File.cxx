@@ -136,7 +136,7 @@ void File::dump() const
   {
     std::clog << "  object (" << it->first.num << "," << it->first.gen << ") is at " << it->second << std::endl;
   }
-  for(int i = 0; i < root_refs.size(); i++)
+  for(unsigned int i = 0; i < root_refs.size(); i++)
   {
     std::clog << "Root Element: (" << root_refs[i].num << "," << root_refs[i].gen << ")" << std::endl;
   }
