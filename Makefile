@@ -6,7 +6,7 @@ VERSION = 0.0.1
 TARNAME = proga-${VERSION}.tar.gz
 OBJS_MAIN = main.o libpdf/libpdf.a utf8.o
 OBJS_ALL = ${OBJS_MAIN}
-SUBDIRS = libpdf tests #docs
+SUBDIRS = libpdf tests wxview #docs
 
 INCLUDEDIR = -Ilibpdf
 
@@ -61,7 +61,7 @@ $(SUBDIRS):
 
 clean:
 	for d in ${SUBDIRS}; do make -C $$d clean; done
-	rm -f ${OBJS_ALL} ${BINS} ${DLLS} .depend core page_metafile.o dump_object.o
+	rm -f ${OBJS_ALL} ${BINS} ${DLLS} .depend core page_metafile.o dump_object.o tabulator2.o page_to_html.o
 #	make -C libpdf clean
 
 # generate documentation
