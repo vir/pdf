@@ -1,3 +1,6 @@
+#ifndef PDF_FONT_HPP_INCLUDED
+#define PDF_FONT_HPP_INCLUDED
+
 #include "OH.hpp"
 #include <iostream>
 #include <map>
@@ -51,8 +54,11 @@ class Font
     CMap to_unicode_map;
 		std::string fontname, fontobjid;
 		std::map<int, unsigned long> charwidths;
+		unsigned long defcharwidth;
 		std::string fonttype, basefont;
 		long fontflags;
+	protected:
+		bool load_type0_font_dic(OH fdic);
   public:
     Font(std::string name="");
     bool load(OH fontnode);
@@ -68,5 +74,7 @@ class Font
 
 
 }; // naespacs PDF
+
+#endif /* PDF_FONT_HPP_INCLUDED */
 
 

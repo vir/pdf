@@ -164,6 +164,7 @@ wchar_t Font::CMap::map(unsigned long c) const
 
 Font::Font(std::string name)
 	:fontname(name)
+	,defcharwidth(1000)
 	,fontflags(0)
 {
 }
@@ -212,6 +213,19 @@ bool Font::load(OH fontnode)
 			Integer * ip = aeh.cast<Integer *>("Non-integer char width not supported");
 			if(ip && ip->value())
 				charwidths[i + firstchar] = ip->value();
+		}
+	}
+	
+	// Extract parameters of Type0 (Composite) fonts
+	if(fonttype == "Type0") {
+		OH dscf = fontnode.find("DescendantFonts");
+		if(dscf) {
+			try {
+				load_type0_font_dic(dscf[0]);
+			}
+			catch(std::string e) {
+				std::cerr << "Error loading Type0 font dyctionary: " << e << std::endl;
+			}
 		}
 	}
 
@@ -264,6 +278,8 @@ std::wstring Font::extract_text(const String * so, double * twid) const
 			std::map<int, unsigned long>::const_iterator it = charwidths.find(c);
 			if(it != charwidths.end())
 				*twid += it->second;
+			else
+				*twid += defcharwidth;
 		}
 		wchar_t res=to_unicode_map.map(c);
 //printf("Map(%s)(%d): %04X -> %04X\n", fontname.c_str(), cw, (unsigned int)c, (unsigned int)res);
@@ -279,7 +295,7 @@ std::wstring Font::extract_text(const String * so, double * twid) const
 
 std::string Font::dump() const
 {
-	char * ffl[] = {
+	const char * ffl[] = {
 		"FixedPitch", // bit 1 in reference
 		"Serif",
 		"Symbolic",
@@ -313,6 +329,54 @@ std::string Font::dump() const
 	}
 	ss << std::endl;
 	return ss.str();
+}
+
+bool Font::load_type0_font_dic(OH fdic)
+{
+	fdic.expand();
+	OH defw = fdic.find("DW");
+	if(defw) {
+		Integer * i = defw.cast<Integer *>("Glyph width is not integer");
+		defcharwidth = i->value();
+	}
+
+	OH w = fdic.find("W");
+	if(w) {
+		OH h1, h2, h3;
+		const Integer *i1, *i2, *i3;
+		const Array * a;
+		unsigned int index = 0;
+		while(index < w.size()) {
+			h1 = w[index++];
+			i1 = h1.cast<Integer *>("First group element must be an integer");
+			if(index >= w.size()) throw std::string("Not enough data");
+
+			h2 = w[index++];
+			a = h2.cast<Array *>();
+			if(a) {
+				for(unsigned int i = 0; i < a->size(); i++) {
+					const Object * oo = a->at(i);
+					const Integer * cw = dynamic_cast<const Integer *>(oo);
+					if(!cw) throw std::string("Char width must be an integer");
+					charwidths[i1->value() + i] = cw->value();
+				}
+//				std::clog << "Charwidths of chars from " << i1->value() << " shuld be read from " << a->dump() << std::endl;
+				continue;
+			}
+			i2 = h2.cast<Integer *>("Second element must be an array or integer");
+			if(index >= w.size()) throw std::string("Not enough data");
+
+			h3 = w[index++];
+			i3 = h3.cast<Integer *>("Third element must be an integer");
+
+			for(int i = i1->value(); i <= i2->value(); i++) {
+//				std::clog << "charwidth for char " << i << " is " << i3->value() << std::endl;
+				charwidths[i] = i3->value();
+			}
+
+		}
+	}
+	return true;
 }
 
 }; // naespacs PDF
