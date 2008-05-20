@@ -181,6 +181,7 @@ std::string Page::dump() const
 class Page::TextObject
 {
 	private:
+		const static bool use_advanced_algorithm;
 		const Page::GraphicsState * gs;
 		Media * media;
 	public:
@@ -192,21 +193,23 @@ class Page::TextObject
 		TextObject(const Page::GraphicsState * g, Media * m):gs(g),media(m),total_width(0) {}
 		void Append(const String * str)
 		{
-			double w;
-			String tmp;
-			if(!gs->text_state.Tf->is_multibyte() && gs->text_state.Tw != 0) { /* output words separately appending Tw space between */
-				tmp = *str;
-				String * sp;
-				while((sp = tmp.cut_word())) {
-					std::wstring s=gs->text_state.Tf->extract_text(sp, &w);
-					w+=s.length() * gs->text_state.Tc; // XXX TODO Take Th into account!
-					accumulated_text+=s;
-					total_width+=w;
-					Flush();
-					tm.offset_unscaled(gs->text_state.Tw, 0);
-					delete sp;
+			double w = 0;
+			if(use_advanced_algorithm) {
+				String tmp;
+				if(!gs->text_state.Tf->is_multibyte() && gs->text_state.Tw != 0) { /* output words separately appending Tw space between */
+					tmp = *str;
+					String * sp;
+					while((sp = tmp.cut_word())) {
+						std::wstring s=gs->text_state.Tf->extract_text(sp, &w);
+						w+=s.length() * gs->text_state.Tc; // XXX TODO Take Th into account!
+						accumulated_text+=s;
+						total_width+=w;
+						Flush();
+						tm.offset_unscaled(gs->text_state.Tw, 0);
+						delete sp;
+					}
+					str = &tmp;
 				}
-				str = &tmp;
 			}
 			std::wstring s=gs->text_state.Tf->extract_text(str, &w);
 			accumulated_text+=s;
@@ -218,11 +221,20 @@ class Page::TextObject
 			if(k > 0.5 || k < -0.5) { // XXX TODO caompare with avg charwidth or so
 				Flush();
 				tm.offset_unscaled(-k, 0);
+			} else {
+				total_width-=k;
 			}
 		}
 		void NewLine() {
 			accumulated_text+='\n';
+			total_width = 0;
 			lm.offset_unscaled(0, gs->text_state.Tl);
+			tm = lm;
+		}
+		void Offset(const Point & p) {
+//		CTM m(1, 0, 0, 1, op->number(0), op->number(1)); tm = lm = m * lm;
+			Flush();
+			lm.offset_unscaled(p);
 			tm = lm;
 		}
 		void Flush() {
@@ -241,6 +253,7 @@ class Page::TextObject
 			return tm.get_rotation_angle() + gs->ctm.get_rotation_angle();
 		}
 };
+const bool Page::TextObject::use_advanced_algorithm = true;
 
 void Page::draw(Media * m)
 {
@@ -256,9 +269,7 @@ void Page::draw(Media * m)
 	if(m_operators_number_limit && m_operators_number_limit < operators_num)
 		operators_num = m_operators_number_limit;
   for(unsigned int operator_index = 0; operator_index < operators_num; operator_index++)
-//	for(std::vector<Operator *>::iterator it=operators.begin(); it!=operators.end(); it++)
   {
-//    Operator * op=*it;
     Operator * op = operators[operator_index];;
 		if(1) {
 			std::stringstream ss;
@@ -289,7 +300,11 @@ void Page::draw(Media * m)
         {
           if(gs) delete gs;
           if(!gstack.empty()) { gs=gstack.top(); gstack.pop(); }
-          else { gs=new GraphicsState(); std::cerr << "GraphicsState stack underrun" << std::endl; gs->ctm = m->Matrix(); }
+          else {
+						gs=new GraphicsState();
+						std::cerr << "GraphicsState stack underrun" << std::endl;
+						gs->ctm = m->Matrix();
+					}
           break;
         }
         else
@@ -453,10 +468,7 @@ void Page::draw(Media * m)
         }
         else if(op->name() == "Td")
         {
-					tobj->Flush();
-//					CTM m(1, 0, 0, 1, op->number(0), op->number(1)); tobj->lm = m * tobj->lm;
-          tobj->lm.offset_unscaled(op->point(0));
-          tobj->tm=tobj->lm;
+					tobj->Offset(op->point(0));
         }
 				else if(op->name() == "TL")
 				{
@@ -464,10 +476,8 @@ void Page::draw(Media * m)
 				}
 				else if(op->name() == "TD") // tx ty TD === -ty TL; tx ty Td
 				{
+					tobj->Offset(op->point(0));
 					gs->text_state.Tl=-op->number(1);
-					tobj->Flush();
-          tobj->lm.offset_unscaled(op->point(0));
-          tobj->tm=tobj->lm;
 				}
         else
 				{
