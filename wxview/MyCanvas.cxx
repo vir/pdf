@@ -14,12 +14,14 @@ class Metafile:public PDF::Media
 		PDF::CTM m;
 		int rot;
 		double height;
+		bool m_debug;
 //		double abs(double x) { return x<0?-x:x; }
   public:
     typedef PDF::Point Point;
-    Metafile(wxPaintDC & theDC, int r):dc(theDC),rot(r) { }
+    Metafile(wxPaintDC & theDC, int r):dc(theDC),rot(r),m_debug(false) { }
     virtual ~Metafile() { };
 		virtual const PDF::CTM & Matrix() { return m; }
+		virtual void SetFont(const PDF::Font * font, double size);
     virtual void Text(Point pos, double rotation, std::wstring text);
     virtual void Line(const Point & p1, const Point & p2);
     virtual void Size(Point size)
@@ -39,6 +41,7 @@ class Metafile:public PDF::Media
 //					m.scale(-1, 1);
 //					m.offset(size.y, 0);
 					m.offset(size.y, 0);
+					break;
 				case 2:
 					height = size.y;
 					m.rotate(180.0);
@@ -52,12 +55,11 @@ class Metafile:public PDF::Media
 				default:
 					break;
 			}
-			std::clog << "Device matix set to:" << std::endl;
-			m.dump();
 		}
 		virtual void Debug(std::string s)
 		{
-			std::clog << "DEBUG: " << s << std::endl;
+			if(m_debug)
+				std::clog << "DEBUG: " << s << std::endl;
 		}
 };
 
@@ -83,22 +85,12 @@ void MyCanvas::OnPaint(wxPaintEvent &WXUNUSED(event))
 
 	dc.Clear();
 
-#if 0
-	dc.DrawText(wxT("Testing"), 40, 60); 
-	dc.SetFont( *wxSWISS_FONT );
-	dc.DrawRotatedText(wxT("Rotated text") , 40, 80, 45);
-//	wxPen pen = *wxRED_PEN;
-//	dc.SetPen(pen);
-	dc.SetPen( wxPen( wxT("red"), 8 /* width */, wxSOLID) );
-	dc.DrawLine( 10, 30,70, 90 );
-#endif
 	Metafile m(dc, m_rotation);
 	theDocument->GetPageObject()->draw(&m);
 }
 
 void MyCanvas::OnMouseMove(wxMouseEvent &event)
 {
-#if wxUSE_STATUSBAR
 	wxClientDC dc(this);
 	PrepareDC(dc);
 	m_owner->PrepareDC(dc);
@@ -109,30 +101,29 @@ void MyCanvas::OnMouseMove(wxMouseEvent &event)
 	wxString str;
 	str.Printf( wxT("Current mouse position: %d,%d"), (int)x, (int)y );
 	m_owner->SetStatusText( str );
-#else
-	wxUnusedVar(event);
-#endif // wxUSE_STATUSBAR
 }
 
 
 
 
+void Metafile::SetFont(const PDF::Font * font, double size)
+{
+	wxFont* f = wxTheFontList->FindOrCreateFont(6.0*size, wxSWISS, wxNORMAL /*wxITALIC*/, wxNORMAL/*wxBOLD*/);
+	dc.SetFont(*f);
+}
 
 void Metafile::Text(Point pos, double rotation, std::wstring text)
 {
-//	dc.DrawText(text/*wxT("Testing")*/, pos.x, pos.y); 
-	dc.SetFont( *wxSWISS_FONT );
 	dc.DrawRotatedText(text, pos.x, height - pos.y, rotation);
-	std::clog << "TEXT " << text.length() << " chars at " << pos.dump() << "(" << rotation << " degree angle)" << std::endl;
+	if(m_debug)
+		std::clog << "TEXT " << text.length() << " chars at " << pos.dump() << "(" << rotation << " degree angle)" << std::endl;
 }
 
 void Metafile::Line(const Point & p1, const Point & p2)
 {
-//	wxPen pen = *wxRED_PEN;
-//	dc.SetPen(pen);
-
 //	dc.SetPen( wxPen( wxT("red"), 8 /* width */, wxSOLID) );
 	dc.DrawLine( p1.x, height - p1.y, p2.x, height - p2.y );
-	std::clog << "LINE " << p1.dump() << '-' << p2.dump() << std::endl;
+	if(m_debug)
+		std::clog << "LINE " << p1.dump() << '-' << p2.dump() << std::endl;
 }
 
