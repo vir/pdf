@@ -24,6 +24,7 @@ class Rect
     std::string dump() const { std::stringstream ss; ss << "(" << x1 << "," << y1 << "," << x2 << "," << y2 << ")"; return ss.str(); }
 		Point offset() const { return Point(x1,y1); }
 		Point size() const { return Point(x2-x1, y2-y1); }
+		bool in(Point p) const { return p.x>=x1 && p.x<=x2 && p.y>=y1 && p.y<=y2; }
 //    bool operator < (const Point & p) const { return (y == p.y)?x<p.x:y<p.y; }
 };
   
