@@ -220,11 +220,12 @@ bool Font::load(OH fontnode)
 	if(fonttype == "Type0") {
 		OH dscf = fontnode.find("DescendantFonts");
 		if(dscf) {
+			dscf.expand();
 			try {
 				load_type0_font_dic(dscf[0]);
 			}
 			catch(std::string e) {
-				std::cerr << "Error loading Type0 font dyctionary: " << e << std::endl;
+				std::cerr << "Error loading Type0 font dictionary: " << e << std::endl;
 			}
 		}
 	}
