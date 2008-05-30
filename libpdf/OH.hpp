@@ -73,17 +73,23 @@ class OH
       else throw std::string("Not a container --- no size()");
     }
     /// Find object in dictionary
-    OH find(const std::string & s) const
+    OH find(const std::string & s, bool autoexpand=true) const
     {
-      Dictionary * d=cast<Dictionary*>("Can't 'find' - not a dictionary");
-      return OH(m_cache, d->find(s));
+      Dictionary * d=dynamic_cast<Dictionary*>(m_ptr);
+			if(!d)
+				throw std::string("Can't 'find' - ") + m_ptr->type() + " is not a dictionary";
+      OH r(m_cache, d->find(s));
+			if(autoexpand)
+				r.expand();
+			return r;
     }
-    /// Get array element by it's index
-    OH operator[](int index)
-    {
-      Array * a=cast<Array*>("Can't [index] - not an array");
-      return OH(m_cache, a->at(index));
-    }
+		/// Get array element by it's index
+		OH operator[](int index)
+		{
+			Array * a;
+			put(a, "Can't [index] - not an array");
+			return OH(m_cache, a->at(index));
+		}
 		/// Get name or string content
 		std::string strvalue() const
 		{
@@ -104,6 +110,19 @@ class OH
       }
       else return false;
     }
+		/// Store controlled pointer to pp or throw exception errstr if unable to cast (or return false if no errstr)
+		template<typename T>
+		bool put(T*&pp, std::string errstr="") const
+		{
+			pp = dynamic_cast<T*>(m_ptr);
+			if(!pp) {
+				if(errstr.length())
+					throw errstr + " " + m_ptr->type();
+				else
+					return false;
+			}
+			return true;
+		}
 };
 
 
