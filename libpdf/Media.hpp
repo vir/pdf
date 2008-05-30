@@ -3,10 +3,13 @@
 #define PDF_MEDIA_HPP
 
 #include <string>
+#include "Point.hpp"
+#include "Ctm.hpp"
 
 namespace PDF {
 
 /// Interface to draw on some media (i.e. paper).
+class Font;
 class Media
 {
 	public:
