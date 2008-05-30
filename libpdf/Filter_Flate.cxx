@@ -1,7 +1,7 @@
 
 #include <zlib.h>
 #include <vector>
-//#include <string>
+#include <string>
 
 #include "Filter.hpp"
 
