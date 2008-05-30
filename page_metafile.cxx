@@ -48,7 +48,7 @@ class Metafile:public PDF::Media
 
 void Metafile::SetFont(const PDF::Font * font, double size)
 {
-	s << "SetFone(" << font->name() << ", " << size << ")" << endl;
+	s << "SetFont(" << font->name() << ", " << size << ")" << endl;
 }
 
 void Metafile::Text(Point pos, std::wstring text)
