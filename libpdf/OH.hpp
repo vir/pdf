@@ -110,14 +110,20 @@ class OH
       }
       else return false;
     }
-		/// Store controlled pointer to pp or throw exception errstr if unable to cast (or return false if no errstr)
+		/** Store controlled pointer to pp or throw exception errstr if unable to cast (or return false if no errstr)
+		 * If errstr ends with a space character, actual object type is appended
+		 * to the error string.
+		 * \param pp reference to a pointer to be updated
+		 * \param errstr error string to throw in case of invalid object type
+		 * \return true on success, false if object has different type and no errstr is given
+		 **/
 		template<typename T>
 		bool put(T*&pp, std::string errstr="") const
 		{
 			pp = dynamic_cast<T*>(m_ptr);
 			if(!pp) {
 				if(errstr.length())
-					throw errstr + " " + m_ptr->type();
+					throw (errstr[errstr.length()-1]==' ')?errstr + m_ptr->type():errstr;
 				else
 					return false;
 			}
