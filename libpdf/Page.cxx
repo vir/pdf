@@ -28,9 +28,10 @@ Page::~Page()
 
 static Rect get_box(OH boxnode)
 {
-	boxnode.expand();
-	Array * a=boxnode.cast<Array *>("*Box is not an array ?!?");
-	if(a->size()!=4) throw std::string("Rect. array must contin 4 elements");
+	Array * a;
+	boxnode.put(a, "*Box is not an array ?!?");
+	if(a->size()!=4)
+		throw std::string("Rect. array must contin 4 elements");
 	double da[4];
 	for(int i=0; i<4; i++) {
 		Real * rn=dynamic_cast<Real *>(a->at(i));
@@ -105,9 +106,10 @@ bool Page::load(OH pagenode)
       // load fonts
       resources_h.expand();
       OH fonts_h=resources_h.find("Font");
-      if(!!fonts_h)
+      if(fonts_h)
       {
-        Dictionary * fonts_d=fonts_h.cast<Dictionary *>("Fonts node is not a Dictionary");
+				Dictionary * fonts_d;
+				fonts_h.put(fonts_d, "Font's node is not a Dictionary but is a ");
 
         // load all fonts' objects
         for( Dictionary::Iterator it=fonts_d->get_iterator(); fonts_d->check_iterator(it); it++)
@@ -194,9 +196,9 @@ class Page::TextObject
 		void Append(const String * str)
 		{
 			double w = 0;
+			String tmp;
 			if(use_advanced_algorithm) {
-				String tmp;
-				if(!gs->text_state.Tf->is_multibyte() && gs->text_state.Tw != 0) { /* output words separately appending Tw space between */
+				if(/*!gs->text_state.Tf->is_multibyte() &&*/ gs->text_state.Tw != 0) { /* output words separately appending Tw space between */
 					tmp = *str;
 					String * sp;
 					while((sp = tmp.cut_word())) {
@@ -208,7 +210,7 @@ class Page::TextObject
 						tm.offset_unscaled(gs->text_state.Tw, 0);
 						delete sp;
 					}
-					str = &tmp;
+					str = &tmp; /* tmp shuld not go out of scope! */
 				}
 			}
 			std::wstring s=gs->text_state.Tf->extract_text(str, &w);
@@ -239,18 +241,15 @@ class Page::TextObject
 		}
 		void Flush() {
 			if(accumulated_text.empty()) return;
+			CTM m = tm * gs->ctm; // Construct text rendering matrix
 			media->Text(
-				gs->ctm.translate(tm.translate(Point(0,0))),
-				calc_rotation_angle(),
+				m.translate(Point(0,0)),
+				m.get_rotation_angle(),
 				accumulated_text
 			);
 			tm.offset_unscaled(total_width, 0);
 			accumulated_text.resize(0);
 			total_width = 0;
-		}
-		double calc_rotation_angle() const
-		{
-			return tm.get_rotation_angle() + gs->ctm.get_rotation_angle();
 		}
 };
 const bool Page::TextObject::use_advanced_algorithm = true;
@@ -276,6 +275,7 @@ void Page::draw(Media * m)
 			ss << operator_index << ": " << op->dump();
 			m->Debug(ss.str());
 		}
+//std::clog << "Operator " << operator_index << ": " << op->dump() << std::endl;
 
 		/* Check for any-mode-operators */
 		if(op->name() == "cm") {
