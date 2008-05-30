@@ -280,6 +280,7 @@ std::string Object::type() const
 static std::string read_o_string(std::istream & f, bool alt)
 {
   std::string s; char c; bool escape=false;
+	int plevel = 0;
   do {
     c=f.get();
     if(c=='\\' && !escape) escape=true;
@@ -291,17 +292,23 @@ static std::string read_o_string(std::istream & f, bool alt)
         switch(c)
         {
           case 'n': c='\n'; break;
-					case '(': case ')': break;
+					case 'r': c='\r'; break;
+					case 'b': c='\x08'; break;
+					case '(': case ')': case '\\': break;
           default: std::cerr << "Unknown escaped char " << c << std::endl; break;
         }
-        s+=c; // XXX
+        s+=c;
       }
       else
       {
-        // XXX handle () counting etc.
+				switch(c) {
+					case '(': plevel++; break;
+					case ')': plevel--; break;
+					default: break;
+				}
         s+=c;
       }
-			if(f.peek()==')') break;
+			if(f.peek()==')' && plevel==0) break;
     }
   } while(f.peek() != EOF);
 //  } while(f.peek() != EOF && (escape || f.peek() != ')'));
