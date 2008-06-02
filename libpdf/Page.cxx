@@ -85,7 +85,7 @@ bool Page::load(OH pagenode)
 				for(unsigned int i=0; i<contents_h.size(); i++) {
 					OH s = contents_h[i];
 					s.expand();
-					stream=s.cast<Stream *>("Page content is not a stream?!?!!?");
+					s.put(stream, "Page content is not a stream?!?!!?");
 					stream->get_data(data);
 					pagedata.insert(pagedata.end(), data.begin(), data.end());
 				}

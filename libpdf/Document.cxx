@@ -25,7 +25,8 @@ Document::Document(File & f, int debug):m_debug(debug),cache(f)
   if(m_debug>1) std::clog << " Checking type..." << std::endl;
   OH type_h=doc_root.find("Type");
   if(!type_h) throw DocumentStructureException("No root elementi type defined");
-  Name * type=type_h.cast<Name *>();
+  Name * type;
+  type_h.put(type);
   if(!type || type->value()!="Catalog") throw DocumentStructureException("Invalid type of root element");
 
   // get pages reference
@@ -61,7 +62,8 @@ void Document::parse_pages_tree(OH pagenode_h)
 
   // get node type
   OH type_h=pagenode_h.find("Type"); if(!type_h) throw DocumentStructureException("No type");
-  Name * n=type_h.cast<Name *>("pages node type is not a name");
+  Name * n;
+  type_h.put(n, "pages node type is not a name but is a ");
 
   if(n->value() == "Pages")
   {

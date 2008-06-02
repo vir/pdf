@@ -141,10 +141,10 @@ std::wstring Font::extract_text(const String * so, double * twid) const
 		}
 		wchar_t res=to_unicode(c);
 //printf("Map(%s)(%d): %04X -> %04X\n", fontname.c_str(), charbytes, (unsigned int)c, (unsigned int)res);
-		if(res) ws.push_back(res);
+		if(res) ws += res;
 		else {
 			fprintf(stderr, "Can not translate char %04lX (font: %s)\n", c, fontname.c_str());
-			ws.push_back(0x40);
+			ws += L'@';
 		}
   }
 	if(twid) *twid/=1000; /* font units is 1/1000 of text units */
@@ -210,7 +210,7 @@ bool Font::load_type0_font_dic(OH fdic)
 		unsigned int index = 0;
 		while(index < w.size()) {
 			h1 = w[index++];
-			i1 = h1.cast<Integer *>("First group element must be an integer");
+			h1.put(i1, "First group element must be an integer, not a ");
 			if(index >= w.size()) throw std::string("Not enough data");
 
 			h2 = w[index++];
@@ -225,11 +225,11 @@ bool Font::load_type0_font_dic(OH fdic)
 //				std::clog << "Charwidths of chars from " << i1->value() << " shuld be read from " << a->dump() << std::endl;
 				continue;
 			}
-			i2 = h2.cast<Integer *>("Second element must be an array or integer");
+			h2.put(i2, "Second element must be an array or integer, not a ");
 			if(index >= w.size()) throw std::string("Not enough data");
 
 			h3 = w[index++];
-			i3 = h3.cast<Integer *>("Third element must be an integer");
+			h3.put(i3, "Third element must be an integer, not a ");
 
 			for(int i = i1->value(); i <= i2->value(); i++) {
 //				std::clog << "charwidth for char " << i << " is " << i3->value() << std::endl;
