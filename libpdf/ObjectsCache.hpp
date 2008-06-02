@@ -1,6 +1,12 @@
 
 #ifndef PDF_OBJECTSCACHE_HPP
 #define PDF_OBJECTSCACHE_HPP
+
+// get rid of "identifier was truncated to '255' characters..."
+#ifdef _MSC_VER
+# pragma warning(disable : 4786)
+#endif
+
 #include <map>
 #include "Object.hpp"
 //#include "OH.hpp"
