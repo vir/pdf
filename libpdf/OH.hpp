@@ -1,6 +1,12 @@
 
 #ifndef PDF_OH_HPP
 #define PDF_OH_HPP
+
+// get rid of "identifier was truncated to '255' characters..."
+#ifdef _MSC_VER
+# pragma warning(disable : 4786)
+#endif
+
 //#include "Document.hpp"
 #include <map>
 #include "Object.hpp"
@@ -65,8 +71,8 @@ class OH
     /// Returns size of array/dictionary
     unsigned long size() const
     {
-      Array * a=cast<Array*>();
-      Dictionary * d=cast<Dictionary*>();
+      Array * a; Dictionary * d;
+	  put(a); put(d);
       // XXX check streams?
       if(a) return a->size();
       else if(d) return d->size();
@@ -93,9 +99,10 @@ class OH
 		/// Get name or string content
 		std::string strvalue() const
 		{
-			const String * s = cast<const String *>();
-			if(s) return s->value();
-			const Name * n = cast<const Name *>(std::string("can't extract string value from ") + obj()->type());
+			const String * s;
+			if(put(s)) return s->value();
+			const Name * n;
+			put(n, "can't extract string value from ");
 			return n->value();
 		}
     /// Replace indirect object reference with real object
