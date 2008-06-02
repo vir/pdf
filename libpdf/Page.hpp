@@ -128,16 +128,17 @@ class Page::GraphicsState {
     // clipping_path
     // color_space
     // color
-    struct {
+    struct TextState {
       double Tc; // char spacing (Tc)=0
       double Tw; // word spacing (Tw)=0
-      // Th // horizontal scaling (Tz)=100
+      double Th; // horizontal scaling (Tz)=100
       double Tl; // leading (TL)=0
       Font * Tf; // text font (Tf)
       double Tfs; // font size (Tf)
       // Tmode // rendering mode (Tr)=0
-      // Trise // text rise (Ts)=0
+      double Trise; // text rise (Ts)=0
       // Tk // text knockout
+			TextState():Tc(0),Tw(0),Th(100),Tl(0),Tf(NULL),Tfs(1),Trise(0) {}
     } text_state;
     // line_width // set with 'w'
     // line_cap // set with 'J'
