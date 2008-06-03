@@ -61,13 +61,15 @@ bool Font::load(OH fontnode)
 
 		OH fc = fontnode.find("FirstChar");
 		if(fc) {
-			Integer * i = fc.cast<Integer *>("FirstChar is not an integer?!?");
+			Integer * i;
+			fc.put(i, "FirstChar is not an integer?!?");
 			firstchar = i->value();
 		}
 
 		for(unsigned int i = 0; i < widths.size(); i++) {
 			OH aeh = widths[i];
-			Integer * ip = aeh.cast<Integer *>("Non-integer char width not supported");
+			Integer * ip;
+			aeh.put(ip, "Non-integer char width not supported");
 			if(ip && ip->value())
 				charwidths[i + firstchar] = ip->value();
 		}
@@ -198,7 +200,8 @@ bool Font::load_type0_font_dic(OH fdic)
 	fdic.expand();
 	OH defw = fdic.find("DW");
 	if(defw) {
-		Integer * i = defw.cast<Integer *>("Glyph width is not integer");
+		Integer * i;
+		defw.put(i, "Glyph width is not integer");
 		defcharwidth = i->value();
 	}
 
@@ -214,8 +217,7 @@ bool Font::load_type0_font_dic(OH fdic)
 			if(index >= w.size()) throw std::string("Not enough data");
 
 			h2 = w[index++];
-			a = h2.cast<Array *>();
-			if(a) {
+			if(h2.put(a)) {
 				for(unsigned int i = 0; i < a->size(); i++) {
 					const Object * oo = a->at(i);
 					const Integer * cw = dynamic_cast<const Integer *>(oo);
