@@ -9,6 +9,10 @@
 #include "Point.hpp"
 #include "Rect.hpp"
 
+#ifndef M_PI
+#define M_PI atan2(0, -1)
+#endif
+
 namespace PDF {
 
 /** \brief Coordinate transormation matrix
