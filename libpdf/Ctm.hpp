@@ -28,7 +28,13 @@ class CTM
     double a, b, c, d, e, f;
   public:
     CTM() { set_unity(); }
-    CTM(double ma, double mb, double mc, double md, double me, double mf):a(ma),b(mb),c(mc),d(md),e(me),f(mf) { }
+    CTM(double ma, double mb, double mc, double md, double me, double mf):a(ma),b(mb),c(mc),d(md),e(me),f(mf)
+		{
+			if(a == 0 && b == 0) { // workaround a BUG in dium at least (how other viewers shows it???) // support 0,0,0,1,e,f and 0,0,-1,0,e,f
+				a = d;
+				b = -c;
+			}
+		}
     Point translate(const Point & p) const
     {
       Point t(a*p.x + c*p.y + e, b*p.x + d*p.y + f);
@@ -37,8 +43,8 @@ class CTM
     }
     void set_unity() { a=d=1.0; b=c=e=f=0.0; }
     void offset(Point p) { e+=p.x; f+=p.y; }
-    void offset_unscaled(Point p) { e+=a*p.x + c*p.y; f+=b*p.x + d*p.y; }
     void offset(double ox, double oy) { e+=ox; f+=oy; }
+    void offset_unscaled(Point p) { e+=a*p.x + c*p.y; f+=b*p.x + d*p.y; }
     void offset_unscaled(double ox, double oy) { e+=a*ox + c*oy; f+=b*ox + d*oy; }
 		void scale(double sx, double sy=0)
 		{
@@ -57,6 +63,14 @@ class CTM
 		double get_rotation_angle() const
 		{
 			return atan2(b, a)*180/M_PI;
+		}
+		double get_scale_h() const
+		{
+			return sqrt(a*a + b*b);
+		}
+		double get_scale_v() const
+		{
+			return sqrt(c*c + d*d);
 		}
 		void skew(double alpha, double beta)
 		{
