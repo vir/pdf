@@ -139,6 +139,10 @@ class Page::GraphicsState {
       double Trise; // text rise (Ts)=0
       // Tk // text knockout
 			TextState():Tc(0),Tw(0),Th(100),Tl(0),Tf(NULL),Tfs(1),Trise(0) {}
+			void dump(std::ostream & s) {
+				s << "Tc:" << Tc << " Tw:" << Tw << " Th:" << Th;
+				s << " Tl:" << Tl << " Tfs:" << Tfs << " Trise:" << Trise;
+			}
     } text_state;
     // line_width // set with 'w'
     // line_cap // set with 'J'

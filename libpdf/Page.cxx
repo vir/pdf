@@ -183,7 +183,6 @@ std::string Page::dump() const
 class Page::TextObject
 {
 	private:
-		const static bool use_advanced_algorithm;
 		const Page::GraphicsState * gs;
 		Media * media;
 	public:
@@ -191,36 +190,47 @@ class Page::TextObject
 		CTM lm;
 		std::wstring accumulated_text; // work around multiple Tj in one text object
 		double total_width;
+		bool update_font;
 
-		TextObject(const Page::GraphicsState * g, Media * m):gs(g),media(m),total_width(0) {}
+		TextObject(const Page::GraphicsState * g, Media * m):gs(g),media(m),total_width(0),update_font(false) {}
+		void SetMatrix(const CTM & m)
+		{
+			tm = lm = m;
+			update_font = true;
+		}
 		void Append(const String * str)
 		{
 			double w = 0;
-			String tmp;
-			if(use_advanced_algorithm) {
-				if(/*!gs->text_state.Tf->is_multibyte() &&*/ gs->text_state.Tw != 0) { /* output words separately appending Tw space between */
-					tmp = *str;
-					String * sp;
-					while((sp = tmp.cut_word())) {
-						std::wstring s=gs->text_state.Tf->extract_text(sp, &w);
-						w+=s.length() * gs->text_state.Tc; // XXX TODO Take Th into account!
-						accumulated_text+=s;
-						total_width+=w;
-						Flush();
-						tm.offset_unscaled(gs->text_state.Tw, 0);
-						delete sp;
-					}
-					str = &tmp; /* tmp shuld not go out of scope! */
+			unsigned int pos = 0;
+			std::wstring s;
+			if(!gs->text_state.Tf)
+				throw std::string("No font set");
+			if(gs->text_state.Tw != 0) { /* output words separately appending Tw space between */
+				while(( pos = gs->text_state.Tf->extract_text(str, s, w, pos, L' ') )) {
+					w*=gs->text_state.Tfs; /* It is subject to scaling with font size! */
+//std::wclog << L"extracted " << s.length() << L" chars: \"" << s << L"\", w=" << w << std::endl;
+					w+=s.length() * gs->text_state.Tc * (gs->text_state.Th/100.0);
+					accumulated_text+=s;
+					total_width+=w;
+					Flush();
+					tm.offset_unscaled(gs->text_state.Tw, 0);
 				}
+			} else {
+				gs->text_state.Tf->extract_text(str, s, w);
+				w*=gs->text_state.Tfs; /* It is subject to scaling with font size! */
+//std::wclog << L"extracted " << s.length() << L" chars: \"" << s << L"\", w=" << w << std::endl;
 			}
-			std::wstring s=gs->text_state.Tf->extract_text(str, &w);
 			accumulated_text+=s;
-			w+=s.length() * gs->text_state.Tc; // XXX TODO Take Th into account!
+			w+=s.length() * gs->text_state.Tc * (gs->text_state.Th/100);
+//std::clog << "After l*Tc w=" << w << std::endl;
 			total_width+=w;
+//std::clog << "total_width=" << total_width << std::endl;
 		}
-		void Kerning(double k) { // offset next char back by k glyph space units
-			k/=1000;
-			if(k > 0.5 || k < -0.5) { // XXX TODO caompare with avg charwidth or so
+		void Kerning(double gk) { // offset next char back by k glyph space units
+			double k = gk / 1000.0;
+			k*=gs->text_state.Tfs;
+			k*=gs->text_state.Th/100.0;
+			if(gk > 500.0 || gk < -500.0) { // XXX TODO caompare with avg charwidth or so
 				Flush();
 				tm.offset_unscaled(-k, 0);
 			} else {
@@ -228,31 +238,56 @@ class Page::TextObject
 			}
 		}
 		void NewLine() {
-			accumulated_text+='\n';
-			total_width = 0;
-			lm.offset_unscaled(0, gs->text_state.Tl);
+			Flush();
+			lm.offset_unscaled(0, -gs->text_state.Tl); // XXX +Tl in spec!!! BUG?
 			tm = lm;
 		}
 		void Offset(const Point & p) {
-//		CTM m(1, 0, 0, 1, op->number(0), op->number(1)); tm = lm = m * lm;
 			Flush();
 			lm.offset_unscaled(p);
 			tm = lm;
 		}
 		void Flush() {
 			if(accumulated_text.empty()) return;
-			CTM m = tm * gs->ctm; // Construct text rendering matrix
+			CTM m(gs->text_state.Tfs * gs->text_state.Th, 0, 0, gs->text_state.Tfs, 0, gs->text_state.Trise);
+			CTM Trm = m * tm * gs->ctm; // Construct text rendering matrix
+			if(update_font) {
+				media->SetFont(gs->text_state.Tf, calc_font_size());
+				update_font = false;
+			}
 			media->Text(
-				m.translate(Point(0,0)),
-				m.get_rotation_angle(),
+				Trm.translate(Point(0,0)),
+				Trm.get_rotation_angle(),
 				accumulated_text
 			);
+//std::clog << "Offset tm: " << total_width << std::endl;
 			tm.offset_unscaled(total_width, 0);
 			accumulated_text.resize(0);
 			total_width = 0;
+			/* XXX
+			 * See page 410 of pdf_reference.pdf for details
+			 * XXX
+			 */
+		}
+		void FontChanged()
+		{
+			update_font = true;
+		}
+		double calc_font_size()
+		{
+			/// \todo optimise it?
+			CTM m(gs->text_state.Tfs * gs->text_state.Th, 0, 0, gs->text_state.Tfs, 0, gs->text_state.Trise);
+			CTM Trm = m * tm * gs->ctm; // Construct text rendering matrix
+#if 0
+			Point p0(0, 0);
+			Point p1(0, 1);
+			Point r = Trm.translate(p1) - Trm.translate(p0);
+			return sqrt(r.x * r.x + r.y * r.y);
+#else
+			return Trm.get_scale_v();
+#endif
 		}
 };
-const bool Page::TextObject::use_advanced_algorithm = true;
 
 void Page::draw(Media * m)
 {
@@ -280,6 +315,8 @@ void Page::draw(Media * m)
 		/* Check for any-mode-operators */
 		if(op->name() == "cm") {
 			gs->ctm *= op->matrix();
+			if(tobj)
+				tobj->FontChanged();
 			continue;
 		}
 
@@ -383,88 +420,76 @@ void Page::draw(Media * m)
       case M_TEXT:
         if(!tobj) tobj=new TextObject(gs, m);
         /* Check text showing operators first */
-        if(op->name() == "Tj") // output text
-        {
-          if(!gs->text_state.Tf) throw std::string("No font set");
-          const String * str=dynamic_cast<const String *>(op->arg(0));
-          if(str)
-          {
+				if(op->name() == "Tj") // output text
+				{
+					if(!gs->text_state.Tf) throw std::string("No font set");
+					const String * str=dynamic_cast<const String *>(op->arg(0));
+					if(str)
 						tobj->Append(str);
-          }
-          break;
-        }
-        else if(op->name() == "TJ")
-        {
-          if(!gs->text_state.Tf) throw std::string("No font set");
-          const Object * o=op->arg(0);
-          const Array * a=dynamic_cast<const Array *>(o);
-          if(a)
-          {
-            for(Array::ConstIterator it=a->get_const_iterator(); a->check_iterator(it); it++)
-            {
-              const String * str=dynamic_cast<const String *>(*it);
-              if(str) tobj->Append(str);
-							else {
-								const Integer * i = dynamic_cast<const Integer *>(*it);
-								const Real * r = dynamic_cast<const Real *>(*it);
-								if(i) tobj->Kerning(i->value());
-								else if(r) tobj->Kerning(r->value());
-								else {
-									std::cerr << "Unexpected object " << (*it)->type() << " in string (TJ)" << std::endl;
-								}
-							}
-            }
-          }
-          break;
-        }
-        else if(op->name() == "\'" || op->name() == "\"")
-        {
-          if(!gs->text_state.Tf) throw std::string("No font set");
-          const Object * o=op->arg((op->name()=="\"")?2:0);
-          const String * str=dynamic_cast<const String *>(o);
-          if(str)
-          {
-            tobj->NewLine();
+					break;
+				}
+				else if(op->name() == "TJ")
+				{
+					const Array * a=dynamic_cast<const Array *>(op->arg(0));
+					if(!a)
+						throw std::string("TJ with no array");
+					for(Array::ConstIterator it=a->get_const_iterator(); a->check_iterator(it); it++) {
+						const String * str=dynamic_cast<const String *>(*it);
+						if(str) tobj->Append(str);
+						else {
+							const Integer * i = dynamic_cast<const Integer *>(*it);
+							const Real * r = dynamic_cast<const Real *>(*it);
+							if(i) tobj->Kerning(i->value());
+							else if(r) tobj->Kerning(r->value());
+							else
+								std::cerr << "Unexpected object " << (*it)->type() << " in string (TJ)" << std::endl;
+						}
+					}
+					break;
+				} // TJ
+				else if(op->name() == "\'" || op->name() == "\"")
+				{
+					const String * str=dynamic_cast<const String *>( op->arg((op->name()=="\"")?2:0) );
+					if(op->name() == "\"") {
+						gs->text_state.Tw = op->number(0);
+						gs->text_state.Tc = op->number(1);
+					}
+					if(str)
+					{
+						tobj->NewLine();
 						tobj->Append(str);
-          }
-          break;
-        }
+					}
+					break;
+				}
         else if(op->name() == "T*") // XXX it is not a text-showing operator!
         {
 					tobj->NewLine();
-          break;
+					break;
         }
         else
         {
 					tobj->Flush();
-          // ... and executete other operators
+					// ... and executete other operators
         }
         
         /* check other text object operators */
-        if(op->name() == "ET") { if(tobj) delete tobj; tobj=NULL; mode=M_PAGE; }
-        else if(op->name() == "Tc") {} // not very useful char spacing
-        else if(op->name() == "Ts" || op->name() == "Tz") {} // also, rise and scaling
-        else if(op->name() == "Tr") // char spacing
+				if(op->name() == "ET") { if(tobj) delete tobj; tobj=NULL; mode=M_PAGE; }
+				else if(op->name() == "Tc") {} // not very useful char spacing
+				else if(op->name() == "Ts") { gs->text_state.Trise = op->number(0); } // rise
+				else if(op->name() == "Tz") { gs->text_state.Th    = op->number(0); } // hor. scaling
+				else if(op->name() == "Tr") { gs->text_state.Tc    = op->number(0); } // char spacing
+				else if(op->name() == "Tw") { gs->text_state.Tw    = op->number(0); } // word spacing - useful if text begins with space(s)
+				else if(op->name() == "Tf") // set current font
 				{
-					gs->text_state.Tc=op->number(0);
-				}
-				else if(op->name() == "Tw") // set word spacing - useful if text begins with space(s)
-				{
-					gs->text_state.Tw=op->number(0);
-				}
-        else if(op->name() == "Tf") // set current font
-        {
-          const Object * o=op->arg(0);
-          const Name * n=dynamic_cast<const Name *>(o);
+          const Name * n=dynamic_cast<const Name *>(op->arg(0));
 //          std::clog << "Set current font to " << n->value() << std::endl;
           if(n) gs->text_state.Tf=fonts.find(n->value())->second;
           gs->text_state.Tfs=op->number(1);
-					m->SetFont(gs->text_state.Tf, gs->text_state.Tfs);
+					tobj->FontChanged();
         }
         else if(op->name() == "Tm")
         {
-					tobj->Flush();
-					tobj->tm = tobj->lm = op->matrix();
+					tobj->SetMatrix( op->matrix() );
         }
         else if(op->name() == "Td")
         {
@@ -501,6 +526,11 @@ void Page::draw(Media * m)
 		if(tobj) {
 			std::clog << "Line matrix:" << std::endl << tobj->lm.dump();
 			std::clog << "Text matrix:" << std::endl << tobj->tm.dump();
+			if(gs) {
+				std::clog << "Text state: ";
+				gs->text_state.dump(std::clog);
+				std::clog << std::endl;
+			}
 		}
 		if(curpath)
 			std::clog << "Current path: " << curpath->dump() << std::endl;
