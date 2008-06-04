@@ -109,7 +109,6 @@ void Font::Encoding::load(OH encnode)
 		if(diffs) {
 			unsigned int i;
 			int j = 0;
-			std::clog << "Diffs:";
 			for(i = 0; i < diffs.size(); i++) {
 				OH d = diffs[i];
 				Integer * iii; Name * nnn;
@@ -120,7 +119,6 @@ void Font::Encoding::load(OH encnode)
 					j++;
 				}
 			}
-			std::clog << std::endl;
 		} // diffs
 	} // name/dic
 }
