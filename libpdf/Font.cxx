@@ -120,37 +120,57 @@ wchar_t Font::to_unicode(int c) const
 	return r;
 }
 
-std::wstring Font::extract_text(const String * so, double * twid) const
+/** Extracts unicode text from a pdf string object.
+ * \param so pointer to a pdf string object to work on
+ * \param ws reference to a wide string to receive extracted text
+ * \param twid reference to a double variable to receive extracted text width
+ * \param startpos byte position in a pdf string object to start extraction
+ * \param delimiter unicode character to search for. Extraction stops just
+ *        before that character and position of _next_ character is returned.
+ * \return byte position of next character in pdf string or 0 if all text has
+ *         been extracted.
+ **/
+unsigned int Font::extract_text(const String * so, std::wstring & ws, double & twid, unsigned int startpos, wchar_t delimiter) const
 {
-  std::string s=so->value();
-  std::wstring ws;
-  if(s.length() % charbytes)
+	unsigned int r = 0;
+	std::string s=so->value();
+	if(s.length() % charbytes)
 		throw std::string("String length is not a multiple of charbytes: ") + dump();
-	if(twid) *twid = 0;
-  for(unsigned int i=0; i<s.length(); i+=charbytes)
-  {
-    unsigned long c=0;
+	twid = 0.0;
+	for(unsigned int i=startpos; i<s.length(); i+=charbytes)
+	{
+		// Get glyph index
+		unsigned long c=0;
 		for(unsigned int k=0; k<charbytes; k++) {
 			c<<=8;
 			c|=(unsigned char)s[i+k];
 		}
-		if(twid) {
-			std::map<int, unsigned long>::const_iterator it = charwidths.find(c);
-			if(it != charwidths.end())
-				*twid += it->second;
-			else
-				*twid += defcharwidth;
-		}
-		wchar_t res=to_unicode(c);
+
+		// Get glyph width
+		std::map<int, unsigned long>::const_iterator it = charwidths.find(c);
+		twid += (it != charwidths.end()) ? it->second : defcharwidth;
+
+		// Convert to unicode
+		wchar_t res = to_unicode(c);
 //printf("Map(%s)(%d): %04X -> %04X\n", fontname.c_str(), charbytes, (unsigned int)c, (unsigned int)res);
-		if(res) ws += res;
-		else {
+
+		// Check for end of token
+		// XXX May be we shuld append delimiter to resulting string????
+		if(delimiter && res == delimiter) {
+			r = i;
+			break;
+		}
+
+		// Append to result
+		if(res) {
+			ws += res;
+		} else {
 			fprintf(stderr, "Can not translate char %04lX (font: %s)\n", c, fontname.c_str());
 			ws += L'@';
 		}
-  }
-	if(twid) *twid/=1000; /* font units is 1/1000 of text units */
-  return ws;
+	}
+	twid/=1000.0; /* font units is 1/1000 of text units */
+	return r;
 }
 
 std::string Font::dump() const
