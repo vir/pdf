@@ -36,7 +36,7 @@ class Font
     wchar_t to_unicode(int c) const;
     std::string dump() const;
 		std::string name() const { return fontname; }
-		unsigned int extract_text(const String * so, std::wstring & ws, double & twid, unsigned int startpos = 0, wchar_t delimiter=L'\0') const;
+		bool extract_text(const String * so, std::wstring & ws, double & twid, unsigned int & pos, wchar_t delimiter=L'\0') const;
 		inline bool is_multibyte() const { return charbytes > 1; }
 };
 

@@ -124,26 +124,31 @@ wchar_t Font::to_unicode(int c) const
  * \param so pointer to a pdf string object to work on
  * \param ws reference to a wide string to receive extracted text
  * \param twid reference to a double variable to receive extracted text width
- * \param startpos byte position in a pdf string object to start extraction
+ * \param pos reference to the index variable, containing byte position in a pdf
+ *   string object to start extraction. It will be updated upon exit.
  * \param delimiter unicode character to search for. Extraction stops just
- *        before that character and position of _next_ character is returned.
- * \return byte position of next character in pdf string or 0 if all text has
- *         been extracted.
+ *   before that character and position of _next_ character is returned.
+ * \return true if delimiter was found and function has to be called again to
+ *   extract the rest of the string, false if whole string content is extracted.
+ *
+ * Upon exit twid contains extracted string's width (in text space units), pos
+ * contains position of the next byte in pdf string object (possible, the
+ * position of the end of string if false returned), ws contains extracted
+ * string in unicode.
  **/
-unsigned int Font::extract_text(const String * so, std::wstring & ws, double & twid, unsigned int startpos, wchar_t delimiter) const
+bool Font::extract_text(const String * so, std::wstring & ws, double & twid, unsigned int & pos, wchar_t delimiter) const
 {
-	unsigned int r = 0;
 	std::string s=so->value();
 	if(s.length() % charbytes)
 		throw std::string("String length is not a multiple of charbytes: ") + dump();
 	twid = 0.0;
-	for(unsigned int i=startpos; i<s.length(); i+=charbytes)
+	while( pos < s.length() )
 	{
 		// Get glyph index
 		unsigned long c=0;
 		for(unsigned int k=0; k<charbytes; k++) {
 			c<<=8;
-			c|=(unsigned char)s[i+k];
+			c|=(unsigned char)s[pos++];
 		}
 
 		// Get glyph width
@@ -157,8 +162,8 @@ unsigned int Font::extract_text(const String * so, std::wstring & ws, double & t
 		// Check for end of token
 		// XXX May be we shuld append delimiter to resulting string????
 		if(delimiter && res == delimiter) {
-			r = i;
-			break;
+			twid/=1000.0; /* font units is 1/1000 of text units */
+			return true;
 		}
 
 		// Append to result
@@ -170,7 +175,7 @@ unsigned int Font::extract_text(const String * so, std::wstring & ws, double & t
 		}
 	}
 	twid/=1000.0; /* font units is 1/1000 of text units */
-	return r;
+	return false;
 }
 
 std::string Font::dump() const
