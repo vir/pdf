@@ -320,7 +320,12 @@ static std::string read_o_string(std::istream & f, bool alt)
 static Object * read_o_digits(std::istream & f, bool alt)
 {
   std::string s=read_token(f, alt);
-  if(static_cast<int>(s.find_first_of("."))>=0) return new Real(strtod(s.c_str(), NULL)); // real
+	if(s.find_first_of(".") != std::string::npos) {
+		double v;// = strtod(s.c_str(), NULL);
+		std::stringstream ss(s);
+		ss >> v;
+		return new Real(v); // real
+	}
 
   long firstint=atol(s.c_str());
   if(s[0] == '-' || s[0] == '+') return new Integer(firstint);
