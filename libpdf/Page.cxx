@@ -53,7 +53,7 @@ bool Page::load(OH pagenode)
   if(m_debug) std::clog << "Page node: " << pagenode.obj()->dump() << std::endl;
   // find page size
   {
-    OH mediabox_h=pagenode.find("CropBox");
+    OH mediabox_h=pagenode.find("MediaBox");
 		if(mediabox_h) {
 			media_box = get_box(mediabox_h);
 		}
@@ -185,6 +185,7 @@ class Page::TextObject
 	private:
 		const Page::GraphicsState * gs;
 		Media * media;
+		double kerning_too_big;
 	public:
 		CTM tm;
 		CTM lm;
@@ -192,7 +193,10 @@ class Page::TextObject
 		double total_width;
 		bool update_font;
 
-		TextObject(const Page::GraphicsState * g, Media * m):gs(g),media(m),total_width(0),update_font(false) {}
+		TextObject(const Page::GraphicsState * g, Media * m):gs(g),media(m),total_width(0),update_font(false)
+		{
+			kerning_too_big = 0.4;
+		}
 		void SetMatrix(const CTM & m)
 		{
 			tm = lm = m;
@@ -206,33 +210,24 @@ class Page::TextObject
 			if(!gs->text_state.Tf)
 				throw std::string("No font set");
 			if(gs->text_state.Tw != 0) { /* output words separately appending Tw space between */
-				while(( pos = gs->text_state.Tf->extract_text(str, s, w, pos, L' ') )) {
-					w*=gs->text_state.Tfs; /* It is subject to scaling with font size! */
-//std::wclog << L"extracted " << s.length() << L" chars: \"" << s << L"\", w=" << w << std::endl;
-					w+=s.length() * gs->text_state.Tc * (gs->text_state.Th/100.0);
+				while( gs->text_state.Tf->extract_text(str, s, w, pos, L' ') ) {
 					accumulated_text+=s;
 					total_width+=w;
 					Flush();
-					tm.offset_unscaled(gs->text_state.Tw, 0);
+					tm.offset_unscaled(gs->text_state.Tw*gs->text_state.Th/100.0, 0);
 				}
 			} else {
-				gs->text_state.Tf->extract_text(str, s, w);
-				w*=gs->text_state.Tfs; /* It is subject to scaling with font size! */
-//std::wclog << L"extracted " << s.length() << L" chars: \"" << s << L"\", w=" << w << std::endl;
+				gs->text_state.Tf->extract_text(str, s, w, pos);
 			}
 			accumulated_text+=s;
-			w+=s.length() * gs->text_state.Tc * (gs->text_state.Th/100);
-//std::clog << "After l*Tc w=" << w << std::endl;
 			total_width+=w;
-//std::clog << "total_width=" << total_width << std::endl;
 		}
-		void Kerning(double gk) { // offset next char back by k glyph space units
-			double k = gk / 1000.0;
-			k*=gs->text_state.Tfs;
-			k*=gs->text_state.Th/100.0;
-			if(gk > 500.0 || gk < -500.0) { // XXX TODO caompare with avg charwidth or so
+		void Kerning(double k) { // offset next char back by k glyph space units
+			k /= 1000.0;
+			if(k > kerning_too_big || k < -kerning_too_big) { // XXX TODO caompare with avg charwidth or so
 				Flush();
-				tm.offset_unscaled(-k, 0);
+				double offset = -k * gs->text_state.Tfs * gs->text_state.Th/100.0;
+				tm.offset_unscaled(offset, 0);
 			} else {
 				total_width-=k;
 			}
@@ -249,7 +244,7 @@ class Page::TextObject
 		}
 		void Flush() {
 			if(accumulated_text.empty()) return;
-			CTM m(gs->text_state.Tfs * gs->text_state.Th, 0, 0, gs->text_state.Tfs, 0, gs->text_state.Trise);
+			CTM m(gs->text_state.Tfs * gs->text_state.Th/100.0, 0, 0, gs->text_state.Tfs, 0, gs->text_state.Trise);
 			CTM Trm = m * tm * gs->ctm; // Construct text rendering matrix
 			if(update_font) {
 				media->SetFont(gs->text_state.Tf, calc_font_size());
@@ -260,14 +255,10 @@ class Page::TextObject
 				Trm.get_rotation_angle(),
 				accumulated_text
 			);
-//std::clog << "Offset tm: " << total_width << std::endl;
-			tm.offset_unscaled(total_width, 0);
+			double offset = (total_width*gs->text_state.Tfs + gs->text_state.Tc*accumulated_text.length()) * gs->text_state.Th/100.0;
+			tm.offset_unscaled(offset, 0);
 			accumulated_text.resize(0);
 			total_width = 0;
-			/* XXX
-			 * See page 410 of pdf_reference.pdf for details
-			 * XXX
-			 */
 		}
 		void FontChanged()
 		{
