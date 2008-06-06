@@ -32,11 +32,12 @@ class Media;
  */
 class Page
 {
+	public:
+		class Operator;
+		class GraphicsState;
+		class Path;
   private:
-    class Operator;
-    class GraphicsState;
 		class TextObject;
-    class Path;
     //class Path;
 		Rect media_box, crop_box;
     
