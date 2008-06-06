@@ -68,7 +68,7 @@ bool Base85Filter::Decode(const std::vector<char> & src, std::vector<char> & dst
 	b85dh h;
 	dst.reserve(src.size()*4/5);
 	while(1) {
-		while(std::strchr(Whitespace,src[pos]) && pos<src.size()) pos++;
+		while(strchr(Whitespace,src[pos]) && pos<src.size()) pos++;
 		if(src[pos] == '~' && src[pos + 1] == '>') {
 			h.flush(dst);
 			break;
