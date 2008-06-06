@@ -108,7 +108,7 @@ std::string File::check_header()
   if(!file.good()) { throw std::string("Bad file"); }
   std::string line, version;
   file.seekg(0, std::ios::beg);
-  getline(file, line, GETLINE_ENDL);
+	std::getline(file, line, GETLINE_ENDL);
   if(line.substr(0,5) == "%PDF-") { version=line.substr(5,3); }
   return version;
 }
@@ -121,11 +121,11 @@ long File::get_first_xreftable_offset()
   char b[to_read+1]; b[to_read]='\0';
   file.seekg(-to_read, std::ios::end);
   file.read(b,to_read);
-  char * p=std::strstr(b, "startxref");
+  char * p=::strstr(b, "startxref");
 //  std::clog << "Xref string @ " << (int)p << std::endl;
   if(!p) return 0;
-  p+=std::strcspn(p, WHITESPACE);
-  p+=std::strspn(p, WHITESPACE);
+  p+=::strcspn(p, WHITESPACE);
+  p+=::strspn(p, WHITESPACE);
   return atol(p);
 }
 
@@ -148,10 +148,10 @@ bool File::read_xref_table_part(long off)
 {
   std::string s;
   file.seekg(off, std::ios::beg);
-  getline(file, s, GETLINE_ENDL); // get 'xref' header
+	std::getline(file, s, GETLINE_ENDL); // get 'xref' header
 //  std::clog << "Read first xref header: " << s << std::endl;
   if(s.find("xref")!=0) { std::cerr << "Error in xref table" << std::endl; return false; }
-  getline(file, s, GETLINE_ENDL); // get numbers
+	std::getline(file, s, GETLINE_ENDL); // get numbers
 //  std::clog << "Read first line of xref: " << s << std::endl;
   int sep=s.find_first_of(" \t");
   int objnum=atoi(s.substr(0,sep).c_str());
@@ -160,7 +160,7 @@ bool File::read_xref_table_part(long off)
 //  std::clog << "First object in this table: " << objnum << ", number of objects: " << count << std::endl;
   for(;count>0;count--,objnum++)
   {
-    getline(file, s, GETLINE_ENDL);
+		std::getline(file, s, GETLINE_ENDL);
 		s.erase(0, s.find_first_not_of("\r\n\t "));
     if(s.length() && s[17] == 'n') // read unly "used" refs
     {
@@ -177,7 +177,7 @@ bool File::read_xref_table_part(long off)
 Dictionary * File::read_trailer()
 {
   std::string s;
-  getline(file, s, GETLINE_ENDL);
+	std::getline(file, s, GETLINE_ENDL);
 	s.erase(0, s.find_first_not_of("\r\n\t "));
   if(s.substr(0,7) != "trailer") throw std::string("No trailer");
 
