@@ -2,10 +2,10 @@
  * Dump single object from a given stream object
  * 
  */
-#include "File.hpp"
-#include "Object.hpp"
-#include "Document.hpp"
-#include "OH.hpp"
+#include "libpdf/File.hpp"
+#include "libpdf/Object.hpp"
+#include "libpdf/Document.hpp"
+#include "libpdf/OH.hpp"
 #include <iostream>
 
 using namespace std;
@@ -111,11 +111,12 @@ void dump_page_content(PDF::File & pf, long pagenum)
 //			stream->get_data(data);
 			cout << stream->value();
 		} else {
-			contents_h.cast<PDF::Array *>("Page content is not a Stream and not an Array. That is wrong. I give up.");
+			if(!dynamic_cast<PDF::Array *>(contents_h.obj()))
+				throw std::string("Page content is not a Stream and not an Array. That is wrong. I give up.");
 			for(unsigned int i=0; i<contents_h.size(); i++) {
 				PDF::OH s = contents_h[i];
 				s.expand();
-				stream=s.cast<PDF::Stream *>("Page content is not a stream?!?!!?");
+				s.put(stream, "Page content is not a stream?!?!!?");
 //				stream->get_data(data);
 				cout << stream->value();
 			}
