@@ -13,9 +13,10 @@ inline unsigned long s2c(const std::string & s) {
 
 bool Font::CMap::Range::load(std::istream & s)
 {
+	int i;
 	String * sp[3]={NULL, NULL, NULL};
 	Object * o;
-	for(int i=0; i<3; i++) {
+	for(i=0; i<3; i++) {
 		o=Object::read(s, true);
 		if(!o) { std::cerr << "Error loading bfrange" << std::endl; return false; }
 		sp[i]=dynamic_cast<String *>(o);
@@ -24,7 +25,7 @@ bool Font::CMap::Range::load(std::istream & s)
 	begin=s2c(sp[0]->value());
 	end=s2c(sp[1]->value());
 	res=(wchar_t)s2c(sp[2]->value());
-	for(int i=0; i<3; i++) delete sp[i];
+	for(i=0; i<3; i++) delete sp[i];
 	return true;
 }
 
