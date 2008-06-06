@@ -58,7 +58,8 @@ void Document::parse_pages_tree(OH pagenode_h)
 //  std::clog << "@ Document::parse_pages_tree(...)" << std::endl;
 //  std::clog << dump_objects_cache();
   pagenode_h.expand(); // dereference indirect objects
-  pagenode_h.cast<Dictionary *>("Invalid Pages node format");
+  if(!dynamic_cast<Dictionary *>(pagenode_h.obj()))
+	  throw std::string("Invalid Pages node format");
 
   // get node type
   OH type_h=pagenode_h.find("Type"); if(!type_h) throw DocumentStructureException("No type");
@@ -68,7 +69,8 @@ void Document::parse_pages_tree(OH pagenode_h)
   if(n->value() == "Pages")
   {
     OH kids_h=pagenode_h.find("Kids"); if(!kids_h) throw DocumentStructureException("No kids");
-    kids_h.cast<Array *>("Kids is not an array");
+    if(!dynamic_cast<Array *>(kids_h.obj()))
+		throw std::string("Kids is not an array");
 
     // recurse into all kids
     for(unsigned int i=0; i<kids_h.size(); i++)
