@@ -53,10 +53,10 @@ static std::string ws2utf8(const std::wstring & ws)
 				header>>=1; header|=0x80;
 			}
 
-			s.push_back(n | header); x--;
-			while(x>=0) { s.push_back(cbuf[x--]|0x80); }
+			s+=char(n | header); x--;
+			while(x>=0) { s+=char(cbuf[x--]|0x80); }
 		}
-		else { s.push_back(n); }
+		else { s+=char(n); }
 	}
 	return s;
 }

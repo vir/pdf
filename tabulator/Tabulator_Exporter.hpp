@@ -1,6 +1,11 @@
 #ifndef TABULATOR_EXPORTER_HPP_INCLUDED
 #define TABULATOR_EXPORTER_HPP_INCLUDED
 
+// get rid of "identifier was truncated to '255' characters..."
+#ifdef _MSC_VER
+# pragma warning(disable : 4786)
+#endif
+
 #include "Tabulator.hpp"
 #include <iostream>
 

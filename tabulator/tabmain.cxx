@@ -1,3 +1,11 @@
+// get rid of "identifier was truncated to '255' characters..."
+#ifdef _MSC_VER
+# pragma warning(disable : 4786)
+# define getopt_long(argc, argv, optlist, longopts, optindex) getopt(argc, argv, optlist)
+# define __need_getopt
+# define __GNU_LIBRARY__
+#endif
+
 #include "Tabulator.hpp"
 #include "Tabulator_Exporter.hpp"
 #include <libpdf/PDF.hpp>
@@ -69,7 +77,7 @@ int main(int argc, char * argv[])
 	std::wcerr << L"err: Привет! Работает, гадина!" << std::endl;
 	std::wcout << L"out: Привет! Работает, гадина!" << std::endl;
 #endif
-
+#ifndef _MSC_VER
 	static struct option longopts[] = {
 		{ "help", 0, 0, 'h' },
 		{ "pages", 0, 0, 'p' },
@@ -77,6 +85,7 @@ int main(int argc, char * argv[])
 		{ "crop", 0, 0, 'c' },
 		{ "add-rows_by-col", 0, 0, 'R' },
 	};
+#endif
 	while(1)
 	{
 		int c, optindex;
@@ -130,7 +139,9 @@ int main(int argc, char * argv[])
 
 	std::clog << "File: " << fname << " Pages: " << page_first << '-' << page_last << " Rotation: " << rot << std::endl;
 
+#ifndef _MSC_VER
   std::set_terminate (__gnu_cxx::__verbose_terminate_handler);
+#endif
   try {
     do_it(fname, page_first, page_last, rot, add_rows_col);
   }
