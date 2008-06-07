@@ -30,7 +30,7 @@ int main(int argc, char * argv[])
   try {
     clog << "Constructing File" << endl;
     PDF::File pf(fname);
-//		pf.debug(3);
+//	pf.debug(3);
     if(!pf.load())
     {
       cerr << "Can't load " << fname << endl;
