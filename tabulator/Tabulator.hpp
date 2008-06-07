@@ -1,6 +1,11 @@
 #ifndef TABULATOR_HPP_INCLUDED
 #define TABULATOR_HPP_INCLUDED
 
+// get rid of "identifier was truncated to '255' characters..."
+#ifdef _MSC_VER
+# pragma warning(disable : 4786)
+#endif
+
 #include <string>
 #include <vector>
 #include <map>
@@ -103,7 +108,6 @@ class Tabulator
 				void resize(unsigned int cols, unsigned int rows);
 				Cell * cell(unsigned int col, unsigned int row, bool create=true);
 				const Cell * cell(unsigned int col, unsigned int rowi) const;
-				void eat_text(const Tabulator::Metafile * mf);
 				void output(Exporter * ex) const;
 				void clear();
 				std::string dump() const;
