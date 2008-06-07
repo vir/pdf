@@ -31,7 +31,7 @@ bool File::open(std::string fn)
 {
   if(!fn.empty()) filename=fn;
   if(filename.empty()) throw std::string("No filename to open");
-  file.open(filename.c_str(), std::ios::in);
+  file.open(filename.c_str(), std::ios::in|std::ios::binary);
   return file.good();
 }
 
