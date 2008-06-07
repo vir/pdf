@@ -14,7 +14,7 @@
 #include <locale>
 #include <iostream>
 
-static void do_it(const char * fname, unsigned int p_first = 0, unsigned int p_last = 0, int rotation = 0, int add_rows_col = -1)
+static void do_it(const char * fname, unsigned int p_first = 0, unsigned int p_last = 0, int rotation = 0, char format = 'c', int add_rows_col = -1)
 {
   PDF::Object::m_debug=false;
   
@@ -38,7 +38,25 @@ static void do_it(const char * fname, unsigned int p_first = 0, unsigned int p_l
 	t.options.find_more_rows = (add_rows_col >= 0);
 	t.options.find_rows_column = add_rows_col;
 
-	ExporterCSV exporter(std::cout);
+	Tabulator::Table::Exporter * exporter = NULL;
+	switch(format) {
+		case 'c': case 'C':
+			exporter = new ExporterCSV(std::cout);
+			break;
+		case 'h': case 'H':
+			exporter = new ExporterHTML(std::cout);
+			break;
+#ifdef _WIN32
+		case 'e': case 'E':
+			exporter = new ExporterExcel();
+			if(!exporter->open())
+				exporter->create();
+			break;
+#endif
+		default:
+			std::cerr << "Unknown format <" << format << ">" << std::endl;
+			return;
+	}
 
 	for(unsigned int pagenum = p_first; pagenum <= (p_last?p_last:doc.get_pages_count()); pagenum++) // all needed
 	{
@@ -50,10 +68,11 @@ static void do_it(const char * fname, unsigned int p_first = 0, unsigned int p_l
 
 			std::clog << "Drawing page " << pagenum << std::endl;
 			t.full_process(p); // do the final pretty structure construction!
-			t.output(&exporter);
+			t.output(exporter);
 			delete p;
 		}
 	}
+	delete exporter;
 
   f.close();
 }
@@ -66,6 +85,7 @@ int main(int argc, char * argv[])
 	int page_last = 0;
 	int rot = 0;
 	int add_rows_col = -1;
+	char format = 'c';
 
 #if 0
 	std::locale loc("");
@@ -84,12 +104,13 @@ int main(int argc, char * argv[])
 		{ "rotate", 0, 0, 'r' },
 		{ "crop", 0, 0, 'c' },
 		{ "add-rows_by-col", 0, 0, 'R' },
+		{ "format", 0, 0, 'f' },
 	};
 #endif
 	while(1)
 	{
 		int c, optindex;
-		c = getopt_long(argc, argv, "hp:r:c:R:", longopts, &optindex);
+		c = getopt_long(argc, argv, "hp:r:c:R:f:", longopts, &optindex);
 		if(c == -1) break;
 		switch(c)
 		{
@@ -110,6 +131,9 @@ int main(int argc, char * argv[])
 				exit(1);
 			case 'R':
 				add_rows_col = atoi(optarg);
+				break;
+			case 'f':
+				format = *optarg;
 				break;
 			case 'c':
 			default:
@@ -143,7 +167,7 @@ int main(int argc, char * argv[])
   std::set_terminate (__gnu_cxx::__verbose_terminate_handler);
 #endif
   try {
-    do_it(fname, page_first, page_last, rot, add_rows_col);
+    do_it(fname, page_first, page_last, rot, format, add_rows_col);
   }
   catch(std::string s)
   {
@@ -177,6 +201,7 @@ void help(std::ostream & s)
 	  << "\t-rR --- rotate page R*90degree CCW before processing" << std::endl
 	  << "\t-cXXXX --- UNIMPLEMENTED crop rectangle" << std::endl
 		<< "\t-R COL --- add rows by looking at text in col COL" << std::endl
+		<< "\t-f F --- set output format to F: c h e" << std::endl
 		;
 }
 
