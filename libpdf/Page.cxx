@@ -247,15 +247,17 @@ class Page::TextObject
 			CTM m(gs->text_state.Tfs * gs->text_state.Th/100.0, 0, 0, gs->text_state.Tfs, 0, gs->text_state.Trise);
 			CTM Trm = m * tm * gs->ctm; // Construct text rendering matrix
 			if(update_font) {
-				media->SetFont(gs->text_state.Tf, calc_font_size());
+				media->SetFont(gs->text_state.Tf, Trm.get_scale_v());
 				update_font = false;
 			}
+			double offset = (total_width*gs->text_state.Tfs + gs->text_state.Tc*accumulated_text.length()) * gs->text_state.Th/100.0;
 			media->Text(
 				Trm.translate(Point(0,0)),
 				Trm.get_rotation_angle(),
-				accumulated_text
+				accumulated_text,
+				offset*Trm.get_scale_h(),
+				Trm.get_scale_v()
 			);
-			double offset = (total_width*gs->text_state.Tfs + gs->text_state.Tc*accumulated_text.length()) * gs->text_state.Th/100.0;
 			tm.offset_unscaled(offset, 0);
 			accumulated_text.resize(0);
 			total_width = 0;
@@ -263,20 +265,6 @@ class Page::TextObject
 		void FontChanged()
 		{
 			update_font = true;
-		}
-		double calc_font_size()
-		{
-			/// \todo optimise it?
-			CTM m(gs->text_state.Tfs * gs->text_state.Th, 0, 0, gs->text_state.Tfs, 0, gs->text_state.Trise);
-			CTM Trm = m * tm * gs->ctm; // Construct text rendering matrix
-#if 0
-			Point p0(0, 0);
-			Point p1(0, 1);
-			Point r = Trm.translate(p1) - Trm.translate(p0);
-			return sqrt(r.x * r.x + r.y * r.y);
-#else
-			return Trm.get_scale_v();
-#endif
 		}
 };
 

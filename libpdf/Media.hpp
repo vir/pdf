@@ -20,6 +20,7 @@ class Media
 		virtual void SetFont(const Font * font, double size) {}
 		virtual void Text(Point pos, std::wstring text) {};
 		virtual void Text(Point pos, double angle, std::wstring text) { Text(pos, text); };
+		virtual void Text(Point pos, double angle, std::wstring text, double twidth, double theight) { Text(pos, angle, text); };
 		virtual void Line(const Point & p1, const Point & p2)=0;
 };
 
