@@ -39,6 +39,14 @@ class ExporterHTML:public Tabulator::Table::Exporter
 		virtual void table_end();
 };
 
+#ifdef _WIN32
+#include "Excel.hpp"
+class ExporterExcel:public Excel
+{
+	public:
+		virtual void cell(const Tabulator::Table::Cell * cptr, unsigned int c, unsigned int r);
+};
+#endif /* _WIN32 */
 
 #endif /* TABULATOR_EXPORTER_HPP_INCLUDED */
 
