@@ -1,6 +1,6 @@
 #include "Excel.hpp"
 
-#include <ole2.h> 
+#include <ole2.h>
 #include <stdio.h>
 
 static HRESULT AutoWrap(int autoType, VARIANT *pvResult, IDispatch *pDisp, LPOLESTR ptName, int cArgs...) {
@@ -75,6 +75,12 @@ Excel::~Excel()
     OleUninitialize();
 }
 
+/** Opens already running excel */
+bool Excel::open()
+{
+	return false;
+}
+
 /** Start new Excel application */
 bool Excel::create()
 {
@@ -88,11 +94,11 @@ bool Excel::create()
 }
 
 /** Set visibility of Excel application */
-void Excel::set_visible(bool v)
+void Excel::set_visible(bool vis)
 {
 	VARIANT v;
 	v.vt = VT_I4;
-	v.lVal = v?1:0;
+	v.lVal = vis?1:0;
 	AutoWrap(DISPATCH_PROPERTYPUT, NULL, app.pdispVal, L"visible", 1, v);
 	VariantClear(&v);
 }
@@ -101,7 +107,7 @@ void Excel::add_workbook()
 {
 	// app . workbooks . add 
 	VARIANT workbooks;
-	AutoWrap(DISPATCH_PROPERTYGET|DISPATCH_METHOD, &workbook, app.pdispVal, L"workbooks", 0);
+	AutoWrap(DISPATCH_PROPERTYGET|DISPATCH_METHOD, &workbooks, app.pdispVal, L"workbooks", 0);
 	AutoWrap(DISPATCH_METHOD, NULL, workbooks.pdispVal, L"add", 0);
 }
 
@@ -119,7 +125,7 @@ void Excel::set_cell_value(std::wstring s, int offset_c, int offset_r)
 	// app . ActiveCell . Offset(r, c) . Value = s
 	VARIANT activecell, offset;
 	AutoWrap(DISPATCH_PROPERTYGET|DISPATCH_METHOD, &activecell, app.pdispVal, L"ActiveCell", 0);
-	AutoWrap(DISPATCH_PROPERTYGET|DISPATCH_METHOD, &offset, activecell.pdispVal, L"Offset", 2, row, col);
+	AutoWrap(DISPATCH_PROPERTYGET|DISPATCH_METHOD, &offset, activecell.pdispVal, L"Offset", 2, col, row);
 	AutoWrap(DISPATCH_PROPERTYPUT, NULL, offset.pdispVal, L"value", 1, val);
 	VariantClear(&offset);
 	VariantClear(&activecell);

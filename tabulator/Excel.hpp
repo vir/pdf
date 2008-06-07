@@ -1,6 +1,9 @@
 #ifndef EXCEL_HPP_INCLUDED
 #define EXCEL_HPP_INCLUDED
 
+#include <ole2.h>
+#include <string>
+
 class Excel
 {
 	private:

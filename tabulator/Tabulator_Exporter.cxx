@@ -1,4 +1,5 @@
 #include "Tabulator_Exporter.hpp"
+#include <string>
 
 static std::string quote_csv(std::string s)
 {
@@ -112,7 +113,7 @@ void ExporterHTML::table_end()
 /*===============================================================*\
  *======= Excel =================================================*
 \*===============================================================*/
-void ExportExcel::cell(const Tabulator::Table::Cell * cptr, unsigned int c, unsigned int r)
+void ExporterExcel::cell(const Tabulator::Table::Cell * cptr, unsigned int c, unsigned int r)
 {
 	if(!cptr)
 		return;

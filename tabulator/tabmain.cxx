@@ -49,8 +49,11 @@ static void do_it(const char * fname, unsigned int p_first = 0, unsigned int p_l
 #ifdef _WIN32
 		case 'e': case 'E':
 			exporter = new ExporterExcel();
-			if(!exporter->open())
-				exporter->create();
+			if(!static_cast<ExporterExcel*>(exporter)->open())
+				static_cast<ExporterExcel*>(exporter)->create();
+			static_cast<ExporterExcel*>(exporter)->add_workbook();
+			static_cast<ExporterExcel*>(exporter)->set_visible(true);
+
 			break;
 #endif
 		default:

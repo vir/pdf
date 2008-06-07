@@ -41,7 +41,9 @@ class ExporterHTML:public Tabulator::Table::Exporter
 
 #ifdef _WIN32
 #include "Excel.hpp"
-class ExporterExcel:public Excel
+class ExporterExcel
+	:public Tabulator::Table::Exporter
+	,public Excel
 {
 	public:
 		virtual void cell(const Tabulator::Table::Cell * cptr, unsigned int c, unsigned int r);
