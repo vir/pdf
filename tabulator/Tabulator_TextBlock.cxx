@@ -24,7 +24,7 @@ bool Tabulator::TextBlock::merge_ok(const TextBlock & oth) const
 	}
 	double avgcw = width / double(text.length());
 	double distance = oth.pos.x - (pos.x + width);
-	bool result = distance < 0.3 * height;
+	bool result = distance < 0.25 * height;
 	std::clog << "Average charwidth: " << avgcw << ", distance: " << distance << ", result: " << result << std::endl;
 //	return (abs(distance) < 2*avgcw);
 	return result;
