@@ -55,11 +55,11 @@ void Tabulator::Table::output(Tabulator::Table::Exporter * ex) const
 	unsigned int r, c;
 	if(!ex)
 		return;
-	ex->table_begin(cells.size(), cells.size()?cells[0].size():0);
+	ex->table_begin(cells.size()?cells[0].size():0, cells.size());
 	for(r = 0; r < cells.size(); r++) {
 		ex->row_begin(r);
 		for(c = 0; c < cells[r].size(); c++) {
-			ex->cell(cell(r, c), r, c);
+			ex->cell(cell(c, r), c, r);
 		}
 		ex->row_end();
 	}
