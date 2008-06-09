@@ -2,6 +2,7 @@
 
 #include <ole2.h>
 #include <stdio.h>
+#include <iostream>
 
 static HRESULT AutoWrap(int autoType, VARIANT *pvResult, IDispatch *pDisp, LPOLESTR ptName, int cArgs...) {
 	// Begin variable-argument list...
@@ -63,7 +64,7 @@ static HRESULT AutoWrap(int autoType, VARIANT *pvResult, IDispatch *pDisp, LPOLE
 	return hr;
 }
 
-Excel::Excel()
+Excel::Excel():app(NULL)
 {
     // Initialize the OLE Library...
     OleInitialize(NULL);
@@ -71,25 +72,39 @@ Excel::Excel()
 
 Excel::~Excel()
 {
+	if(app) {
+		app->Release();
+		app = NULL;
+	}
     // Close the OLE Library...
     OleUninitialize();
 }
 
 /** Opens already running excel */
-bool Excel::open()
-{
-	return false;
-}
-
-/** Start new Excel application */
-bool Excel::create()
+bool Excel::get_active()
 {
 	CLSID clsid;
 	CLSIDFromProgID(L"Excel.Application", &clsid);
-	HRESULT hr = CoCreateInstance(clsid, NULL, CLSCTX_LOCAL_SERVER|CLSCTX_INPROC_SERVER, IID_IDispatch, (void **)&app.pdispVal);
+//	HRESULT hr = CoCreateInstance(clsid, NULL, CLSCTX_LOCAL_SERVER|CLSCTX_INPROC_SERVER, IID_IDispatch, (void **)&app.pdispVal);
+	IUnknown * u;
+	HRESULT hr = /*CoGetObject( )*/ GetActiveObject(clsid, NULL, &u);
 	if(FAILED(hr))
 		return false;
-	app.vt = VT_DISPATCH;
+	hr = u->QueryInterface(IID_IDispatch, (void **)&app);
+	u->Release();
+	if(FAILED(hr))
+		return false;
+	return true;
+}
+
+/** Start new Excel application */
+bool Excel::start_new()
+{
+	CLSID clsid;
+	CLSIDFromProgID(L"Excel.Application", &clsid);
+	HRESULT hr = CoCreateInstance(clsid, NULL, CLSCTX_LOCAL_SERVER|CLSCTX_INPROC_SERVER, IID_IDispatch, (void **)&app);
+	if(FAILED(hr))
+		return false;
 	return true;
 }
 
@@ -99,7 +114,7 @@ void Excel::set_visible(bool vis)
 	VARIANT v;
 	v.vt = VT_I4;
 	v.lVal = vis?1:0;
-	AutoWrap(DISPATCH_PROPERTYPUT, NULL, app.pdispVal, L"visible", 1, v);
+	AutoWrap(DISPATCH_PROPERTYPUT, NULL, app, L"visible", 1, v);
 	VariantClear(&v);
 }
 
@@ -107,8 +122,9 @@ void Excel::add_workbook()
 {
 	// app . workbooks . add 
 	VARIANT workbooks;
-	AutoWrap(DISPATCH_PROPERTYGET|DISPATCH_METHOD, &workbooks, app.pdispVal, L"workbooks", 0);
+	AutoWrap(DISPATCH_PROPERTYGET|DISPATCH_METHOD, &workbooks, app, L"workbooks", 0);
 	AutoWrap(DISPATCH_METHOD, NULL, workbooks.pdispVal, L"add", 0);
+	VariantClear(&workbooks);
 }
 
 void Excel::set_cell_value(std::wstring s, int offset_c, int offset_r)
@@ -117,6 +133,8 @@ void Excel::set_cell_value(std::wstring s, int offset_c, int offset_r)
 	col.vt = row.vt = VT_I4;
 	col.lVal = offset_c;
 	row.lVal = offset_r;
+
+	std::clog << "set_cell_values(" << offset_c << ", " << offset_r << ")" << std::endl;
 	
 	VARIANT val;
 	val.vt = VT_BSTR;
@@ -124,7 +142,7 @@ void Excel::set_cell_value(std::wstring s, int offset_c, int offset_r)
 
 	// app . ActiveCell . Offset(r, c) . Value = s
 	VARIANT activecell, offset;
-	AutoWrap(DISPATCH_PROPERTYGET|DISPATCH_METHOD, &activecell, app.pdispVal, L"ActiveCell", 0);
+	AutoWrap(DISPATCH_PROPERTYGET|DISPATCH_METHOD, &activecell, app, L"ActiveCell", 0);
 	AutoWrap(DISPATCH_PROPERTYGET|DISPATCH_METHOD, &offset, activecell.pdispVal, L"Offset", 2, col, row);
 	AutoWrap(DISPATCH_PROPERTYPUT, NULL, offset.pdispVal, L"value", 1, val);
 	VariantClear(&offset);
@@ -143,7 +161,7 @@ bool Excel::save_as(std::wstring fname)
 
 	// app . activeworkbook . SaveAs C:\\test.xls 
 	VARIANT activeworkbook;
-	AutoWrap(DISPATCH_PROPERTYGET|DISPATCH_METHOD, &activeworkbook, app.pdispVal, L"activeworkbook", 0);
+	AutoWrap(DISPATCH_PROPERTYGET|DISPATCH_METHOD, &activeworkbook, app, L"activeworkbook", 0);
 	AutoWrap(DISPATCH_METHOD, NULL, activeworkbook.pdispVal, L"SaveAs", 1, v);
 	VariantClear(&activeworkbook);
 
@@ -153,8 +171,35 @@ bool Excel::save_as(std::wstring fname)
 
 bool Excel::quit()
 {
-	HRESULT hr = AutoWrap(DISPATCH_METHOD, NULL, app.pdispVal, L"quit", 0);
-	return !FAILED(hr);
+	HRESULT hr = AutoWrap(DISPATCH_METHOD, NULL, app, L"quit", 0);
+	if(!FAILED(hr)) {
+		app->Release();
+		app = NULL;
+		return true;
+	}
+	return false;
+}
+
+void Excel::move_cursor(int offset_c, int offset_r)
+{
+	VARIANT col, row;
+	col.vt = row.vt = VT_I4;
+	col.lVal = offset_c;
+	row.lVal = offset_r;
+	
+	std::clog << "move_cursor(" << offset_c << ", " << offset_r << ")" << std::endl;
+
+	// app . ActiveCell . Offset(r, c) . Value = s
+	// app.ActiveCell.Offset(2, 3).Activate
+	VARIANT activecell, offset;
+	AutoWrap(DISPATCH_PROPERTYGET|DISPATCH_METHOD, &activecell, app, L"ActiveCell", 0);
+	AutoWrap(DISPATCH_PROPERTYGET|DISPATCH_METHOD, &offset, activecell.pdispVal, L"Offset", 2, col, row);
+	AutoWrap(DISPATCH_METHOD, NULL, offset.pdispVal, L"Activate", 0);
+	VariantClear(&offset);
+	VariantClear(&activecell);
+
+	VariantClear(&col);
+	VariantClear(&row);
 }
 
 

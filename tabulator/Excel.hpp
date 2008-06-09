@@ -7,14 +7,15 @@
 class Excel
 {
 	private:
-		VARIANT app;
+		IDispatch * app;
 	public:
 		Excel();
 		~Excel();
-		bool open();
-		bool create();
+		bool get_active();
+		bool start_new();
 		void set_visible(bool v);
 		void add_workbook();
+		void move_cursor(int offset_c, int offset_r);
 		void set_cell_value(std::wstring s, int offset_c = 0, int offset_r = 0);
 		bool save_as(std::wstring fname);
 		bool quit();
