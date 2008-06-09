@@ -45,8 +45,12 @@ class ExporterExcel
 	:public Tabulator::Table::Exporter
 	,public Excel
 {
+	private:
+		unsigned int rows_number;
 	public:
+		virtual void table_begin(unsigned int ncols, unsigned int nrows) { rows_number = nrows; }
 		virtual void cell(const Tabulator::Table::Cell * cptr, unsigned int c, unsigned int r);
+		virtual void table_end() { move_cursor(0, rows_number); }
 };
 #endif /* _WIN32 */
 
