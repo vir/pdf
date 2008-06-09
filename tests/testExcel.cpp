@@ -11,11 +11,11 @@ int APIENTRY WinMain(HINSTANCE hInstance,
                      int       nCmdShow)
 {
 	Excel e;
-	if(	e.open() ) {
+	if(	e.get_active() ) {
 		//TRACE("Open successed");
 	} else {
 		//TRACE("Open failed");
-		e.create();
+		e.start_new();
 		e.add_workbook();
 	}
 	e.set_visible(true);
