@@ -33,6 +33,16 @@ class Tabulator
 					return 0;
 				}
 		};
+		class TextBlock
+		{
+			public:
+				PDF::Point pos;
+				std::wstring text;
+				unsigned int height;
+				unsigned int width;
+				double angle;
+				PDF::Rect bounds() const;
+		};
 		/** Abstract surface on which PDF page will be drawn */
 		class Metafile:public PDF::Media
 		{
@@ -93,17 +103,21 @@ class Tabulator
 				class Exporter
 				{
 					public:
+						virtual void page_begin(std::string fname, unsigned int pnum) {}
 						virtual void table_begin(unsigned int ncols, unsigned int nrows) {}
 						virtual void row_begin(unsigned int r) {}
 						virtual void cell(std::wstring text, unsigned int c, unsigned int r) {};
 						virtual void cell(const Cell * cptr, unsigned int c, unsigned int r) { cell(cptr?cptr->celltext():L"", c, r); }
 						virtual void row_end() {}
 						virtual void table_end() {}
+						virtual void page_end() {}
 				};
 			private:
 				std::list<Cell> all_cells;
 				std::vector< std::vector<Cell *> > cells;
 			public: /* methods */
+				unsigned int ncols() const;
+				unsigned int nrows() const;
 				Grid grid;
 				void resize(unsigned int cols, unsigned int rows);
 				Cell * cell(unsigned int col, unsigned int row, bool create=true);
