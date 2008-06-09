@@ -4,28 +4,33 @@ void Tabulator::Metafile::Size(PDF::Point size)
 {
 	if(rotation % 2) {
 		myarea = PDF::Rect(35, 0, size.y, size.x);
+		page_height = size.x;
 	} else {
 		myarea = PDF::Rect(0, 0, size.x, size.y);
+		page_height = size.y;
 	}
 	matrix.set_unity();
 	switch(rotation) {
-		case 0:                       matrix.scale(1, -1); matrix.offset(0, size.y); break;
-		case 1: matrix.rotate( 90.0); matrix.scale(1, -1); matrix.offset(size.y, size.x); break;
-		case 2: matrix.rotate(180.0); matrix.scale(1, -1); matrix.offset(size.x, size.y); break;
-		case 3: matrix.rotate(270.0); matrix.scale(1, -1); break;
+		case 0: break;
+		case 1: matrix.rotate( 90.0); matrix.offset(size.y, 0); break;
+		case 2: matrix.rotate(180.0); matrix.offset(size.x, size.y); break;
+		case 3: matrix.rotate(270.0); matrix.offset(0, size.x); break;
 		default: break;
 	}
 }
 
 
-void Tabulator::Metafile::Text(PDF::Point pos, std::wstring text)
+//void Tabulator::Metafile::Text(PDF::Point pos, std::wstring text)
+void Tabulator::Metafile::Text(PDF::Point pos, double angle, std::wstring text, double twidth, double theight)
 {
 	if(!myarea.in(pos)) {
-//		std::clog << "Skipping text <<" << ws2utf8(text) << ">> - not in my area" << std::endl;
+		std::wclog << L"Skipping text <<" << text << L">> - not in my area" << std::endl;
 		return;
 	}
-//	clog << "Text" << pos.dump() << "[" << ws2utf8(text) << "]" << endl;
-	all_text[pos] = text;
+//	std::clog << "Text" << pos.dump() << std::endl;
+	pos.y = page_height - pos.y;
+//	all_text.insert(TextBlock(pos, text));
+	all_text.insert(TextBlock(pos, angle, text, twidth, theight));
 }
 
 /**
@@ -40,9 +45,9 @@ void Tabulator::Metafile::Line(const PDF::Point & p1, const PDF::Point & p2)
 	}
 
 	Coord x1(p1.x);
-	Coord y1(p1.y);
+	Coord y1(page_height - p1.y);
 	Coord x2(p2.x);
-	Coord y2(p2.y);
+	Coord y2(page_height - p2.y);
 
 	if(x1 == x2 && y1 != y2) { // vertical line
 		std::clog << "V-Line" << p1.dump() << "-" << p2.dump() << std::endl;
@@ -59,6 +64,6 @@ void Tabulator::Metafile::Line(const PDF::Point & p1, const PDF::Point & p2)
 		return;
 	}
 
-	std::clog << "Skipping invalid line " << p1.dump() << "-" << p2.dump() << std::endl;
+//	std::clog << "Skipping invalid line " << p1.dump() << "-" << p2.dump() << std::endl;
 }
 

@@ -37,6 +37,7 @@ static void do_it(const char * fname, unsigned int p_first = 0, unsigned int p_l
 //	t.set_tolerance(5.0, 5.0);
 	t.options.find_more_rows = (add_rows_col >= 0);
 	t.options.find_rows_column = add_rows_col;
+	t.options.postprocess = true;
 
 	Tabulator::Table::Exporter * exporter = NULL;
 	switch(format) {

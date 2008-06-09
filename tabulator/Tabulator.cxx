@@ -92,11 +92,11 @@ void Tabulator::build_grid()
 		Tabulator::Metafile::TextMap::const_iterator tit; // text iterator
 		Coord cur_y = -1E10;
 		for(tit = metafile.all_text.begin(); tit != metafile.all_text.end(); tit++) { /* check all text */
-			if(lowest_h_line < lowest_v_line && tit->first.y < lowest_h_line) // skip seader
+			if(lowest_h_line < lowest_v_line && tit->pos.y < lowest_h_line) // skip seader
 				continue;
-			if(tit->first.x >= x1 && tit->first.x < x2 && tit->first.y != cur_y) {
-				std::clog << "Adding line above text string @" << tit->first.dump() << std::endl;
-				cur_y = tit->first.y;
+			if(tit->pos.x >= x1 && tit->pos.x < x2 && tit->pos.y != cur_y) {
+				std::clog << "Adding line above text string @" << tit->pos.dump() << std::endl;
+				cur_y = tit->pos.y;
 				grid.v_knots.insert(Grid::KnotsMap::value_type(cur_y - 10.0, Grid::Line()));
 			}
 		}
@@ -122,7 +122,7 @@ void Tabulator::fill_table_with_text()
 	row = -1;
 	bool reached_end_of_table = false;
 	for(tit = metafile.all_text.begin(); tit != metafile.all_text.end(); tit++) {
-		if(!reached_end_of_table && tit->first.y > double(rit->first)) { // reached next row
+		if(!reached_end_of_table && tit->pos.y > double(rit->first)) { // reached next row
 			rit++;
 			if(rit != grid.v_knots.end()) { // still in table
 //				std::clog << "Reached next row @ " << double(rit->first) << std::endl;
@@ -134,15 +134,16 @@ void Tabulator::fill_table_with_text()
 			}
 		}
 
-		try { col = grid.find_col(tit->first.x); } catch(...) { col = -1; }
+		try { col = grid.find_col(tit->pos.x); } catch(...) { col = -1; }
 
 		if(row>=0 && col>=0) {
 //			std::wclog << L"Text in table(" << col << L',' << row << "): \"" << tit->second << "\"" << std::endl;
-			table.cell(col, row)->addtext(tit->first, tit->second);
-			if(tit->first.y < header_y)
+			if(tit->text.length())
+				table.cell(col, row)->addtext(*tit);
+			if(tit->pos.y < header_y)
 				table.cell(col, row)->is_header=true;
 		} else {
-			std::wclog << L"Text is not in table: \"" << tit->second << "\"" << std::endl;
+			std::wclog << L"Text is not in table: \"" << tit->text << "\"" << std::endl;
 		}
 	}
 #else
@@ -184,6 +185,9 @@ void Tabulator::full_process(PDF::Page * page)
 
 	fill_table_with_text();
 	std::clog << table.dump();
+
+	if(options.postprocess)
+		table.postprocess();
 }
 
 void Tabulator::dump() const

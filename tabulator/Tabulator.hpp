@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <set>
 #include <vector>
 #include <list>
 #include <libpdf/PDF.hpp>
@@ -38,10 +39,18 @@ class Tabulator
 			public:
 				PDF::Point pos;
 				std::wstring text;
-				unsigned int height;
 				unsigned int width;
+				unsigned int height;
 				double angle;
 				PDF::Rect bounds() const;
+				bool merge_ok(const TextBlock & oth) const;
+				TextBlock operator +(const TextBlock & oth) const;
+				bool operator <  (const TextBlock & oth) const { return pos < oth.pos; }
+				bool operator == (const TextBlock & oth) const { return pos < oth.pos; }
+				TextBlock & operator = (const TextBlock & oth) { pos = oth.pos; text = oth.text; width = oth.width; height = oth.height; angle = oth.angle; return *this; }
+				TextBlock():width(0),height(0),angle(0) {}
+				TextBlock(const PDF::Point & p, std::wstring s):pos(p),text(s),width(0),height(0),angle(0) {}
+				TextBlock(const PDF::Point & p, double a, std::wstring s, double w, double h):pos(p),text(s),width(w),height(h),angle(a) {}
 		};
 		/** Abstract surface on which PDF page will be drawn */
 		class Metafile:public PDF::Media
@@ -50,14 +59,16 @@ class Tabulator
 				PDF::CTM matrix;
 				int rotation;
 				PDF::Rect myarea;
+				double page_height;
 			public:
 				typedef	std::multimap<Coord, std::pair<Coord, Coord> > LineMap;
-				typedef std::map<PDF::Point, std::wstring> TextMap;
+				typedef std::set<TextBlock> TextMap;
 
 				Metafile():rotation(0),myarea(0,0,10000,10000) {}
 				LineMap h_lines, v_lines;
 				TextMap all_text;
-				virtual void Text(PDF::Point pos, std::wstring text);
+//				virtual void Text(PDF::Point pos, std::wstring text);
+				virtual void Text(PDF::Point pos, double angle, std::wstring text, double twidth, double theight);
 				virtual void Line(const PDF::Point & p1, const PDF::Point & p2);
 				virtual const PDF::CTM & Matrix() { return matrix; }
 				virtual void Size(PDF::Point size);
@@ -90,13 +101,14 @@ class Tabulator
 				class Cell
 				{
 					private:
-						std::map<PDF::Point, std::wstring> text;
+						std::set<TextBlock> text;
 					public: // data
 						bool is_header;
 						unsigned int colspan, rowspan;
 					public: // methods
 						Cell():is_header(false) {}
-						void addtext(const PDF::Point & p, const std::wstring & s) { text[p]=s; }
+						unsigned int mergeblocks();
+						void addtext(const TextBlock & b) { text.insert(b); }
 						std::wstring celltext() const;
 				};
 				/** Table exporter interface */
@@ -122,6 +134,7 @@ class Tabulator
 				void resize(unsigned int cols, unsigned int rows);
 				Cell * cell(unsigned int col, unsigned int row, bool create=true);
 				const Cell * cell(unsigned int col, unsigned int rowi) const;
+				void postprocess();
 				void output(Exporter * ex) const;
 				void clear();
 				std::string dump() const;
@@ -133,7 +146,8 @@ class Tabulator
 		struct Options {
 			bool find_more_rows;
 			unsigned int find_rows_column;
-			Options():find_more_rows(false),find_rows_column(0) { }
+			bool postprocess;
+			Options():find_more_rows(false),find_rows_column(0),postprocess(false) { }
 		} options;
 		void set_area(PDF::Rect r);
 		void set_rotation(int rot);

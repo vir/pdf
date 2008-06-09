@@ -1,11 +1,32 @@
 #include "Tabulator.hpp"
 
 /*============ Table Cell ===========================*/
+unsigned int Tabulator::Table::Cell::mergeblocks()
+{
+	bool flag = false;;
+	std::set<Tabulator::TextBlock>::iterator it1, it2;
+	for(it1 = text.begin(); it1 != text.end();) {
+		flag = false;
+		for(it2 = it1, it2++; it2 != text.end(); it2++) {
+			if(it1->merge_ok(*it2)) {
+				TextBlock combined = *it1 + *it2;
+				text.erase(it1);
+				text.erase(it2);
+				it1 = text.insert(combined).first;
+				flag = true;
+				break;
+			}
+		}
+		if(!flag)
+			it1++;
+	} 
+	return text.size();
+}
 
 std::wstring Tabulator::Table::Cell::celltext() const
 {
 	std::wstring r;
-	std::map<PDF::Point, std::wstring>::const_iterator tpit;
+	std::set<Tabulator::TextBlock>::const_iterator tpit;
 	for(tpit=text.begin(); tpit!=text.end(); tpit++)
 	{
 		if(!r.empty()) {
@@ -17,7 +38,7 @@ std::wstring Tabulator::Table::Cell::celltext() const
 		}
 		/// \todo Mwss with text block width and coordinate comparsition and catch newlines also
 
-		r+=tpit->second;
+		r+=tpit->text;
 	}
 	return r;
 }
@@ -48,6 +69,14 @@ Tabulator::Table::Cell * Tabulator::Table::cell(unsigned int col, unsigned int r
 const Tabulator::Table::Cell * Tabulator::Table::cell(unsigned int col, unsigned int row) const
 {
 	return cells[row][col];
+}
+
+void Tabulator::Table::postprocess()
+{
+	std::list<Cell>::iterator it;
+	for(it = all_cells.begin(); it != all_cells.end(); it++) {
+		it->mergeblocks();
+	}
 }
 
 void Tabulator::Table::output(Tabulator::Table::Exporter * ex) const

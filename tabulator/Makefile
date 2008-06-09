@@ -2,7 +2,8 @@
 .PHONY : clean docs
 #---------------------------------------------------------------------------
 SOURCES = tabmain.cxx \
-	Tabulator.cxx Tabulator_Metafile.cxx Tabulator_Table.cxx Tabulator_Grid.cxx Tabulator_Exporter.cxx
+	Tabulator.cxx Tabulator_Metafile.cxx Tabulator_Table.cxx Tabulator_Grid.cxx \
+	Tabulator_Exporter.cxx Tabulator_TextBlock.cxx
 OBJS = $(SOURCES:.cxx=.o)
 
 CXXFLAGS = -Wall -pipe -g -I..
