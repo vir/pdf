@@ -49,9 +49,10 @@ static void do_it(const char * fname, unsigned int p_first = 0, unsigned int p_l
 #ifdef _WIN32
 		case 'e': case 'E':
 			exporter = new ExporterExcel();
-			if(!static_cast<ExporterExcel*>(exporter)->open())
+			if(!static_cast<ExporterExcel*>(exporter)->open()) {
 				static_cast<ExporterExcel*>(exporter)->create();
-			static_cast<ExporterExcel*>(exporter)->add_workbook();
+				static_cast<ExporterExcel*>(exporter)->add_workbook();
+			}
 			static_cast<ExporterExcel*>(exporter)->set_visible(true);
 
 			break;
@@ -66,12 +67,14 @@ static void do_it(const char * fname, unsigned int p_first = 0, unsigned int p_l
 		PDF::Page * p=new PDF::Page();
 		if(p)
 		{
+			exporter->page_begin(fname, pagenum);
 			std::clog << "Page " << pagenum << std::endl;
 			p->load(doc.get_page_node(pagenum-1)); // 0-based
 
 			std::clog << "Drawing page " << pagenum << std::endl;
 			t.full_process(p); // do the final pretty structure construction!
 			t.output(exporter);
+			exporter->page_end();
 			delete p;
 		}
 	}
