@@ -77,6 +77,8 @@ class Tabulator
 					v_lines.clear();
 					all_text.clear();
 				}
+				void set_area(PDF::Rect r) { myarea = r; }
+				void set_rotation(int rot) { rotation = rot; }
 		};
 		/** Grid, dividing table into cells */
 		class Grid
@@ -149,8 +151,6 @@ class Tabulator
 			bool postprocess;
 			Options():find_more_rows(false),find_rows_column(0),postprocess(false) { }
 		} options;
-		void set_area(PDF::Rect r);
-		void set_rotation(int rot);
 		void set_tolerance(double tx, double ty);
 		void load_page(PDF::Page * page);
 		void build_grid();
