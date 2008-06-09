@@ -140,14 +140,21 @@ void Excel::set_cell_value(std::wstring s, int offset_c, int offset_r)
 	val.vt = VT_BSTR;
 	val.bstrVal = ::SysAllocString(s.c_str());
 
+	VARIANT format;
+	format.vt = VT_BSTR;
+	format.bstrVal = ::SysAllocString(L"@");
+
+	// app . ActiveCell . Offset(r, c) . NumberFormat = "@"
 	// app . ActiveCell . Offset(r, c) . Value = s
 	VARIANT activecell, offset;
 	AutoWrap(DISPATCH_PROPERTYGET|DISPATCH_METHOD, &activecell, app, L"ActiveCell", 0);
 	AutoWrap(DISPATCH_PROPERTYGET|DISPATCH_METHOD, &offset, activecell.pdispVal, L"Offset", 2, col, row);
+    AutoWrap(DISPATCH_PROPERTYPUT, NULL, offset.pdispVal, L"NumberFormat", 1, format);
 	AutoWrap(DISPATCH_PROPERTYPUT, NULL, offset.pdispVal, L"value", 1, val);
 	VariantClear(&offset);
 	VariantClear(&activecell);
 
+	VariantClear(&format);
 	VariantClear(&val);
 	VariantClear(&col);
 	VariantClear(&row);
@@ -244,3 +251,37 @@ void Excel::move_cursor(int offset_c, int offset_r)
     VariantClear(&arr);
 #endif
 
+#if 0
+// Line 5: app . Range app . ActiveCell , app . ActiveCell . Offset 3 , 5 . Select 
+    VariantCopy(&root[++level], &app);
+    VariantCopy(&parm[0], &app);
+    AutoWrap(DISPATCH_PROPERTYGET|DISPATCH_METHOD, &root[level+1], root[level++].pdispVal, L"Range", 1, parm[0]);
+    VariantClear(&parm[0]);
+    parm[0].vt = VT_ERROR; parm[0].scode = DISP_E_PARAMNOTFOUND;
+    VariantCopy(&parm[1], &app);
+    AutoWrap(DISPATCH_PROPERTYGET|DISPATCH_METHOD, &root[level+1], root[level++].pdispVal, L"ActiveCell", 2, parm[1], parm[0]);
+    VariantClear(&parm[0]);
+    VariantClear(&parm[1]);
+    AutoWrap(DISPATCH_PROPERTYGET|DISPATCH_METHOD, &root[level+1], root[level++].pdispVal, L"ActiveCell", 0);
+    parm[0].vt = VT_I4; parm[0].lVal = 3;
+    parm[1].vt = VT_I4; parm[1].lVal = 5;
+    AutoWrap(DISPATCH_PROPERTYGET|DISPATCH_METHOD, &root[level+1], root[level++].pdispVal, L"Offset", 2, parm[1], parm[0]);
+    VariantClear(&parm[0]);
+    VariantClear(&parm[1]);
+    AutoWrap(DISPATCH_METHOD, NULL, root[level].pdispVal, L"Select", 0);
+    VariantClear(&root[level--]);
+    VariantClear(&root[level--]);
+    VariantClear(&root[level--]);
+    VariantClear(&root[level--]);
+    VariantClear(&root[level--]);
+
+    // Line 6: app . Selection . NumberFormat = @ 
+    rVal.vt = VT_BSTR;
+    rVal.bstrVal = ::SysAllocString(L"@");
+    VariantCopy(&root[++level], &app);
+    AutoWrap(DISPATCH_PROPERTYGET|DISPATCH_METHOD, &root[level+1], root[level++].pdispVal, L"Selection", 0);
+    AutoWrap(DISPATCH_PROPERTYPUT, NULL, root[level].pdispVal, L"NumberFormat", 1, rVal);
+    VariantClear(&root[level--]);
+    VariantClear(&root[level--]);
+    VariantClear(&rVal);
+#endif
