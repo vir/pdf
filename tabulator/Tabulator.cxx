@@ -186,8 +186,6 @@ void Tabulator::full_process(PDF::Page * page)
 	std::clog << table.dump();
 }
 
-
-
 void Tabulator::dump() const
 {
 	std::clog << "Tabulator dump:" << std::endl;
@@ -196,5 +194,12 @@ void Tabulator::dump() const
 	std::clog << table.dump();
 }
 
+unsigned int Tabulator::Table::nrows() const
+{
+	return cells.size();
+}
 
-
+unsigned int Tabulator::Table::ncols() const
+{
+	return cells.size()?cells[0].size():0;
+}
