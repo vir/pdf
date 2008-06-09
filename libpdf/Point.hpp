@@ -12,6 +12,7 @@ class Point
 {
   public:
     double x,y;
+    Point():x(0),y(0) {}
     Point(double nx, double ny):x(nx),y(ny) {}
     Point(const Point & p):x(p.x),y(p.y) {}
     Point & operator =(const Point & p) { x=p.x; y=p.y; return *this; }
