@@ -214,6 +214,7 @@ class Page::TextObject
 					accumulated_text+=s;
 					total_width+=w;
 					Flush();
+					s.resize(0);
 					tm.offset_unscaled(gs->text_state.Tw*gs->text_state.Th/100.0, 0);
 				}
 			} else {
