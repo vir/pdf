@@ -113,6 +113,10 @@ SOURCE=.\Tabulator_Metafile.cxx
 
 SOURCE=.\Tabulator_Table.cxx
 # End Source File
+# Begin Source File
+
+SOURCE=.\Tabulator_TextBlock.cxx
+# End Source File
 # End Group
 # Begin Group "Header Files"
 
