@@ -121,6 +121,7 @@ class Tabulator
 				class Exporter
 				{
 					public:
+						virtual ~Exporter() {}
 						virtual void page_begin(std::string fname, unsigned int pnum) {}
 						virtual void table_begin(unsigned int ncols, unsigned int nrows) {}
 						virtual void row_begin(unsigned int r) {}
