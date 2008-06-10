@@ -94,6 +94,10 @@ class Tabulator
 				unsigned int find_col(double x) const;
 				unsigned int find_row(double y) const;
 				std::string dump() const;
+				void clear() {
+					h_knots.clear();
+					v_knots.clear();
+				}
 		};
 		/** Table of cells */
 		class Table
@@ -152,6 +156,7 @@ class Tabulator
 			Options():find_more_rows(false),find_rows_column(0),postprocess(false) { }
 		} options;
 		void set_tolerance(double tx, double ty);
+		void flush() { metafile.Clear(); grid.clear(); table.clear(); }
 		void load_page(PDF::Page * page);
 		void build_grid();
 		void fill_table_with_text();

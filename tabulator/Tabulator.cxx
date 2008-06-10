@@ -91,7 +91,7 @@ void Tabulator::build_grid()
 
 		Tabulator::Metafile::TextMap::const_iterator tit; // text iterator
 		Coord cur_y = -1E10;
-		for(tit = metafile.all_text.begin(); tit != metafile.all_text.end(); tit++) { /* check all text */
+		for(tit = metafile.all_text.begin(); tit != metafile.all_text.end() && tit->pos.y < lowest_v_line; tit++) { /* check all text */
 			if(lowest_h_line < lowest_v_line && tit->pos.y < lowest_h_line) // skip seader
 				continue;
 			if(tit->pos.x >= x1 && tit->pos.x < x2 && tit->pos.y != cur_y) {
@@ -115,7 +115,6 @@ void Tabulator::fill_table_with_text()
 	double header_y = 0;
 	/* all_text is sorted by y, then x coord */
 	int row = 0;
-#if 1
 	Tabulator::Grid::KnotsIterator cit; // table cols iterator
 	int col;
 	rit = grid.v_knots.begin();
@@ -143,41 +142,14 @@ void Tabulator::fill_table_with_text()
 			if(tit->pos.y < header_y)
 				table.cell(col, row)->is_header=true;
 		} else {
-			std::wclog << L"Text is not in table: \"" << tit->text << "\"" << std::endl;
+			std::wclog << L"Text at " << tit->pos.x << L',' << tit->pos.y << L" is not in table: \"" << tit->text << "\"" << std::endl;
 		}
 	}
-#else
-	bool in_table = false;
-	tit = metafile.all_text.begin();
-	for(rit = grid.v_knots.begin(); rit != grid.v_knots.end(); rit++, in_table=true) {
-		std::clog << "Checking row " << row << " at y=" << rit->first << std::endl;
-		while(tit!=metafile.all_text.end() && tit->first.y < double(rit->first)) {
-			if(!in_table) {
-				std::wclog << L"Text is not in table: \"" << tit->second << "\"" << std::endl;
-				tit++;
-				continue;
-			}
-			unsigned int col;
-			try {
-				col = grid.find_col( tit->first.x );
-//				std::clog << "Text goes to (" << col << "," << row << ")" << std::endl;
-				table.cell(col, row)->addtext(tit->first, tit->second);
-				if(tit->first.y < header_y)
-					table.cell(col, row)->is_header=true;
-			}
-			catch(...) {
-				std::wclog << L"Text is not in table: \"" << tit->second << "\"" << std::endl;
-			}
-			tit++;
-		} // all_text
-		if(in_table)
-			row++;
-	}
-#endif
 }
 
 void Tabulator::full_process(PDF::Page * page)
 {
+	flush();
 	load_page(page);
 
 	build_grid();
