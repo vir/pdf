@@ -3,9 +3,9 @@
 /** Find table column number by x coordinate */
 unsigned int Tabulator::Grid::find_col(double x) const
 {
-	KnotsIterator it = h_knots.begin();
+	KnotsIterator it;
 	unsigned int r = 0;
-	for(it++; it != h_knots.end(); it++, r++) {
+	for(it = h_knots.begin(); it != h_knots.end(); it++, r++) {
 		if(x < it->first) {
 			if(r > 0) // in table
 				return r - 1;
