@@ -2,7 +2,6 @@
 
 #include <ole2.h>
 #include <stdio.h>
-#include <iostream>
 
 static HRESULT AutoWrap(int autoType, VARIANT *pvResult, IDispatch *pDisp, LPOLESTR ptName, int cArgs...) {
 	// Begin variable-argument list...
@@ -23,7 +22,7 @@ static HRESULT AutoWrap(int autoType, VARIANT *pvResult, IDispatch *pDisp, LPOLE
 	char szName[200];
 
 	// Convert down to ANSI
-	WideCharToMultiByte(CP_ACP, 0, ptName, -1, szName, 256, NULL, NULL);
+	WideCharToMultiByte(CP_ACP, 0, ptName, -1, szName, sizeof(szName), NULL, NULL);
 
 	// Get DISPID for name passed...
 	hr = pDisp->GetIDsOfNames(IID_NULL, &ptName, 1, LOCALE_USER_DEFAULT, &dispID);
@@ -134,8 +133,6 @@ void Excel::set_cell_value(std::wstring s, int offset_c, int offset_r)
 	col.lVal = offset_c;
 	row.lVal = offset_r;
 
-	std::clog << "set_cell_values(" << offset_c << ", " << offset_r << ")" << std::endl;
-	
 	VARIANT val;
 	val.vt = VT_BSTR;
 	val.bstrVal = ::SysAllocString(s.c_str());
@@ -194,8 +191,6 @@ void Excel::move_cursor(int offset_c, int offset_r)
 	col.lVal = offset_c;
 	row.lVal = offset_r;
 	
-	std::clog << "move_cursor(" << offset_c << ", " << offset_r << ")" << std::endl;
-
 	// app . ActiveCell . Offset(r, c) . Value = s
 	// app.ActiveCell.Offset(2, 3).Activate
 	VARIANT activecell, offset;

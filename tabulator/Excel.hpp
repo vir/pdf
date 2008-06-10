@@ -10,7 +10,7 @@ class Excel
 		IDispatch * app;
 	public:
 		Excel();
-		~Excel();
+		virtual ~Excel();
 		bool get_active();
 		bool start_new();
 		void set_visible(bool v);
