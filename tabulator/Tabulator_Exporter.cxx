@@ -109,15 +109,42 @@ void ExporterHTML::table_end()
 	s << "</table>" << std::endl;
 }
 
-#ifdef _WIN32
-/*===============================================================*\
- *======= Excel =================================================*
-\*===============================================================*/
+#ifdef _WIN32 /*======= Excel =================================================*/
+
+bool ExporterExcel::set_params(std::string pstr)
+{
+	std::strstream ss(pstr);
+	ss >> sheets_number;
+	std::clog << "ExporterExcel: sheets_number set to " << sheets_number << std::endl;
+	return true;
+}
+
+void ExporterExcel::table_begin(unsigned int ncols, unsigned int nrows)
+{
+	cols_number = ncols;
+	if(!cur_sheet || nrows > rows_number)
+		rows_number = nrows;
+}
+
 void ExporterExcel::cell(const Tabulator::Table::Cell * cptr, unsigned int c, unsigned int r)
 {
 	if(!cptr)
 		return;
 	set_cell_value(cptr->celltext(), c, r);
+}
+
+void ExporterExcel::table_end()
+{
+	cur_sheet++;
+	if(cur_sheet == sheets_number) { // move down and cur_sheet times left
+		move_cursor(-cur_col, rows_number);
+		cur_col = 0;
+		cur_sheet = 0;
+	} else { // move right
+		move_cursor(cols_number, 0);
+		cur_col+=cols_number;
+		cur_sheet++;
+	}
 }
 
 #endif /* _WIN32 */

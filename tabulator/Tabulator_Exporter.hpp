@@ -46,11 +46,17 @@ class ExporterExcel
 	,public Excel
 {
 	private:
+		unsigned int sheets_number;
+		unsigned int cur_sheet; // number of "sheets" in current "megarow"
+		unsigned int cur_col;
 		unsigned int rows_number;
+		unsigned int cols_number;
 	public:
-		virtual void table_begin(unsigned int ncols, unsigned int nrows) { rows_number = nrows; }
+		ExporterExcel():sheets_number(1),cur_sheet(0),cur_col(0) {}
+		virtual bool set_params(std::string pstr);
+		virtual void table_begin(unsigned int ncols, unsigned int nrows);
 		virtual void cell(const Tabulator::Table::Cell * cptr, unsigned int c, unsigned int r);
-		virtual void table_end() { move_cursor(0, rows_number); }
+		virtual void table_end();
 };
 #endif /* _WIN32 */
 
