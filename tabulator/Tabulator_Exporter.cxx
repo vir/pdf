@@ -113,7 +113,7 @@ void ExporterHTML::table_end()
 
 bool ExporterExcel::set_params(std::string pstr)
 {
-	std::strstream ss(pstr);
+	std::stringstream ss(pstr);
 	ss >> sheets_number;
 	std::clog << "ExporterExcel: sheets_number set to " << sheets_number << std::endl;
 	return true;
@@ -136,14 +136,13 @@ void ExporterExcel::cell(const Tabulator::Table::Cell * cptr, unsigned int c, un
 void ExporterExcel::table_end()
 {
 	cur_sheet++;
-	if(cur_sheet == sheets_number) { // move down and cur_sheet times left
+	if(!sheets_number || cur_sheet == sheets_number) { // move down and cur_sheet times left
 		move_cursor(-cur_col, rows_number);
 		cur_col = 0;
 		cur_sheet = 0;
 	} else { // move right
 		move_cursor(cols_number, 0);
 		cur_col+=cols_number;
-		cur_sheet++;
 	}
 }
 
