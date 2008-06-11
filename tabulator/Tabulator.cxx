@@ -39,6 +39,9 @@ void Tabulator::build_grid()
 	Coord lowest_h_line(-1E10);
 	Coord lowest_v_line(-1E10);
 
+	if(!metafile.h_lines.size() || !metafile.v_lines.size())
+		return;
+
 	// 1. Find vertical knots (y-coords of all horisontal lines)
 	for(cur = -1E20, lit = metafile.h_lines.begin(); lit != metafile.h_lines.end(); lit++) {
 		if(cur != lit->first) { // add knot
@@ -110,6 +113,8 @@ void Tabulator::build_grid()
 void Tabulator::fill_table_with_text()
 {
 	table.clear();
+	if(!grid.h_knots.size() || !grid.v_knots.size())
+		return;
 	table.resize(grid.h_knots.size()-1, grid.v_knots.size()-1);
 
 	Tabulator::Metafile::TextMap::iterator tit; // text iterator
