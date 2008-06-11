@@ -23,6 +23,7 @@ int main(int argc, char * argv[])
 	int tmp;
 
 	Tabulator t;
+	const char * expparams = NULL;
 	// t.set_tolerance(5.0, 5.0);
 
 #if 0
@@ -38,7 +39,7 @@ int main(int argc, char * argv[])
 	while(1)
 	{
 		int c;
-		c = getopt(argc, argv, "hp:r:c:R:f:P");
+		c = getopt(argc, argv, "hp:r:c:R:f:PE:");
 		if(c == -1) break;
 		switch(c)
 		{
@@ -57,7 +58,6 @@ int main(int argc, char * argv[])
 					t.metafile.set_rotation(tmp);
 					break;
 				}
-	// t.set_rotation(rotation);
 				std::cerr << "Error in rotation specification " << optarg << std::endl;
 				help(std::cerr);
 				exit(1);
@@ -70,6 +70,9 @@ int main(int argc, char * argv[])
 				break;
 			case 'P':
 				t.options.postprocess = true;
+				break;
+			case 'E':
+				expparams = optarg;
 				break;
 			case 'c':
 			default:
@@ -128,6 +131,12 @@ int main(int argc, char * argv[])
 			std::cerr << "Unknown format <" << format << ">" << std::endl;
 			return -1;
 	}
+	if(expparams) {
+			if(!exporter->set_params(expparams)) {
+				std::cerr << "Error setting exporter params" << std::endl;
+				return -1;
+			}
+	}
 
 	for(unsigned int pagenum = page_first; pagenum <= (page_last?page_last:doc.get_pages_count()); pagenum++) // all needed
 	{
@@ -182,7 +191,8 @@ void help(std::ostream & s)
 	  << "\t-cXXXX --- UNIMPLEMENTED crop rectangle" << std::endl
 		<< "\t-R COL --- add rows by looking at text in col COL" << std::endl
 		<< "\t-f F --- set output format to F: c h e" << std::endl
-		<< "\t-P --- postprocess table - use if got many W O R D S W I T H S P A C E S" << std::endl;
+		<< "\t-P --- postprocess table - use if got many W O R D S W I T H S P A C E S" << std::endl
+		<< "\t-E PARAMS --- set exporter-specific params" << std::endl
 		;
 }
 

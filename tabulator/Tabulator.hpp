@@ -122,6 +122,7 @@ class Tabulator
 				{
 					public:
 						virtual ~Exporter() {}
+						virtual bool set_params(std::string pstr) { return true; }
 						virtual void page_begin(std::string fname, unsigned int pnum) {}
 						virtual void table_begin(unsigned int ncols, unsigned int nrows) {}
 						virtual void row_begin(unsigned int r) {}
