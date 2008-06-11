@@ -91,13 +91,16 @@ void Tabulator::build_grid()
 
 		Tabulator::Metafile::TextMap::const_iterator tit; // text iterator
 		Coord cur_y = -1E10;
-		for(tit = metafile.all_text.begin(); tit != metafile.all_text.end() && tit->pos.y < lowest_v_line; tit++) { /* check all text */
+		double table_bottom = lowest_v_line;
+		if(lowest_h_line > table_bottom)
+			table_bottom = lowest_h_line;
+		for(tit = metafile.all_text.begin(); tit != metafile.all_text.end() && tit->pos.y < table_bottom; tit++) { /* check all text */
 			if(lowest_h_line < lowest_v_line && tit->pos.y < lowest_h_line) // skip seader
 				continue;
 			if(tit->pos.x >= x1 && tit->pos.x < x2 && tit->pos.y != cur_y) {
 				std::clog << "Adding line above text string @" << tit->pos.dump() << std::endl;
 				cur_y = tit->pos.y;
-				grid.v_knots.insert(Grid::KnotsMap::value_type(cur_y - 10.0, Grid::Line()));
+				grid.v_knots.insert(Grid::KnotsMap::value_type(cur_y - tit->height, Grid::Line()));
 			}
 		}
 	} // option.find_more_rows
