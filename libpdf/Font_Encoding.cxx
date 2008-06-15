@@ -11,6 +11,7 @@ static struct {
 	const char * n;
 	wchar_t c;
 } charnames_table[] = {
+#if 0
 	{"space",    L' '},
 	{"zero",     L'0'},
 	{"one",      L'1'},
@@ -33,6 +34,9 @@ static struct {
 	{"equal",    L'='},
 	{"plus",     L'+'},
 	{"asterisk", L'*'},
+#else
+# include "glyphlist.i"
+#endif
 };
 
 static wchar_t get_unicode_char_by_name(std::string name)
