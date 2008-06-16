@@ -39,6 +39,13 @@ static struct {
 #endif
 };
 
+static wchar_t encoding_win_ansi[] = {
+#include "enc_win.i"
+};
+static wchar_t encoding_mac_roman[] = {
+#include "enc_mac.i"
+};
+
 static wchar_t get_unicode_char_by_name(std::string name)
 {
 	if(name.length() == 1) {
@@ -54,7 +61,7 @@ static wchar_t get_unicode_char_by_name(std::string name)
 
 
 
-struct TypeTabEntry { enum Font::Encoding::Type t; const char * n; } encodings_tab[] = {
+static struct TypeTabEntry { enum Font::Encoding::Type t; const char * n; } encodings_tab[] = {
 #define C(c) { Font::Encoding::c, #c }
 	C(UnknownEncoding),
 	C(WinAnsiEncoding),
@@ -143,17 +150,24 @@ wchar_t Font::Encoding::map(unsigned long c) const
 			return (wchar_t)c; /* unmapped */
 		case WinAnsiEncoding:
 			switch(c) {
-				case 0xA8: return 0x401;
+				case 0xA8: return 0x401; // Fix for 'io' (Ё)
 				case 0xB8: return 0x451;
 				default:
+#if 0
 					if(c<0x7F) return c;
 //					printf("WinAnsiEncoding: %04X -> %04X\n", (unsigned int)c, (unsigned int)(0x410 + (c - 0xC0)));
 //					return 0x410 + (c - 0xC0); // Convert cp1251 to unicode
 					return c;
+#else
+					return encoding_win_ansi[c];
+#endif
 			}
 			break;
+		case MacRomanEncoding:
+			return encoding_mac_roman[c];
+			break;
 		default:
-//			std::cerr << "Unsupported font encoding" << std::endl;
+			std::cerr << "Unsupported font encoding" << std::endl;
 			return c;
 			break;
 	}
