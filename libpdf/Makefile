@@ -29,13 +29,19 @@ libpdf.a: $(OBJS)
 %.o: %.cxx
 	$(COMPILE.cpp) $(OUTPUT_OPTION) $<
 
-glyphlist.i: mk_encoding_table.pl glyphlist.txt
-	./mk_encoding_table.pl $^ > $@
+glyphlist.i: mk_encoding_table.pl glyphlist.txt pdf_encodings.txt
+	./mk_encoding_table.pl
+
+enc_win.i: mk_encoding_table.pl glyphlist.txt pdf_encodings.txt
+	./mk_encoding_table.pl
+
+enc_mac.i: mk_encoding_table.pl glyphlist.txt pdf_encodings.txt
+	./mk_encoding_table.pl
 
 glyphlist.txt:
 	wget http://www.adobe.com/devnet/opentype/archives/glyphlist.txt
 
-Font_Encoding.cxx: glyphlist.i
+Font_Encoding.cxx: glyphlist.i enc_win.i enc_mac.i
 
 include $(SOURCES:.cxx=.d)
 
