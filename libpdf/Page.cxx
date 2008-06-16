@@ -7,6 +7,8 @@
 #include "Object.hpp"
 #include "Media.hpp"
 
+#define TC_IS_KERNING 1
+
 namespace PDF {
 
 Page::Page():m_debug(0),m_operators_number_limit(0)
@@ -204,8 +206,17 @@ class Page::TextObject
 		}
 		void Append(const String * str)
 		{
-			double w = 0;
 			unsigned int pos = 0;
+#if TC_IS_KERNING
+			while(gs->text_state.Tf->extract_one_char(str, accumulated_text, total_width, pos)) {
+				double plusw = gs->text_state.Tc;
+				if(accumulated_text[accumulated_text.length()-1] == L' ')
+					plusw += gs->text_state.Tw;
+				if(plusw)
+					Kerning(-(plusw / gs->text_state.Tfs));
+			}
+#else
+			double w = 0;
 			std::wstring s;
 			if(!gs->text_state.Tf)
 				throw std::string("No font set");
@@ -222,9 +233,9 @@ class Page::TextObject
 			}
 			accumulated_text+=s;
 			total_width+=w;
+#endif
 		}
 		void Kerning(double k) { // offset next char back by k glyph space units
-			k /= 1000.0;
 			if(k > kerning_too_big || k < -kerning_too_big) { // XXX TODO caompare with avg charwidth or so
 				Flush();
 				double offset = -k * gs->text_state.Tfs * gs->text_state.Th/100.0;
@@ -251,12 +262,16 @@ class Page::TextObject
 				media->SetFont(gs->text_state.Tf, Trm.get_scale_v());
 				update_font = false;
 			}
+#if TC_IS_KERNING
+			double offset = (total_width*gs->text_state.Tfs) * gs->text_state.Th/100.0;
+#else
 			double offset = (total_width*gs->text_state.Tfs + gs->text_state.Tc*accumulated_text.length()) * gs->text_state.Th/100.0;
+#endif
 			media->Text(
 				Trm.translate(Point(0,0)),
 				Trm.get_rotation_angle(),
 				accumulated_text,
-				offset*Trm.get_scale_h(),
+				total_width*Trm.get_scale_h(),
 				Trm.get_scale_v()
 			);
 			tm.offset_unscaled(offset, 0);
@@ -419,8 +434,8 @@ void Page::draw(Media * m)
 						else {
 							const Integer * i = dynamic_cast<const Integer *>(*it);
 							const Real * r = dynamic_cast<const Real *>(*it);
-							if(i) tobj->Kerning(i->value());
-							else if(r) tobj->Kerning(r->value());
+							if(i) tobj->Kerning(i->value()/1000.0);
+							else if(r) tobj->Kerning(r->value()/1000.0);
 							else
 								std::cerr << "Unexpected object " << (*it)->type() << " in string (TJ)" << std::endl;
 						}
@@ -454,15 +469,13 @@ void Page::draw(Media * m)
         
         /* check other text object operators */
 				if(op->name() == "ET") { if(tobj) delete tobj; tobj=NULL; mode=M_PAGE; }
-				else if(op->name() == "Tc") {} // not very useful char spacing
+				else if(op->name() == "Tc") { gs->text_state.Tc    =  op->number(0);} // char spacing
 				else if(op->name() == "Ts") { gs->text_state.Trise = op->number(0); } // rise
 				else if(op->name() == "Tz") { gs->text_state.Th    = op->number(0); } // hor. scaling
-				else if(op->name() == "Tr") { gs->text_state.Tc    = op->number(0); } // char spacing
 				else if(op->name() == "Tw") { gs->text_state.Tw    = op->number(0); } // word spacing - useful if text begins with space(s)
 				else if(op->name() == "Tf") // set current font
 				{
           const Name * n=dynamic_cast<const Name *>(op->arg(0));
-//          std::clog << "Set current font to " << n->value() << std::endl;
           if(n) gs->text_state.Tf=fonts.find(n->value())->second;
           gs->text_state.Tfs=op->number(1);
 					tobj->FontChanged();
