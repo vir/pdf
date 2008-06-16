@@ -178,6 +178,32 @@ bool Font::extract_text(const String * so, std::wstring & ws, double & twid, uns
 	return false;
 }
 
+bool Font::extract_one_char(const String * so, std::wstring & ws, double & twid, unsigned int & pos) const
+{
+	// Get glyph index
+	unsigned long c=0;
+	for(unsigned int k=0; k<charbytes; k++) {
+		if(pos >= so->value().length())
+			return false;
+		c<<=8;
+		c|=(unsigned char)so->value()[pos++];
+	}
+
+	// Get glyph width
+	std::map<int, unsigned long>::const_iterator it = charwidths.find(c);
+	twid += ((it != charwidths.end()) ? it->second : defcharwidth)/1000.0;
+
+	// Convert to unicode
+	wchar_t res = to_unicode(c);
+	if(res) {
+		ws+=res;
+	} else {
+		fprintf(stderr, "Can not translate char %04lX (font: %s)\n", c, fontname.c_str());
+		ws+=L'@';
+	}
+	return true;
+}
+
 std::string Font::dump() const
 {
 	const char * ffl[] = {

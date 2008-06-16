@@ -37,6 +37,7 @@ class Font
     std::string dump() const;
 		std::string name() const { return fontname; }
 		bool extract_text(const String * so, std::wstring & ws, double & twid, unsigned int & pos, wchar_t delimiter=L'\0') const;
+		bool extract_one_char(const String * so, std::wstring & ws, double & twid, unsigned int & pos) const;
 		inline bool is_multibyte() const { return charbytes > 1; }
 };
 
