@@ -30,6 +30,7 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
 {
 	m_pagespin = NULL;
 	m_oplimitspin = NULL;
+	m_canvas = NULL;
 
 	/* Add Menu */
 	wxMenu *menuFile = new wxMenu;
@@ -122,7 +123,7 @@ void MyFrame::AddToolbar()
 
 void MyFrame::OnPageSpinCtrl(wxSpinEvent& event)
 {
-	if(m_pagespin) {
+	if(m_pagespin && m_canvas) {
 		theDocument->LoadPage(m_pagespin->GetValue());
 		std::clog << "Page switched to " << m_pagespin->GetValue() << std::endl;
 		m_canvas->Refresh();
@@ -131,7 +132,7 @@ void MyFrame::OnPageSpinCtrl(wxSpinEvent& event)
 
 void MyFrame::OnOplimitSpinCtrl(wxSpinEvent& event)
 {
-	if(m_oplimitspin) {
+	if(m_oplimitspin && m_canvas) {
 		PDF::Page * p = theDocument->GetPageObject();
 		p->set_operators_number_limit(m_oplimitspin->GetValue());
 		m_canvas->Refresh();
