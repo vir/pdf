@@ -87,52 +87,12 @@ LINK32=link.exe
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
-SOURCE=.\Excel.cxx
-# End Source File
-# Begin Source File
-
 SOURCE=.\tabmain.cxx
-# End Source File
-# Begin Source File
-
-SOURCE=.\Tabulator.cxx
-# End Source File
-# Begin Source File
-
-SOURCE=.\Tabulator_Exporter.cxx
-# End Source File
-# Begin Source File
-
-SOURCE=.\Tabulator_Grid.cxx
-# End Source File
-# Begin Source File
-
-SOURCE=.\Tabulator_Metafile.cxx
-# End Source File
-# Begin Source File
-
-SOURCE=.\Tabulator_Table.cxx
-# End Source File
-# Begin Source File
-
-SOURCE=.\Tabulator_TextBlock.cxx
 # End Source File
 # End Group
 # Begin Group "Header Files"
 
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
-# Begin Source File
-
-SOURCE=.\Excel.hpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\Tabulator.hpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\Tabulator_Exporter.hpp
-# End Source File
 # End Group
 # Begin Group "Resource Files"
 

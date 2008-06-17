@@ -28,11 +28,13 @@ IMPLEMENT_APP(MyApp)
 // `Main program' equivalent: the program execution "starts" here
 bool MyApp::OnInit()
 {
+#if 0
 	std::locale loc("ru_RU.KOI8-R");
 	std::wcout.imbue(loc);
 	std::wcerr.imbue(loc);
 	std::wclog.imbue(loc);
 //	std::wclog << L"Привет! Работает, гадина!" << std::endl;
+#endif
 
 	startpage = 1;
 	need_gui = true;
