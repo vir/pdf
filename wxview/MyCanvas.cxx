@@ -108,7 +108,7 @@ void MyCanvas::OnMouseMove(wxMouseEvent &event)
 
 void Metafile::SetFont(const PDF::Font * font, double size)
 {
-	wxFont* f = wxTheFontList->FindOrCreateFont(6.0*size, wxSWISS, wxNORMAL /*wxITALIC*/, wxNORMAL/*wxBOLD*/);
+	wxFont* f = wxTheFontList->FindOrCreateFont(size, wxSWISS, wxNORMAL /*wxITALIC*/, wxNORMAL/*wxBOLD*/);
 	dc.SetFont(*f);
 }
 
