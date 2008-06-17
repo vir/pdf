@@ -114,7 +114,7 @@ void Metafile::SetFont(const PDF::Font * font, double size)
 
 void Metafile::Text(Point pos, double rotation, std::wstring text)
 {
-	dc.DrawRotatedText(text, pos.x, height - pos.y, rotation);
+	dc.DrawRotatedText(wxString(text.c_str()), pos.x, height - pos.y, rotation);
 	if(m_debug)
 		std::clog << "TEXT " << text.length() << " chars at " << pos.dump() << "(" << rotation << " degree angle)" << std::endl;
 }

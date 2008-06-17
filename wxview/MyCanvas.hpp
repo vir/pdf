@@ -1,5 +1,11 @@
 #ifndef MYCANVAS_HPP_INCLUDED
 #define MYCANVAS_HPP_INCLUDED
+
+// get rid of "identifier was truncated to '255' characters..."
+#ifdef _MSC_VER
+# pragma warning(disable : 4786)
+#endif
+
 #include <wx/wx.h>
 
 class MyFrame;
