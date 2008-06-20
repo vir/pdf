@@ -88,10 +88,7 @@ class Tabulator
 				{
 					public:
 						Line() {}
-						Line(unsigned int b1, unsigned int b2)
-						{
-							set_bits(b1, b2);
-						}
+						Line(unsigned int size, bool defval = false):std::vector<bool>(size, defval) {}
 						void set_bits(unsigned int b1, unsigned int b2)
 						{
 							for(unsigned int i = b1; i <= b2; i++) { at(i) = true; }

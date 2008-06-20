@@ -100,7 +100,7 @@ void Tabulator::build_grid()
 			if(tit->pos.x >= x1 && tit->pos.x < x2 && tit->pos.y != cur_y) {
 				std::clog << "Adding line above text string @" << tit->pos.dump() << std::endl;
 				cur_y = tit->pos.y;
-				grid.v_knots.insert(Grid::KnotsMap::value_type(cur_y - tit->height, Grid::Line(0, grid.h_knots.size())));
+				Grid::KnotsMap::iterator iit = grid.v_knots.insert(Grid::KnotsMap::value_type(cur_y - tit->height, Grid::Line(grid.h_knots.size()-1, true))).first;
 			}
 		}
 	} // option.find_more_rows
