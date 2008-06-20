@@ -50,14 +50,14 @@ void Tabulator::Metafile::Line(const PDF::Point & p1, const PDF::Point & p2)
 	Coord y2(page_height - p2.y);
 
 	if(x1 == x2 && y1 != y2) { // vertical line
-		std::clog << "V-Line" << p1.dump() << "-" << p2.dump() << std::endl;
+//		std::clog << "V-Line" << p1.dump() << "-" << p2.dump() << std::endl;
 		std::pair<Coord, Coord> y(y1, y2);
 		if(y2 < y1) std::swap(y.first, y.second);
 		v_lines.insert(std::pair<Coord, std::pair<Coord, Coord> >(x1, y));
 		return;
 	}
 	if(x1 != x2 && y1 == y2) { // horizontal line
-		std::clog << "H-Line" << p1.dump() << "-" << p2.dump() << std::endl;
+//		std::clog << "H-Line" << p1.dump() << "-" << p2.dump() << std::endl;
 		std::pair<Coord, Coord> x(x1, x2);
 		if(x2 < x1) std::swap(x.first, x.second);
 		h_lines.insert(std::pair<Coord, std::pair<Coord, Coord> >(y1, x));

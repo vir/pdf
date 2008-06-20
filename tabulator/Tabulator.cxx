@@ -72,9 +72,6 @@ void Tabulator::build_grid()
 		grid.v_knots.insert(Grid::KnotsMap::value_type(lowest_v_line, Grid::Line()));
 	}
 
-	// 3. Fill vertical knot's arrays (line in n'th column present)
-	// 4. Fill horizontal knot's arrays (line in nth row present)
-
 	if(options.find_more_rows && grid.h_knots.size() >= 2) {
 	/* 
 	 * We have no horizontal lines, so
@@ -103,10 +100,56 @@ void Tabulator::build_grid()
 			if(tit->pos.x >= x1 && tit->pos.x < x2 && tit->pos.y != cur_y) {
 				std::clog << "Adding line above text string @" << tit->pos.dump() << std::endl;
 				cur_y = tit->pos.y;
-				grid.v_knots.insert(Grid::KnotsMap::value_type(cur_y - tit->height, Grid::Line()));
+				grid.v_knots.insert(Grid::KnotsMap::value_type(cur_y - tit->height, Grid::Line(0, grid.h_knots.size())));
 			}
 		}
 	} // option.find_more_rows
+
+	if(options.find_joined_cells) {
+		Grid::KnotsMap::iterator kit;
+		Grid::KnotsIterator kit2;
+
+		// Fill vertical knot's arrays (line in n'th column present)
+		for(lit = metafile.h_lines.begin(); lit != metafile.h_lines.end(); lit++) {
+			kit = grid.v_knots.find(lit->first);
+			if(kit == grid.v_knots.end())
+				continue;
+			kit->second.resize(grid.h_knots.size()-1, false);
+			int e1 = -1;
+			int e2 = -1;
+			int e;
+			for(kit2 = grid.h_knots.begin(), kit2++, e = 0; kit2 != grid.h_knots.end(); kit2++, e++) {
+				if(lit->second.first < kit2->first && e1 < 0)
+					e1 = e;
+				if(e1 >= 0)
+					e2 = e;
+				if(lit->second.second < kit2->first)
+					break;
+			}
+			if(e1 >= 0 && e2 >= 0)
+				kit->second.set_bits(e1, e2);
+		}
+		// Fill horizontal knot's arrays (line in nth row present)
+		for(lit = metafile.v_lines.begin(); lit != metafile.v_lines.end(); lit++) {
+			kit = grid.h_knots.find(lit->first);
+			if(kit == grid.h_knots.end())
+				continue;
+			kit->second.resize(grid.v_knots.size()-1, false);
+			int e1 = -1;
+			int e2 = -1;
+			int e;
+			for(kit2 = grid.v_knots.begin(), kit2++, e = 0; kit2 != grid.v_knots.end(); kit2++, e++) {
+				if(lit->second.first < kit2->first && e1 < 0)
+					e1 = e;
+				if(e1 >= 0)
+					e2 = e;
+				if(lit->second.second < kit2->first)
+					break;
+			}
+			if(e1 >= 0 && e2 >= 0)
+				kit->second.set_bits(e1, e2);
+		}
+	}
 
 }
 

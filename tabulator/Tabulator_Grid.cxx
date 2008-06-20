@@ -1,5 +1,15 @@
 #include "Tabulator.hpp"
 
+std::string Tabulator::Grid::Line::dump() const
+{
+	std::stringstream ss;
+	for(unsigned int i = 0; i < size(); i++) {
+		ss << (at(i)?'=':'.');
+	}
+	return ss.str();
+}
+
+
 /** Find table column number by x coordinate */
 unsigned int Tabulator::Grid::find_col(double x) const
 {
@@ -40,11 +50,11 @@ std::string Tabulator::Grid::dump() const
 	ss << "Grid: " << h_knots.size() << " h-knots, " << v_knots.size() << " v-knots" << std::endl;
 	ss << " H-knots is at";
 	for(it = h_knots.begin(); it != h_knots.end(); it++)
-		ss << ' ' << (double)it->first;
+		ss << ' ' << (double)it->first << "(" << it->second.dump() << ")";
 	ss << std::endl;
 	ss << " V-knots is at";
 	for(it = v_knots.begin(); it != v_knots.end(); it++)
-		ss << ' ' << (double)it->first;
+		ss << ' ' << (double)it->first << "(" << it->second.dump() << ")";
 	ss << std::endl;
 	return ss.str();
 }

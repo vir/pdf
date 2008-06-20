@@ -86,6 +86,17 @@ class Tabulator
 			public:
 				class Line:public std::vector<bool>
 				{
+					public:
+						Line() {}
+						Line(unsigned int b1, unsigned int b2)
+						{
+							set_bits(b1, b2);
+						}
+						void set_bits(unsigned int b1, unsigned int b2)
+						{
+							for(unsigned int i = b1; i <= b2; i++) { at(i) = true; }
+						}
+						std::string dump() const;
 				};
 				typedef std::map< Coord, Line > KnotsMap;
 				typedef KnotsMap::const_iterator KnotsIterator;
@@ -155,7 +166,8 @@ class Tabulator
 			bool find_more_rows;
 			unsigned int find_rows_column;
 			bool postprocess;
-			Options():find_more_rows(false),find_rows_column(0),postprocess(false) { }
+			bool find_joined_cells;
+			Options():find_more_rows(false),find_rows_column(0),postprocess(false),find_joined_cells(true) { }
 		} options;
 		void set_tolerance(double tx, double ty);
 		void flush() { metafile.Clear(); grid.clear(); table.clear(); }
