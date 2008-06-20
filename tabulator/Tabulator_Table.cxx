@@ -49,7 +49,7 @@ void Tabulator::Table::resize(unsigned int cols, unsigned int rows)
 {
 	cells.resize(rows);
 	for(unsigned int i = 0; i < cells.size(); i++) {
-		cells[i].resize(cols, NULL);
+		cells[i].resize(cols, CellPtr(NULL));
 	}
 }
 
@@ -57,7 +57,7 @@ Tabulator::Table::Cell * Tabulator::Table::cell(unsigned int col, unsigned int r
 {
 	if(row >= cells.size() || col >= cells[row].size())
 		return NULL;
-	Cell * r = cells[row][col];
+	Cell * r = cells[row][col].get();
 	if(!r && create) {
 		std::list<Cell>::iterator it = all_cells.insert(all_cells.end(), Cell());
 		r = &(*it);
@@ -68,7 +68,21 @@ Tabulator::Table::Cell * Tabulator::Table::cell(unsigned int col, unsigned int r
 
 const Tabulator::Table::Cell * Tabulator::Table::cell(unsigned int col, unsigned int row) const
 {
-	return cells[row][col];
+	return cells[row][col].get();
+}
+
+void Tabulator::Table::span(unsigned int col, unsigned int row, unsigned int cs, unsigned int rs)
+{
+	Cell * cc = cell(col, row, true);
+	cc->set_spans(cs, rs);
+	for(unsigned int r = 0; r < rs; r++) {
+		for(unsigned int c = 0; c < cs; c++) {
+			if(r || c) {
+				cells[row+r][col+c] = cc;
+				cells[row+r][col+c].hide();
+			}
+		} // c
+	} // r
 }
 
 void Tabulator::Table::postprocess()
@@ -88,7 +102,9 @@ void Tabulator::Table::output(Tabulator::Table::Exporter * ex) const
 	for(r = 0; r < cells.size(); r++) {
 		ex->row_begin(r);
 		for(c = 0; c < cells[r].size(); c++) {
-			ex->cell(cell(c, r), c, r);
+			const Cell * cc = cell(c, r);
+			ex->cell(cc, cells[r][c].hidden(), c, r, cc?cc->colspan:0, cc?cc->rowspan:0);
+//			ex->cell(cc, c, r);
 		}
 		ex->row_end();
 	}

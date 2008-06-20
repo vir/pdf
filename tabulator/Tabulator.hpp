@@ -123,10 +123,11 @@ class Tabulator
 						bool is_header;
 						unsigned int colspan, rowspan;
 					public: // methods
-						Cell():is_header(false) {}
+						Cell():is_header(false),colspan(1),rowspan(1) {}
 						unsigned int mergeblocks();
 						void addtext(const TextBlock & b) { text.insert(b); }
 						std::wstring celltext() const;
+						void set_spans(unsigned int cs, unsigned int rs) { colspan = cs; rowspan = rs; }
 				};
 				/** Table exporter interface */
 				class Exporter
@@ -139,19 +140,37 @@ class Tabulator
 						virtual void row_begin(unsigned int r) {}
 						virtual void cell(std::wstring text, unsigned int c, unsigned int r) {};
 						virtual void cell(const Cell * cptr, unsigned int c, unsigned int r) { cell(cptr?cptr->celltext():L"", c, r); }
+						virtual void cell(const Cell * cptr, bool hidden, unsigned int c, unsigned int r, unsigned int cs, unsigned int rs) { cell(hidden?NULL:cptr, c, r); }
 						virtual void row_end() {}
 						virtual void table_end() {}
 						virtual void page_end() {}
 				};
+				class CellPtr
+				{
+					private:
+						Cell * m_ptr;
+						bool m_hidden;
+					public:
+						explicit CellPtr(Cell * c = NULL):m_ptr(c),m_hidden(false) {}
+						CellPtr & operator=(Cell * c) { m_ptr = c; return *this; }
+						Cell & operator*() { return *m_ptr; }
+						Cell * operator->() { return m_ptr; }
+						Cell * get() { return m_ptr; }
+						void hide() { m_hidden = true; }
+						void unhide() { m_hidden = false; }
+						bool hidden() const { return m_hidden; }
+						const Cell * get() const { return m_ptr; }
+				};
 			private:
 				std::list<Cell> all_cells;
-				std::vector< std::vector<Cell *> > cells;
+				std::vector< std::vector<CellPtr> > cells;
 			public: /* methods */
 				unsigned int ncols() const;
 				unsigned int nrows() const;
 				Grid grid;
 				void resize(unsigned int cols, unsigned int rows);
 				Cell * cell(unsigned int col, unsigned int row, bool create=true);
+				void span(unsigned int col, unsigned int row, unsigned int cs, unsigned int rs);
 				const Cell * cell(unsigned int col, unsigned int rowi) const;
 				void postprocess();
 				void output(Exporter * ex) const;
@@ -173,6 +192,7 @@ class Tabulator
 		void flush() { metafile.Clear(); grid.clear(); table.clear(); }
 		void load_page(PDF::Page * page);
 		void build_grid();
+		void prepare_table();
 		void fill_table_with_text();
 		void full_process(PDF::Page * page);
 		void dump() const;

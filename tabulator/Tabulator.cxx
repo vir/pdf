@@ -150,16 +150,44 @@ void Tabulator::build_grid()
 				kit->second.set_bits(e1, e2);
 		}
 	}
-
 }
 
-void Tabulator::fill_table_with_text()
+void Tabulator::prepare_table()
 {
 	table.clear();
 	if(!grid.h_knots.size() || !grid.v_knots.size())
 		return;
 	table.resize(grid.h_knots.size()-1, grid.v_knots.size()-1);
 
+	if(options.find_joined_cells) {
+		Tabulator::Grid::KnotsIterator it_row, it_col, ri, ci;
+		unsigned int row, col;
+		// Check all cells
+		for(it_row = grid.v_knots.begin(), it_row++, row = 0; it_row != grid.v_knots.end(); it_row++, row++) {
+			for(it_col = grid.h_knots.begin(), it_col++, col = 0; it_col != grid.h_knots.end(); it_col++, col++) {
+				unsigned int cs = 0;
+				unsigned int rs = 0;
+				unsigned int c = col;
+				unsigned int r = row;
+				for(ri = it_row, r = row; ri != grid.v_knots.end(); ri++, r++) {
+					for(ci = it_col, c = col; ci != grid.h_knots.end(); ci++, c++) {
+						if(ci->second[r]) {
+							cs = c - col;
+							break;
+						}
+					} // c
+					break; // XXX Add rowspan calc
+				} // r
+if(cs || rs) std::clog << "Spans: row " << row << ", col " << col << ": " << cs+1 << "x" << rs+1 << std::endl;
+				if(cs || rs)
+					table.span(col, row, cs+1, rs+1);
+			} // col
+		} // row
+	}
+}
+
+void Tabulator::fill_table_with_text()
+{
 	Tabulator::Metafile::TextMap::iterator tit; // text iterator
 	Tabulator::Grid::KnotsIterator rit; // table rows iterator
 
@@ -205,6 +233,8 @@ void Tabulator::full_process(PDF::Page * page)
 
 	build_grid();
 	std::clog << grid.dump();
+
+	prepare_table();
 
 	fill_table_with_text();
 	std::clog << table.dump();
