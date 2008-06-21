@@ -154,6 +154,8 @@ void Tabulator::prepare_table()
 		// Check all cells
 		for(it_row = grid.v_knots.begin(), it_row++, row = 0; it_row != grid.v_knots.end(); it_row++, row++) {
 			for(it_col = grid.h_knots.begin(), it_col++, col = 0; it_col != grid.h_knots.end(); it_col++, col++) {
+				if(table.is_hidden(col, row))
+					continue; // skip cells, hidden by precedin spans
 				unsigned int cs = 0;
 				unsigned int rs = 0;
 				unsigned int c = col;
@@ -165,7 +167,7 @@ void Tabulator::prepare_table()
 							break;
 						}
 					} // c
-					break; // XXX Add rowspan calc
+					break; // XXX \todo Add rowspan calc
 				} // r
 if(cs || rs) std::clog << "Spans: row " << row << ", col " << col << ": " << cs+1 << "x" << rs+1 << std::endl;
 				if(cs || rs)

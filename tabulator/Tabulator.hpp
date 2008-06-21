@@ -168,6 +168,7 @@ class Tabulator
 				void resize(unsigned int cols, unsigned int rows);
 				Cell * cell(unsigned int col, unsigned int row, bool create=true);
 				void span(unsigned int col, unsigned int row, unsigned int cs, unsigned int rs);
+				bool is_hidden(unsigned int col, unsigned int row) { return cells[row][col].hidden(); }
 				const Cell * cell(unsigned int col, unsigned int rowi) const;
 				void postprocess();
 				void output(Exporter * ex) const;
