@@ -39,7 +39,7 @@ int main(int argc, char * argv[])
 	while(1)
 	{
 		int c;
-		c = getopt(argc, argv, "hp:r:c:R:f:PE:");
+		c = getopt(argc, argv, "hp:r:c:R:f:PE:J");
 		if(c == -1) break;
 		switch(c)
 		{
@@ -74,9 +74,12 @@ int main(int argc, char * argv[])
 			case 'E':
 				expparams = optarg;
 				break;
+			case 'J':
+				t.options.find_joined_cells = false;
+				break;
 			case 'c':
 			default:
-				std::cerr << "Unimplemented option " << c << std::endl;
+				std::cerr << "Unimplemented option '" << (char)c << "'" << std::endl;
 				exit(-1);
 		}
 	}
@@ -193,6 +196,7 @@ void help(std::ostream & s)
 		<< "\t-f F --- set output format to F: c h e" << std::endl
 		<< "\t-P --- postprocess table - use if got many W O R D S W I T H S P A C E S" << std::endl
 		<< "\t-E PARAMS --- set exporter-specific params" << std::endl
+		<< "\t-J --- do NOT find joined cells" << std::endl
 		;
 }
 
