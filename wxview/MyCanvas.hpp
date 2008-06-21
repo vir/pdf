@@ -16,8 +16,10 @@ class MyCanvas: public wxScrolledWindow
 		void OnPaint(wxPaintEvent &event);
 		void OnMouseMove(wxMouseEvent &event);
 		void Rotate(int quas) { m_rotation = quas; Refresh(); }
+		void debug(bool d) { m_debug = d; }
 	private:
 		int m_rotation;
+		bool m_debug;
 		MyFrame *m_owner;
 		DECLARE_EVENT_TABLE()
 };

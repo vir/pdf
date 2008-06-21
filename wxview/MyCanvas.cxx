@@ -32,6 +32,7 @@ class Metafile:public PDF::Media
 			if(m_debug)
 				std::clog << "DEBUG: " << s << std::endl;
 		}
+		void debug(bool d) { m_debug = d; }
 };
 
 
@@ -57,6 +58,7 @@ void MyCanvas::OnPaint(wxPaintEvent &WXUNUSED(event))
 	dc.Clear();
 
 	Metafile m(dc, m_rotation);
+	m.debug(m_debug);
 	theDocument->GetPageObject()->draw(&m);
 }
 
@@ -117,7 +119,7 @@ void Metafile::SetFont(const PDF::Font * font, double size)
 	if(size < 4) size = 4;
 	m_font_size = size;
 //	wxFont* f = wxTheFontList->FindOrCreateFont(6.0*size, wxSWISS, wxNORMAL /*wxITALIC*/, wxNORMAL/*wxBOLD*/);
-	wxFont* f = wxTheFontList->FindOrCreateFont(size, wxSWISS, wxNORMAL /*wxITALIC*/, wxNORMAL/*wxBOLD*/);
+	wxFont* f = wxTheFontList->FindOrCreateFont((int)size, wxSWISS, wxNORMAL /*wxITALIC*/, wxNORMAL/*wxBOLD*/);
 	dc.SetFont(*f);
 }
 
@@ -136,15 +138,15 @@ void Metafile::Text(Point pos, double rotation, std::wstring text, double width,
 	pos.y+=m_font_size*cos(a);
 	dc.SetBrush(wxBrush(*wxCYAN, wxSOLID));
 	dc.SetPen(wxPen(*wxCYAN, 0, wxSOLID));
-	dc.DrawRectangle(pos.x, page_height - pos.y, width*cos(a)+height*sin(a), height*cos(a)-width*sin(a));
-	dc.DrawRotatedText(text, pos.x, page_height - pos.y, rotation);
+	dc.DrawRectangle(wxCoord(pos.x), wxCoord(page_height - pos.y), wxCoord(width*cos(a)+height*sin(a)), wxCoord(height*cos(a)-width*sin(a)));
+	dc.DrawRotatedText(text, wxCoord(pos.x), wxCoord(page_height - pos.y), rotation);
 }
 
 void Metafile::Line(const Point & p1, const Point & p2)
 {
 //	dc.SetPen( wxPen( wxT("red"), 8 /* width */, wxSOLID) );
 	dc.SetPen(wxPen(*wxBLACK, 0, wxSOLID));
-	dc.DrawLine( p1.x, page_height - p1.y, p2.x, page_height - p2.y );
+	dc.DrawLine( wxCoord(p1.x), wxCoord(page_height - p1.y), wxCoord(p2.x), wxCoord(page_height - p2.y) );
 	if(m_debug)
 		std::clog << "LINE " << p1.dump() << '-' << p2.dump() << std::endl;
 }

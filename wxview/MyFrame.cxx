@@ -134,7 +134,9 @@ void MyFrame::OnOplimitSpinCtrl(wxSpinEvent& event)
 {
 	if(m_oplimitspin && m_canvas) {
 		PDF::Page * p = theDocument->GetPageObject();
-		p->set_operators_number_limit(m_oplimitspin->GetValue());
+		int lim = m_oplimitspin->GetValue();
+		p->set_operators_number_limit(lim);
+		m_canvas->debug(lim > 0);
 		m_canvas->Refresh();
 	}
 }
