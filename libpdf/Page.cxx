@@ -197,7 +197,7 @@ class Page::TextObject
 
 		TextObject(const Page::GraphicsState * g, Media * m):gs(g),media(m),total_width(0),update_font(false)
 		{
-			kerning_too_big = 0.4;
+			kerning_too_big = 0.3; //0.4;
 		}
 		void SetMatrix(const CTM & m)
 		{
