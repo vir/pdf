@@ -9,17 +9,7 @@
 #include <libpdf/PDF.hpp>
 #include "Tabulator.hpp"
 
-/* parser of tables such as
- *  .-----------------.
- *  | h1  |  h2  | h3 |
- *  `-----------------'
- *   d11   d12    d13
- *   d21   d22    d23
- *   ...
- * (updated for gng-2007 parsing)
- */
-
-#if 0
+#if 0 /* unimplemented! */
 void Tabulator::set_area(PDF::Rect r)
 void Tabulator::set_rotation(int rot)
 void Tabulator::set_tolerance(double tx, double ty)

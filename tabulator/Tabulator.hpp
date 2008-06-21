@@ -39,8 +39,8 @@ class Tabulator
 			public:
 				PDF::Point pos;
 				std::wstring text;
-				unsigned int width;
-				unsigned int height;
+				double width;
+				double height;
 				double angle;
 				PDF::Rect bounds() const;
 				bool merge_ok(const TextBlock & oth) const;
