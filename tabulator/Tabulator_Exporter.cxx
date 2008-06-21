@@ -32,6 +32,15 @@ static std::string quote_html(std::string s)
 	replace_in_place(s, ">", "&gt;");
 	replace_in_place(s, "&", "&amp;");
 	replace_in_place(s, "\"", "&quot;");
+	unsigned int p;
+#if 0
+	p = s.find_first_not_of(" \t\r\n");
+	if(p != std::string::npos)
+		s.erase(0, p-1);
+#endif
+	p = s.find_last_not_of(" \t\r\n");
+	if(p != std::string::npos)
+		s.erase(p+1, s.length());
 	return s;
 }
 
@@ -88,15 +97,23 @@ void ExporterHTML::row_begin(unsigned int r)
 	s << "<tr>";
 }
 
-void ExporterHTML::cell(const Tabulator::Table::Cell * cptr, unsigned int c, unsigned int r)
+void ExporterHTML::cell(const Tabulator::Table::Cell * cptr, bool hidden, unsigned int c, unsigned int r, unsigned int cs, unsigned int rs)
 {
+	if(hidden)
+		return;
 	if(!cptr) {
 		s << "<td></td>";
 		return;
 	}
-	s << (cptr->is_header?"<th>":"<td>");
+	std::string tag = (cptr->is_header)?"th":"td";
+	s << '<' << tag;
+	if(cs > 1) 
+		s << " colspan=\"" << cs << "\"";
+	if(rs > 1)
+		s << " rowspan=\"" << rs << "\"";
+	s << ">";
 	s << quote_html( ws2utf8( cptr->celltext() ) );
-	s << (cptr->is_header?"</th>":"</td>");
+	s << '<' << tag << '>';
 }
 
 void ExporterHTML::row_end()

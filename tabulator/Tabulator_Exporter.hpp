@@ -34,7 +34,7 @@ class ExporterHTML:public Tabulator::Table::Exporter
 		virtual void table_begin(unsigned int ncols, unsigned int nrows);
 		virtual void row_begin(unsigned int r);
 //		virtual void cell(std::wstring text, unsigned int c, unsigned int r);
-		virtual void cell(const Tabulator::Table::Cell * cptr, unsigned int c, unsigned int r);
+		virtual void cell(const Tabulator::Table::Cell * cptr, bool hidden, unsigned int c, unsigned int r, unsigned int cs, unsigned int rs);
 		virtual void row_end();
 		virtual void table_end();
 };
