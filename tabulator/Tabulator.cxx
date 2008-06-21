@@ -64,9 +64,8 @@ void Tabulator::build_grid()
 
 	if(options.find_more_rows && grid.h_knots.size() >= 2) {
 	/* 
-	 * We have no horizontal lines, so
-	 * let's assume lines some little space (eg. 10 units) above text, that falls
-	 * into first column
+	 * We have no horizontal lines, so let's there be some invisible
+	 * lines above text blocks, that falls into first column
 	 */
 		Grid::KnotsIterator kit;
 		double x1, x2;
