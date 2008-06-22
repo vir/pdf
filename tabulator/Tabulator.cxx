@@ -83,12 +83,12 @@ void Tabulator::build_grid()
 		double table_bottom = lowest_v_line;
 		if(lowest_h_line > table_bottom)
 			table_bottom = lowest_h_line;
-		for(tit = metafile.all_text.begin(); tit != metafile.all_text.end() && tit->pos.y < table_bottom; tit++) { /* check all text */
-			if(lowest_h_line < lowest_v_line && tit->pos.y < lowest_h_line) // skip seader
+		for(tit = metafile.all_text.begin(); tit != metafile.all_text.end() && tit->y < Coord(table_bottom); tit++) { /* check all text */
+			if(lowest_h_line < lowest_v_line && tit->y < lowest_h_line) // skip seader
 				continue;
-			if(tit->pos.x >= x1 && tit->pos.x < x2 && tit->pos.y != cur_y) {
-				std::clog << "Adding line above text string @" << tit->pos.dump() << std::endl;
-				cur_y = tit->pos.y;
+			if(double(tit->x) >= x1 && double(tit->x) < x2 && tit->y != cur_y) {
+				std::clog << "Adding line above text string @" << tit->x << ',' << tit->y << std::endl;
+				cur_y = tit->y;
 				Grid::KnotsMap::iterator iit = grid.v_knots.insert(Grid::KnotsMap::value_type(cur_y - tit->height, Grid::Line(grid.h_knots.size()-1, true))).first;
 			}
 		}
@@ -191,7 +191,7 @@ void Tabulator::fill_table_with_text()
 	row = -1;
 	bool reached_end_of_table = false;
 	for(tit = metafile.all_text.begin(); tit != metafile.all_text.end(); tit++) {
-		if(!reached_end_of_table && tit->pos.y > double(rit->first)) { // reached next row
+		if(!reached_end_of_table && tit->y > double(rit->first)) { // reached next row
 			rit++;
 			if(rit != grid.v_knots.end()) { // still in table
 //				std::clog << "Reached next row @ " << double(rit->first) << std::endl;
@@ -203,16 +203,16 @@ void Tabulator::fill_table_with_text()
 			}
 		}
 
-		try { col = grid.find_col(tit->pos.x); } catch(...) { col = -1; }
+		try { col = grid.find_col(tit->x); } catch(...) { col = -1; }
 
 		if(row>=0 && col>=0) {
 //			std::wclog << L"Text in table(" << col << L',' << row << "): \"" << tit->second << "\"" << std::endl;
 			if(tit->text.length())
 				table.cell(col, row)->addtext(*tit);
-			if(tit->pos.y < header_y)
+			if(tit->y < header_y)
 				table.cell(col, row)->is_header=true;
 		} else {
-			std::wclog << L"Text at " << tit->pos.x << L',' << tit->pos.y << L" is not in table: \"" << tit->text << "\"" << std::endl;
+			std::wclog << L"Text at " << tit->x << L',' << tit->y << L" is not in table: \"" << tit->text << "\"" << std::endl;
 		}
 	}
 }

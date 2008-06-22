@@ -24,6 +24,9 @@ class Tabulator
 			public:
 				Coord(double d=0):v(d) {}
 				bool operator < (const Coord & c) const { return compare(v, c.v) < 0; }
+				bool operator > (const Coord & c) const { return compare(v, c.v) > 0; }
+				bool operator < (double c) const { return compare(v, c) < 0; }
+				bool operator > (double c) const { return compare(v, c) > 0; }
 				bool operator == (const Coord & c) const { return compare(v, c.v) == 0; }
 				bool operator != (const Coord & c) const { return compare(v, c.v) != 0; }
 				operator double() const { return v; }
@@ -37,7 +40,7 @@ class Tabulator
 		class TextBlock
 		{
 			public:
-				PDF::Point pos;
+				Coord x, y;
 				std::wstring text;
 				double width;
 				double height;
@@ -45,12 +48,13 @@ class Tabulator
 				PDF::Rect bounds() const;
 				bool merge_ok(const TextBlock & oth) const;
 				TextBlock operator +(const TextBlock & oth) const;
-				bool operator <  (const TextBlock & oth) const { return pos < oth.pos; }
-				bool operator == (const TextBlock & oth) const { return pos < oth.pos; }
-				TextBlock & operator = (const TextBlock & oth) { pos = oth.pos; text = oth.text; width = oth.width; height = oth.height; angle = oth.angle; return *this; }
-				TextBlock():width(0),height(0),angle(0) {}
-				TextBlock(const PDF::Point & p, std::wstring s):pos(p),text(s),width(0),height(0),angle(0) {}
-				TextBlock(const PDF::Point & p, double a, std::wstring s, double w, double h):pos(p),text(s),width(w),height(h),angle(a) {}
+				bool operator <  (const TextBlock & oth) const { bool r = (y < oth.y); return r?r:(x < oth.x); }
+				bool operator == (const TextBlock & oth) const { return x==oth.x && y==oth.y; }
+				TextBlock & operator = (const TextBlock & oth) { x = oth.x; y = oth.y; text = oth.text; width = oth.width; height = oth.height; angle = oth.angle; return *this; }
+				TextBlock():x(0),y(0),width(0),height(0),angle(0) {}
+				TextBlock(const PDF::Point & p, std::wstring s):x(p.x),y(p.y),text(s),width(0),height(0),angle(0) {}
+				TextBlock(const PDF::Point & p, double a, std::wstring s, double w, double h):x(p.x),y(p.y),text(s),width(w),height(h),angle(a) {}
+				TextBlock(Coord xx, Coord yy, double a, std::wstring s, double w, double h):x(xx),y(yy),text(s),width(w),height(h),angle(a) {}
 		};
 		/** Abstract surface on which PDF page will be drawn */
 		class Metafile:public PDF::Media
