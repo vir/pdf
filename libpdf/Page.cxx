@@ -284,6 +284,12 @@ class Page::TextObject
 		}
 };
 
+void Page::GraphicsState::TextState::dump(std::ostream & s) const {
+	s << "Tc:" << Tc << " Tw:" << Tw << " Th:" << Th;
+	s << " Tl:" << Tl << " Tfs:" << Tfs << " Trise:" << Trise;
+	s << " Font:" << (Tf?Tf->name():"(null)");
+}
+
 void Page::draw(Media * m)
 {
   Path * curpath=NULL;
