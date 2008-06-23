@@ -62,7 +62,21 @@ void Tabulator::build_grid()
 		grid.v_knots.insert(Grid::KnotsMap::value_type(lowest_v_line, Grid::Line()));
 	}
 
-	if(options.find_more_rows && grid.h_knots.size() >= 2) {
+	if(options.find_table_header) {
+		if(lowest_h_line < lowest_v_line/2.0) {
+			grid.headers_end = lowest_h_line;
+			std::clog << "Headers end seems to be on last horizontal line, at " << grid.headers_end << std::endl;
+		} else {
+			Grid::KnotsMap::reverse_iterator rit = grid.v_knots.rbegin();
+			rit++;
+			if(rit->first < lowest_v_line/2.0) {
+				grid.headers_end = rit->first;
+				std::clog << "Headers end seems to be on pre-last horizontal line, at " << grid.headers_end << std::endl;
+			}
+		}
+	}
+
+	if(options.find_more_rows_column && grid.h_knots.size() >= 2) {
 	/* 
 	 * We have no horizontal lines, so let's there be some invisible
 	 * lines above text blocks, that falls into first column
@@ -70,13 +84,12 @@ void Tabulator::build_grid()
 		Grid::KnotsIterator kit;
 		double x1, x2;
 		kit = grid.h_knots.begin();
-		for(unsigned int i = 0; i < options.find_rows_column; i++)
+		for(unsigned int i = 0; i < options.find_more_rows_column - 1; i++)
 			kit++;
 		x1 = kit->first;
 		kit++; /* pointer to second verical line */
 		x2 = kit->first;
-		std::clog << "First column is between " << x1 << " and " << x2 << std::endl;
-		std::clog << "Second vertical line is at x " << lit->first << std::endl;
+		std::clog << "Adding more rows: " << options.find_more_rows_column << "th column is between " << x1 << " and " << x2 << std::endl;
 
 		Tabulator::Metafile::TextMap::const_iterator tit; // text iterator
 		Coord cur_y = -1E10;
@@ -84,7 +97,7 @@ void Tabulator::build_grid()
 		if(lowest_h_line > table_bottom)
 			table_bottom = lowest_h_line;
 		for(tit = metafile.all_text.begin(); tit != metafile.all_text.end() && tit->pos.y < table_bottom; tit++) { /* check all text */
-			if(lowest_h_line < lowest_v_line && tit->pos.y < lowest_h_line) // skip seader
+			if(tit->pos.y < grid.headers_end) // skip seader
 				continue;
 			if(tit->pos.x >= x1 && tit->pos.x < x2 && tit->pos.y != cur_y) {
 				std::clog << "Adding line above text string @" << tit->pos.dump() << std::endl;
@@ -181,6 +194,9 @@ void Tabulator::fill_table_with_text()
 {
 	Tabulator::Metafile::TextMap::iterator tit; // text iterator
 	Tabulator::Grid::KnotsIterator rit; // table rows iterator
+
+	if(table.nrows() == 0 || table.ncols() == 0)
+		return;
 
 	double header_y = 0;
 	/* all_text is sorted by y, then x coord */

@@ -26,6 +26,12 @@ class Tabulator
 				bool operator < (const Coord & c) const { return compare(v, c.v) < 0; }
 				bool operator == (const Coord & c) const { return compare(v, c.v) == 0; }
 				bool operator != (const Coord & c) const { return compare(v, c.v) != 0; }
+				Coord operator - (const Coord & c) const { return v - c.v; }
+				Coord operator + (const Coord & c) const { return v + c.v; }
+				Coord operator - (double d) const { return v - d; }
+				Coord operator + (double d) const { return v + d; }
+				Coord operator / (double d) const { return v / d; }
+				Coord operator * (double d) const { return v * d; }
 				operator double() const { return v; }
 				inline static int compare(double d1, double d2, double delta=3)
 				{
@@ -98,6 +104,8 @@ class Tabulator
 				typedef std::map< Coord, Line > KnotsMap;
 				typedef KnotsMap::const_iterator KnotsIterator;
 				KnotsMap h_knots, v_knots;
+				double headers_end; /**< y coord of line, dividing headers and body */
+				Grid():headers_end(-1E10) {}
 				void build(const Metafile * mf);
 				unsigned int find_col(double x) const;
 				unsigned int find_row(double y) const;
@@ -105,6 +113,7 @@ class Tabulator
 				void clear() {
 					h_knots.clear();
 					v_knots.clear();
+					headers_end = -1E10;
 				}
 		};
 		/** Table of cells */
@@ -180,11 +189,11 @@ class Tabulator
 		Grid grid;
 		Table table;
 		struct Options {
-			bool find_more_rows;
-			unsigned int find_rows_column;
+			bool find_table_header;
+			unsigned int find_more_rows_column;
 			bool postprocess;
 			bool find_joined_cells;
-			Options():find_more_rows(false),find_rows_column(0),postprocess(false),find_joined_cells(true) { }
+			Options():find_table_header(true),find_more_rows_column(0),postprocess(false),find_joined_cells(true) { }
 		} options;
 		void set_tolerance(double tx, double ty);
 		void flush() { metafile.Clear(); grid.clear(); table.clear(); }
