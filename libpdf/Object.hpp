@@ -8,6 +8,7 @@
 #endif
 
 #include <iostream>
+#include <iomanip>
 #include <string>
 #include <map>
 #include <vector>
@@ -100,7 +101,23 @@ class String:public ObjSimpleT<std::string>
   public:
     String():ObjSimpleT<std::string>() {}
     String(std::string s):ObjSimpleT<std::string>(s) {}
-    virtual std::string dump(int level=0) const { return std::string("(")+my_value+std::string(")"); }
+    virtual std::string dump(int level=0) const
+		{
+#if 0
+			return std::string("(")+my_value+std::string(")");
+#else
+			unsigned int pos;
+			std::stringstream ss;
+			for(pos = 0; pos < my_value.length(); pos++) {
+				unsigned int c = (unsigned int)(unsigned char)my_value[pos];
+				if(c < 0x20 || c >= 0x7F)
+					ss << "\\x" << std::uppercase << std::hex << std::setfill('0') << std::setw(2) << c;
+				else
+					ss << (char)c;
+			}
+			return ss.str();
+#endif
+		}
 };
 /// PDF Object: Name --- represents some kind of name
 class Name:public ObjSimpleT<std::string>
