@@ -150,8 +150,8 @@ wchar_t Font::Encoding::map(unsigned long c) const
 			return (wchar_t)c; /* unmapped */
 		case WinAnsiEncoding:
 			switch(c) {
-				case 0xA8: return 0x401; // Fix for 'io' (Ё)
-				case 0xB8: return 0x451;
+//				case 0xA8: return 0x401; // Fix for 'io' (Ё)
+//				case 0xB8: return 0x451;
 				default:
 #if 0
 					if(c<0x7F) return c;

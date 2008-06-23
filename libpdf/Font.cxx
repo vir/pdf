@@ -93,7 +93,6 @@ bool Font::load(OH fontnode)
 		if(!to_unicode_map)
 			to_unicode_map = new Font::CMap;
 		to_unicode_map->load(ucmap);
-		charbytes = to_unicode_map->cbytes();
 	}
 
 	OH enc=fontnode.find("Encoding");
@@ -101,6 +100,12 @@ bool Font::load(OH fontnode)
 		if(!encoding)
 			encoding = new Font::Encoding;
 		encoding->load(enc);
+	}
+
+	if(encoding && encoding->is_singlebyte()) {
+		charbytes = 1;
+	} else if(to_unicode_map) {
+		charbytes = to_unicode_map->cbytes();
 	}
 
 	if(encoding || to_unicode_map)
