@@ -460,27 +460,34 @@ bool Stream::get_data(std::vector<char> & buf)
 
 	// pass data thrugh all filters
 	
-	std::vector<char> *s, *d;
-	s = NULL;
-	unsigned int i;
-	for(i = 0; i < filters.size(); i++)
-	{
-		if(i == filters.size() - 1) d = &buf;
-		else d = new std::vector<char>;
+	try {
+		std::vector<char> *s, *d;
+		s = NULL;
+		unsigned int i;
+		for(i = 0; i < filters.size(); i++)
+		{
+			if(i == filters.size() - 1) d = &buf;
+			else d = new std::vector<char>;
 
-		bool r = filters[i]->Decode(i?*s:data, *d);
-		if(!r) throw std::string("Stream filter error: ") + filters[i]->Name();
+			bool r = filters[i]->Decode(i?*s:data, *d);
+			if(!r) throw std::string("Stream filter error: ") + filters[i]->Name();
 
-		delete s;
-		s = d;
-		d = NULL;
+			delete s;
+			s = d;
+			d = NULL;
+		}
+
+		// delete all filters
+		for(i = 0; i < filters.size(); i++)
+			delete filters[i]; 
+
+		return true;
 	}
-
-	// delete all filters
-	for(i = 0; i < filters.size(); i++)
-		delete filters[i]; 
-
-  return true;
+	catch(std::string s) {
+		for(unsigned int i = 0; i < filters.size(); i++)
+			delete filters[i]; 
+		throw FormatException(s, soffset);
+	}
 }
 
 } // namespace PDF
