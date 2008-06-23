@@ -182,7 +182,7 @@ void Tabulator::prepare_table()
 					} // c
 					break; // XXX \todo Add rowspan calc
 				} // r
-if(cs || rs) std::clog << "Spans: row " << row << ", col " << col << ": " << cs+1 << "x" << rs+1 << std::endl;
+//if(cs || rs) std::clog << "Spans: row " << row << ", col " << col << ": " << cs+1 << "x" << rs+1 << std::endl;
 				if(cs || rs)
 					table.span(col, row, cs+1, rs+1);
 			} // col
@@ -198,7 +198,6 @@ void Tabulator::fill_table_with_text()
 	if(table.nrows() == 0 || table.ncols() == 0)
 		return;
 
-	double header_y = 0;
 	/* all_text is sorted by y, then x coord */
 	int row = 0;
 	Tabulator::Grid::KnotsIterator cit; // table cols iterator
@@ -225,7 +224,7 @@ void Tabulator::fill_table_with_text()
 //			std::wclog << L"Text in table(" << col << L',' << row << "): \"" << tit->second << "\"" << std::endl;
 			if(tit->text.length())
 				table.cell(col, row)->addtext(*tit);
-			if(tit->pos.y < header_y)
+			if(tit->pos.y < grid.headers_end)
 				table.cell(col, row)->is_header=true;
 		} else {
 			std::wclog << L"Text at " << tit->pos.x << L',' << tit->pos.y << L" is not in table: \"" << tit->text << "\"" << std::endl;
