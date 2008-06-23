@@ -33,26 +33,35 @@ bool FlateFilter::Decode(const std::vector<char> & src, std::vector<char> & dst)
   zs.zalloc=NULL;
   zs.zfree=NULL;
   
-  r=inflateInit(&zs);
-  if(r!=Z_OK) return false;
+	try {
+//  r=inflateInit(&zs);
+		r=inflateInit2(&zs, 47);
+		if(r!=Z_OK)
+			throw std::string("Zlib error: ") + zs.msg;
 
-  int outbufsize=3*src.size();
-  int pos=0;
-  do {
-    dst.resize(outbufsize);
-    zs.next_out=reinterpret_cast<Bytef *>(&dst[pos]);
-    zs.avail_out=dst.size()-pos;
+		int outbufsize=3*src.size();
+		int pos=0;
+		do {
+			dst.resize(outbufsize);
+			zs.next_out=reinterpret_cast<Bytef *>(&dst[pos]);
+			zs.avail_out=dst.size()-pos;
 
-    r=inflate(&zs, 0);
-    pos=outbufsize;
-    outbufsize+=src.size(); // increment output buffer size XXX
-  } while(r==Z_OK);
+			r=inflate(&zs, 0);
+			pos=outbufsize;
+			outbufsize+=src.size(); // increment output buffer size XXX
+		} while(r==Z_OK);
 
-  if(r!=Z_STREAM_END) return false;
-  
-  dst.resize((char*)zs.next_out-&dst[0]); // adjust output object size
-  r=inflateEnd(&zs);
-  if(r!=Z_OK) return false;
+		if(r!=Z_STREAM_END)
+			throw std::string("Zlib error: ") + zs.msg;
+		dst.resize((char*)zs.next_out-&dst[0]); // adjust output object size
+		r=inflateEnd(&zs);
+		if(r!=Z_OK)
+			throw std::string("Zlib error: ") + zs.msg;
+	}
+	catch(...) {
+		inflateEnd(&zs);
+		throw;
+	}
   
   return true;
 }
