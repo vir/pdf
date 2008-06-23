@@ -50,8 +50,9 @@ END_EVENT_TABLE()
 enum {
 	File_Quit = wxID_EXIT,
 	File_About = wxID_ABOUT,
+	File_ShowTabulatorOptions = wxID_HIGHEST,
 
-	MenuRotate_First = wxID_HIGHEST,
+	MenuRotate_First,
 	Rotate_0 = MenuRotate_First,
 	Rotate_90,
 	Rotate_180,
@@ -61,6 +62,7 @@ enum {
 	MenuGo_First,
 	Go_First = MenuGo_First, Go_Prev, Go_Next, Go_Last,
 	MenuGo_Last = Go_Last,
+
 };
 
 const int ID_TOOLBAR = 500;
@@ -70,6 +72,7 @@ const int ID_PAGENUM = 512;
 BEGIN_EVENT_TABLE(WxTabFrame, wxFrame)
 	EVT_MENU      (File_Quit,     WxTabFrame::OnQuit)
 	EVT_MENU      (File_About,    WxTabFrame::OnAbout)
+	EVT_MENU      (File_ShowTabulatorOptions,    WxTabFrame::OnShowTabulatorOptions)
 	EVT_MENU_RANGE(MenuGo_First,  MenuGo_Last,   WxTabFrame::OnMenuGo)
 	EVT_MENU_RANGE(MenuRotate_First,   MenuRotate_Last,   WxTabFrame::OnRotate)
 	EVT_SPINCTRL  (ID_SPIN_OPLIMIT, WxTabFrame::OnOplimitSpinCtrl)
@@ -85,8 +88,9 @@ WxTabFrame::WxTabFrame(const wxString& title, const wxPoint& pos, const wxSize& 
 	/* Add Menu */
 	wxMenu *menuFile = new wxMenu;
 	menuFile->AppendSeparator();
-	menuFile->Append(File_About, _T("&About...\tCtrl-A"), _T("Show about dialog"));
+	menuFile->Append(File_ShowTabulatorOptions, _T("Tabulator &Options\tAlt-O"), _T("Show Tabulator options dialog"));
 	menuFile->AppendSeparator();
+	menuFile->Append(File_About, _T("&About...\tCtrl-A"), _T("Show about dialog"));
 	menuFile->Append(File_Quit, _T("E&xit\tAlt-X"), _T("Quit this program"));
 
 	wxMenu * menuRotate = new wxMenu;
@@ -160,6 +164,7 @@ void WxTabFrame::PrepareDC(wxDC& dc)
 void WxTabFrame::AddToolbar()
 {
 	wxToolBarBase *toolBar = CreateToolBar(wxTB_FLAT/* | wxTB_DOCKABLE*/ | wxTB_HORIZONTAL | wxTB_TEXT | wxTB_NOICONS, ID_TOOLBAR);
+	toolBar->AddTool(File_ShowTabulatorOptions, _T("Options"), wxBitmap(), _T("Show Tabulator options dialog"));
 
 	toolBar->AddTool(Go_First, _T("<<"), wxBitmap(), _T("Go to the first page"));
 	toolBar->AddTool(Go_Prev, _T("<"), wxBitmap(), _T("Go to the previous page"));
@@ -219,5 +224,13 @@ void WxTabFrame::OnPageNumChanged(wxCommandEvent &event)
 	m_pagenum->SetValue(v);
 	m_canvas->Refresh();
 }
+
+void WxTabFrame::OnShowTabulatorOptions(wxCommandEvent& event)
+{
+	theTabulator->ShowOptionsDialog(this);
+	theTabulator->full_process(theDocument->GetPageObject());
+	m_canvas->Refresh();
+}
+
 
 

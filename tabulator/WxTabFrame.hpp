@@ -16,6 +16,7 @@ class WxTabFrame : public wxFrame
 	protected:
 		void OnQuit(wxCommandEvent& event);
 		void OnAbout(wxCommandEvent& event);
+		void OnShowTabulatorOptions(wxCommandEvent& event);
 		void OnRotate(wxCommandEvent &event);
 		void OnMenuGo(wxCommandEvent &event);
     void OnPageSpinCtrl(wxSpinEvent & event);
