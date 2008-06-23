@@ -107,7 +107,7 @@ void MyFrame::AddToolbar()
 
 	m_pagespin = new wxSpinCtrl( toolBar, ID_SPIN_PAGE, _T("")/*, wxDefaultPosition, wxSize(40,wxDefaultCoord)*/ );
 	m_pagespin->SetRange(1, theDocument->GetPagesNum());
-	m_pagespin->SetValue(40);
+	m_pagespin->SetValue(theDocument->GetPageNum());
 	toolBar->AddControl(m_pagespin);
 
 	toolBar->AddTool(wxID_EXIT, _T("Exit"), wxBitmap(), _T("Exit application"));
