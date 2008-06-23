@@ -62,8 +62,7 @@ int main(int argc, char * argv[])
 				help(std::cerr);
 				exit(1);
 			case 'R':
-				t.options.find_more_rows = true;
-				t.options.find_rows_column = atoi(optarg);
+				t.options.find_more_rows_column = atoi(optarg);
 				break;
 			case 'f':
 				format = *optarg;
@@ -192,7 +191,7 @@ void help(std::ostream & s)
 	  << "\t-pN-M or -p NNN or --page NN-MM --- pages to process" << std::endl
 	  << "\t-rR --- rotate page R*90degree CCW before processing" << std::endl
 	  << "\t-cXXXX --- UNIMPLEMENTED crop rectangle" << std::endl
-		<< "\t-R COL --- add rows by looking at text in col COL" << std::endl
+		<< "\t-R COL --- add rows by looking at text in col COL (1...n), 0 - disable" << std::endl
 		<< "\t-f F --- set output format to F: c h e" << std::endl
 		<< "\t-P --- postprocess table - use if got many W O R D S W I T H S P A C E S" << std::endl
 		<< "\t-E PARAMS --- set exporter-specific params" << std::endl
