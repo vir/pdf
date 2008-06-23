@@ -1,6 +1,10 @@
+// get rid of "identifier was truncated to '255' characters..."
+#ifdef _MSC_VER
+# pragma warning(disable : 4786)
+#endif
+
 #include <iostream>
 #include <string>
-
 #include "Page.hpp"
 #include "OH.hpp"
 #include "Font.hpp"
