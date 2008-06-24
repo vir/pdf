@@ -120,6 +120,7 @@ WxTabFrame::WxTabFrame(const wxString& title, const wxPoint& pos, const wxSize& 
 	menuBar->Append(menuFile, _T("&File"));
 	menuBar->Append(menuRotate, _T("&Rotate"));
 	menuBar->Append(menuGo, _T("&Go"));
+	menuBar->Append(menuExport, _T("&Export"));
 
 	SetMenuBar(menuBar);
 
@@ -197,9 +198,9 @@ void WxTabFrame::AddToolbar()
 	toolBar->AddControl(m_oplimitspin);
 	
 	toolBar->AddTool(Export_CSV, _T("CSV"), wxBitmap(), _T("Export current table as CSV to stdout"));
-	toolBar->AddTool(Export_CSV, _T("HTML"), wxBitmap(), _T("Export current table as HTML table to stdout"));
+	toolBar->AddTool(Export_HTML, _T("HTML"), wxBitmap(), _T("Export current table as HTML table to stdout"));
 #ifdef _WIN32
-	toolBar->AddTool(Export_CSV, _T("CSV"), wxBitmap(), _T("Export current table to Microsoft Excel (Open empty sheet if already running!!!)"));
+	toolBar->AddTool(Export_EXCEL, _T("Excel"), wxBitmap(), _T("Export current table to Microsoft Excel (Open empty sheet if already running!!!)"));
 #endif
 
 	toolBar->Realize();
@@ -263,7 +264,7 @@ void WxTabFrame::OnMenuExport(wxCommandEvent &event)
 #ifdef _WIN32
 		case Export_EXCEL:
 			{
-				ExporterExcel e = new ExporterExcel();
+				ExporterExcel * e = new ExporterExcel();
 				if(!e->get_active()) {
 					e->start_new();
 					e->add_workbook();
