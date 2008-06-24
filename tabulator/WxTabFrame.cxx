@@ -283,6 +283,7 @@ void WxTabFrame::OnMenuExport(wxCommandEvent &event)
 		theTabulator->output(exporter);
 		exporter->page_end();
 	}
+	delete exporter;
 }
 
 
