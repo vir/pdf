@@ -63,6 +63,9 @@ enum {
 	Go_First = MenuGo_First, Go_Prev, Go_Next, Go_Last,
 	MenuGo_Last = Go_Last,
 
+	MenuExport_First,
+	Export_CSV = MenuExport_First, Export_HTML, Export_EXCEL,
+	MenuExport_Last = Export_EXCEL,
 };
 
 const int ID_TOOLBAR = 500;
@@ -75,6 +78,7 @@ BEGIN_EVENT_TABLE(WxTabFrame, wxFrame)
 	EVT_MENU      (File_ShowTabulatorOptions,    WxTabFrame::OnShowTabulatorOptions)
 	EVT_MENU_RANGE(MenuGo_First,  MenuGo_Last,   WxTabFrame::OnMenuGo)
 	EVT_MENU_RANGE(MenuRotate_First,   MenuRotate_Last,   WxTabFrame::OnRotate)
+	EVT_MENU_RANGE(MenuExport_First,   MenuExport_Last,   WxTabFrame::OnMenuExport)
 	EVT_SPINCTRL  (ID_SPIN_OPLIMIT, WxTabFrame::OnOplimitSpinCtrl)
 	EVT_TEXT_ENTER(ID_PAGENUM,    WxTabFrame::OnPageNumChanged)
 END_EVENT_TABLE()
@@ -104,6 +108,13 @@ WxTabFrame::WxTabFrame(const wxString& title, const wxPoint& pos, const wxSize& 
 	menuGo->Append(Go_Last, _T("Last page\tEnd"));
 	menuGo->Append(Go_Prev, _T("Previous page\tPgUp"));
 	menuGo->Append(Go_Next, _T("Next page\tPgDn"));
+
+	wxMenu * menuExport = new wxMenu;
+	menuExport->Append(Export_CSV, _T("Export as CSV"));
+	menuExport->Append(Export_HTML, _T("Export HTML table"));
+#ifdef _WIN32
+	menuExport->Append(Export_EXCEL, _T("Export to MS Excel"));
+#endif
 
 	wxMenuBar *menuBar = new wxMenuBar;
 	menuBar->Append(menuFile, _T("&File"));
@@ -184,6 +195,12 @@ void WxTabFrame::AddToolbar()
 	m_oplimitspin->SetRange(0, 10000);
 	m_oplimitspin->SetValue(0);
 	toolBar->AddControl(m_oplimitspin);
+	
+	toolBar->AddTool(Export_CSV, _T("CSV"), wxBitmap(), _T("Export current table as CSV to stdout"));
+	toolBar->AddTool(Export_CSV, _T("HTML"), wxBitmap(), _T("Export current table as HTML table to stdout"));
+#ifdef _WIN32
+	toolBar->AddTool(Export_CSV, _T("CSV"), wxBitmap(), _T("Export current table to Microsoft Excel (Open empty sheet if already running!!!)"));
+#endif
 
 	toolBar->Realize();
 }
@@ -230,6 +247,41 @@ void WxTabFrame::OnShowTabulatorOptions(wxCommandEvent& event)
 	theTabulator->ShowOptionsDialog(this);
 	theTabulator->full_process(theDocument->GetPageObject());
 	m_canvas->Refresh();
+}
+
+#include "Tabulator_Exporter.hpp"
+void WxTabFrame::OnMenuExport(wxCommandEvent &event)
+{
+	Tabulator::Table::Exporter * exporter = NULL;
+	switch(event.GetId()) {
+		case Export_CSV:
+			exporter = new ExporterCSV(std::cout);
+			break;
+		case Export_HTML:
+			exporter = new ExporterHTML(std::cout);
+			break;
+#ifdef _WIN32
+		case Export_EXCEL:
+			{
+				ExporterExcel e = new ExporterExcel();
+				if(!e->get_active()) {
+					e->start_new();
+					e->add_workbook();
+				}
+				e->set_visible(true);
+				exporter = e;
+			}
+			break;
+#endif
+		default:
+			std::cerr << "Unimplemented export format" << std::endl;
+			break;
+	}
+	if(exporter && theTabulator->ok()) {
+		exporter->page_begin("wxTab document", theDocument->GetPageNum());
+		theTabulator->output(exporter);
+		exporter->page_end();
+	}
 }
 
 

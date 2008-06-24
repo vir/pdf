@@ -40,7 +40,7 @@ void WxTabTabulator::Draw(wxDC * dc)
 	}
 	if(grid.headers_end >= 0) {
 		dc->SetPen(wxPen(*wxGREEN, 3, wxSHORT_DASH));
-		dc->DrawLine(0, grid.headers_end, cs.GetWidth(), grid.headers_end);
+		dc->DrawLine(0, wxCoord(grid.headers_end), cs.GetWidth(), wxCoord(grid.headers_end));
 	}
 
 	// Draw cells

@@ -24,6 +24,7 @@ class WxTabDocument
 		PDF::Page * GetPageObject() { return page; }
 		void Refresh() { }
 		void Rotate(int r) { m_rotation = r; Refresh(); }
+		void Scale(unsigned int pr) { m_scale = pr/100.0; }
 };
 
 extern WxTabDocument * theDocument;

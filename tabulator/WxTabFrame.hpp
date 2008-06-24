@@ -19,6 +19,7 @@ class WxTabFrame : public wxFrame
 		void OnShowTabulatorOptions(wxCommandEvent& event);
 		void OnRotate(wxCommandEvent &event);
 		void OnMenuGo(wxCommandEvent &event);
+		void OnMenuExport(wxCommandEvent &event);
     void OnPageSpinCtrl(wxSpinEvent & event);
     void OnOplimitSpinCtrl(wxSpinEvent & event);
 		void OnPageNumChanged(wxCommandEvent &event);
