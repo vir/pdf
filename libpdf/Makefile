@@ -4,7 +4,8 @@
 SOURCES = \
 	File.cxx Object.cxx Document.cxx ObjectsCache.cxx \
 	Filter.cxx Filter_Flate.cxx Filter_Base85.cxx \
-	Page.cxx Font.cxx Font_Encoding.cxx Font_CMap.cxx
+	Page.cxx Font.cxx Font_Encoding.cxx Font_CMap.cxx \
+	Font_StdFonts.cxx
 OBJS = $(SOURCES:.cxx=.o)
 DEPS = $(SOURCES:.cxx=.d)
 
@@ -38,11 +39,17 @@ enc_win.i: mk_encoding_table.pl glyphlist.txt pdf_encodings.txt
 enc_mac.i: mk_encoding_table.pl glyphlist.txt pdf_encodings.txt
 	./mk_encoding_table.pl
 
+enc_std.i: mk_encoding_table.pl glyphlist.txt pdf_encodings.txt
+	./mk_encoding_table.pl
+
+deffont_widths.i: Core14_AFMs.tar parse_font_metrics.pl
+	./parse_font_metrics.pl > deffont_widths.i
+
 glyphlist.txt:
 	wget http://www.adobe.com/devnet/opentype/archives/glyphlist.txt
 
-Font_Encoding.cxx: glyphlist.i enc_win.i enc_mac.i
-
+Core14_AFMs.tar:
+	wget http://www.adobe.com/devnet/font/pdfs/Core14_AFMs.tar
 include $(SOURCES:.cxx=.d)
 
 
