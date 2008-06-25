@@ -143,10 +143,20 @@ void ExporterExcel::table_begin(unsigned int ncols, unsigned int nrows)
 		rows_number = nrows;
 }
 
+#if 0
 void ExporterExcel::cell(const Tabulator::Table::Cell * cptr, unsigned int c, unsigned int r)
 {
 	if(!cptr)
 		return;
+	set_cell_value(cptr->celltext(), c, r);
+}
+#endif
+void ExporterExcel::cell(const Tabulator::Table::Cell * cptr, bool hidden, unsigned int c, unsigned int r, unsigned int cs, unsigned int rs)
+{
+	if(!cptr || hidden)
+		return;
+	if(do_join_cells && (cs || rs))
+			join_cells(cs, rs, c, r);
 	set_cell_value(cptr->celltext(), c, r);
 }
 

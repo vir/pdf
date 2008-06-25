@@ -51,11 +51,13 @@ class ExporterExcel
 		unsigned int cur_col;
 		unsigned int rows_number;
 		unsigned int cols_number;
+		bool do_join_cells;
 	public:
-		ExporterExcel():sheets_number(1),cur_sheet(0),cur_col(0) {}
+		ExporterExcel():sheets_number(1),cur_sheet(0),cur_col(0),do_join_cells(true) {}
 		virtual bool set_params(std::string pstr);
 		virtual void table_begin(unsigned int ncols, unsigned int nrows);
-		virtual void cell(const Tabulator::Table::Cell * cptr, unsigned int c, unsigned int r);
+//		virtual void cell(const Tabulator::Table::Cell * cptr, unsigned int c, unsigned int r);
+		virtual void cell(const Tabulator::Table::Cell * cptr, bool hidden, unsigned int c, unsigned int r, unsigned int cs, unsigned int rs);
 		virtual void table_end();
 };
 #endif /* _WIN32 */

@@ -204,6 +204,83 @@ void Excel::move_cursor(int offset_c, int offset_r)
 	VariantClear(&row);
 }
 
+void Excel::move_cursor(std::wstring cellname)
+{
+	VARIANT val, range;
+	val.vt = VT_BSTR;
+	val.bstrVal = ::SysAllocString(cellname.c_str());
+
+	AutoWrap(DISPATCH_PROPERTYGET|DISPATCH_METHOD, &range, app, L"Range", 1, val);
+	AutoWrap(DISPATCH_METHOD, NULL, range.pdispVal, L"Activate", 0);
+
+	VariantClear(&range);
+	VariantClear(&val);
+}
+
+void Excel::join_cells(int ncols, int nrows, int ccol, int crow)
+{
+	VARIANT col, row;
+	col.vt = row.vt = VT_I4;
+	col.lVal = ccol;
+	row.lVal = crow;
+	VARIANT cols, rows, theval;
+	cols.vt = rows.vt = VT_I4;
+	cols.lVal = ncols - 1;
+	rows.lVal = nrows - 1;
+	theval.vt = VT_I4;
+	theval.lVal = 1;
+	
+	// Range(ActiveCell, ActiveCell.Offset(2, 4)).MergeCells = True
+	VARIANT activecell, offset1, offset2, range;
+	AutoWrap(DISPATCH_PROPERTYGET|DISPATCH_METHOD, &activecell, app, L"ActiveCell", 0);
+	AutoWrap(DISPATCH_PROPERTYGET|DISPATCH_METHOD, &offset1, activecell.pdispVal, L"Offset", 2, col, row);
+	AutoWrap(DISPATCH_PROPERTYGET|DISPATCH_METHOD, &offset2, offset1.pdispVal, L"Offset", 2, cols, rows);
+	AutoWrap(DISPATCH_PROPERTYGET|DISPATCH_METHOD, &range, app, L"Range", 2, offset1, offset2);
+    AutoWrap(DISPATCH_PROPERTYPUT, NULL, range.pdispVal, L"MergeCells", 1, theval);
+	VariantClear(&range);
+	VariantClear(&offset2);
+	VariantClear(&offset1);
+	VariantClear(&activecell);
+
+	VariantClear(&theval);
+	VariantClear(&cols);
+	VariantClear(&rows);
+	VariantClear(&col);
+	VariantClear(&row);
+}
+
+void Excel::set_cell_format(int rotation, bool wrap_text, bool shrink_to_fit, int rown, int coln)
+{
+	VARIANT col, row;
+	col.vt = row.vt = VT_I4;
+	col.lVal = coln;
+	row.lVal = rown;
+
+	VARIANT val;
+	val.vt = VT_I4;
+
+	// app . ActiveCell . Offset(r, c) . 
+	/*
+        .WrapText = True
+        .Orientation = 0
+        .ShrinkToFit = False
+	*/
+	VARIANT activecell, offset;
+	AutoWrap(DISPATCH_PROPERTYGET|DISPATCH_METHOD, &activecell, app, L"ActiveCell", 0);
+	AutoWrap(DISPATCH_PROPERTYGET|DISPATCH_METHOD, &offset, activecell.pdispVal, L"Offset", 2, col, row);
+	val.lVal = rotation;
+	AutoWrap(DISPATCH_PROPERTYPUT, NULL, offset.pdispVal, L"Orientation", 1, val);
+	val.lVal = wrap_text?1:0;
+	AutoWrap(DISPATCH_PROPERTYPUT, NULL, offset.pdispVal, L"WrapText", 1, val);
+	val.lVal = shrink_to_fit?1:0;
+	AutoWrap(DISPATCH_PROPERTYPUT, NULL, offset.pdispVal, L"ShrinkToFit", 1, val);
+	VariantClear(&offset);
+	VariantClear(&activecell);
+
+	VariantClear(&val);
+	VariantClear(&col);
+	VariantClear(&row);
+}
 
 #if 0
 		// Assigning whole array
@@ -246,37 +323,52 @@ void Excel::move_cursor(int offset_c, int offset_r)
     VariantClear(&arr);
 #endif
 
-#if 0
-// Line 5: app . Range app . ActiveCell , app . ActiveCell . Offset 3 , 5 . Select 
-    VariantCopy(&root[++level], &app);
-    VariantCopy(&parm[0], &app);
-    AutoWrap(DISPATCH_PROPERTYGET|DISPATCH_METHOD, &root[level+1], root[level++].pdispVal, L"Range", 1, parm[0]);
-    VariantClear(&parm[0]);
-    parm[0].vt = VT_ERROR; parm[0].scode = DISP_E_PARAMNOTFOUND;
-    VariantCopy(&parm[1], &app);
-    AutoWrap(DISPATCH_PROPERTYGET|DISPATCH_METHOD, &root[level+1], root[level++].pdispVal, L"ActiveCell", 2, parm[1], parm[0]);
-    VariantClear(&parm[0]);
-    VariantClear(&parm[1]);
-    AutoWrap(DISPATCH_PROPERTYGET|DISPATCH_METHOD, &root[level+1], root[level++].pdispVal, L"ActiveCell", 0);
-    parm[0].vt = VT_I4; parm[0].lVal = 3;
-    parm[1].vt = VT_I4; parm[1].lVal = 5;
-    AutoWrap(DISPATCH_PROPERTYGET|DISPATCH_METHOD, &root[level+1], root[level++].pdispVal, L"Offset", 2, parm[1], parm[0]);
-    VariantClear(&parm[0]);
-    VariantClear(&parm[1]);
-    AutoWrap(DISPATCH_METHOD, NULL, root[level].pdispVal, L"Select", 0);
-    VariantClear(&root[level--]);
-    VariantClear(&root[level--]);
-    VariantClear(&root[level--]);
-    VariantClear(&root[level--]);
-    VariantClear(&root[level--]);
 
-    // Line 6: app . Selection . NumberFormat = @ 
-    rVal.vt = VT_BSTR;
-    rVal.bstrVal = ::SysAllocString(L"@");
-    VariantCopy(&root[++level], &app);
-    AutoWrap(DISPATCH_PROPERTYGET|DISPATCH_METHOD, &root[level+1], root[level++].pdispVal, L"Selection", 0);
-    AutoWrap(DISPATCH_PROPERTYPUT, NULL, root[level].pdispVal, L"NumberFormat", 1, rVal);
-    VariantClear(&root[level--]);
-    VariantClear(&root[level--]);
-    VariantClear(&rVal);
+#if 0
+'    Range("C18:H20").Select
+'    With Selection
+'        .HorizontalAlignment = xlGeneral
+'        .VerticalAlignment = xlBottom
+'        .WrapText = True
+'        .Orientation = 0
+'        .AddIndent = False
+'        .ShrinkToFit = False
+'        .MergeCells = True
+'    End With
+'    Range("D27").Select
+'    ActiveCell.FormulaR1C1 = "qwerty"
+'    Range("D27").Select
+'    With Selection
+'        .HorizontalAlignment = xlGeneral
+'        .VerticalAlignment = xlBottom
+'        .WrapText = False
+'        .Orientation = 90
+'        .AddIndent = False
+'        .ShrinkToFit = False
+'        .MergeCells = False
+'    End With
+'    Range("G27").Select
+'    With Selection
+'        .HorizontalAlignment = xlGeneral
+'        .VerticalAlignment = xlBottom
+'        .WrapText = False
+'        .Orientation = xlVertical
+'        .AddIndent = False
+'        .ShrinkToFit = False
+'        .MergeCells = False
+'    End With
+'    ActiveCell.FormulaR1C1 = "asdfg"
+'    With ActiveCell.Characters(Start:=1, Length:=5).Font
+'        .Name = "Arial Cyr"
+'        .FontStyle = "обычный"
+'        .Size = 10
+'        .Strikethrough = False
+'        .Superscript = False
+'        .Subscript = False
+'        .OutlineFont = False
+'        .Shadow = False
+'        .Underline = xlUnderlineStyleNone
+'        .ColorIndex = xlAutomatic
+'    End With
+'    Range("G28").Select
 #endif
