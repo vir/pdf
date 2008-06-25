@@ -178,7 +178,7 @@ std::string Page::dump() const
   ss << "\t" << fonts.size() << " fonts" << std::endl;
   for(std::map<std::string,Font *>::const_iterator it=fonts.begin(); it!=fonts.end(); it++)
   {
-    ss << "Font " << it->first << ": "  << it->second->dump();
+    ss << "Font " << std::setw(5) << std::left << it->first << it->second->dump();
   }
   return ss.str();
 }

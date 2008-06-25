@@ -108,6 +108,7 @@ class String:public ObjSimpleT<std::string>
 #else
 			unsigned int pos;
 			std::stringstream ss;
+			ss << '(';
 			for(pos = 0; pos < my_value.length(); pos++) {
 				unsigned int c = (unsigned int)(unsigned char)my_value[pos];
 				if(c < 0x20 || c >= 0x7F)
@@ -115,6 +116,7 @@ class String:public ObjSimpleT<std::string>
 				else
 					ss << (char)c;
 			}
+			ss << ')';
 			return ss.str();
 #endif
 		}
