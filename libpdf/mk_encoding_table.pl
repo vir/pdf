@@ -2,7 +2,7 @@
 #
 # Parses encoding tables and writes glyphlist.i and enc_*.i include files.
 #
-# Last modified: Mon Jun 16 15:38:48 MSD 2008
+# Last modified: Wed Jun 25 10:07:20 MSD 2008
 #
 
 use strict;
@@ -40,6 +40,7 @@ close F;
 write_glyphlist_table();
 write_encoding_table('win', \%win);
 write_encoding_table('mac', \%mac);
+write_encoding_table('std', \%std);
 
 sub dump_enc
 {
