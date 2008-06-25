@@ -2,6 +2,7 @@
 #include "Font_Encoding.hpp"
 #include "Font_CMap.hpp"
 #include "OH.hpp"
+#include "Font_StdFonts.hpp"
 
 #include <sstream>
 
@@ -73,6 +74,8 @@ bool Font::load(OH fontnode)
 			if(ip && ip->value())
 				charwidths[i + firstchar] = ip->value();
 		}
+	} else { // load widths of standard font
+		load_stdfont_widths_table(charwidths, basefont);
 	}
 
 	// Extract parameters of Type0 (Composite) fonts
@@ -225,12 +228,13 @@ std::string Font::dump() const
 		"ForceBold",
 	};
 	std::stringstream ss;
-	ss << fontobjid << ' ' << fonttype << " " << charbytes << "-byte font, " << charwidths.size() << " char widhs, base: " << basefont;
+	ss << std::setw(6) << fontobjid << ' ' << std::setw(8) << fonttype << " " << charbytes << "-byte font, "
+		<< std::setw(3) << charwidths.size() << " char widhs, base: " << std::setw(15) << std::left << basefont;
 	if(encoding)
-		ss << ", Encoding: " << encoding->name();
+		ss << " +Enc:" << std::setw(16) << std::left << encoding->name();
 	if(to_unicode_map)
-		ss << ", Has ToUnicodeMap";
-	ss << ", Flags: " << fontflags;
+		ss << " +ToUnicodeMap";
+	ss << " Flags: " << fontflags;
 	if(fontflags) {
 		bool comma = false;
 		ss << " (";
