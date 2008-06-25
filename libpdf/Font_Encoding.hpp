@@ -9,7 +9,7 @@ namespace PDF {
 class Font::Encoding
 {
 	public:
-		enum Type { UnknownEncoding, WinAnsiEncoding, MacRomanEncoding, MacExpertEncoding, /*RealMap,*/ IdentityH };
+		enum Type { UnknownEncoding, StandardEncoding, WinAnsiEncoding, MacRomanEncoding, MacExpertEncoding, /*RealMap,*/ IdentityH };
 	private:
 		enum Type enc;
 		std::map<long,wchar_t> charmap;
