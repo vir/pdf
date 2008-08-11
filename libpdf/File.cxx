@@ -10,6 +10,9 @@
 //#include <cstring>
 #include <map>
 
+#include <stdlib.h> // for atof
+#include <string.h> // for strstr, strspn
+
 #include "File.hpp"
 #include "Exceptions.hpp"
 
@@ -47,7 +50,7 @@ bool File::load()
   std::string ver=check_header();
   if(ver.length())
   {
-    pdf_version=atof(ver.c_str());
+    pdf_version=::atof(ver.c_str());
     if(m_debug) std::clog << "PDF version: " << version() << "\n";
   }
   else throw FormatException("Invalid header", 0);

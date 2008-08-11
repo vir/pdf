@@ -15,6 +15,8 @@
 #include "File.hpp" // for loading indirect object in stream's dictionary
 #include <string.h>
 
+#include <stdlib.h> // XXX for atol
+
 #define NOT_IMPLEMENTED(a) \
  throw std::string(__FILE__ ": Not implemented: "a);
 
@@ -109,13 +111,13 @@ std::string Object::type() const
   long start=f.tellg();
   s=read_token(f);
   if(static_cast<int>(s.find_first_not_of("0123456789"))>=0) throw FormatException("Invalid object number", start);
-  long objnum=atol(s.c_str());
+  long objnum=::atol(s.c_str());
   
   // read generation
   skip_whitespace(f);
   s=read_token(f);
   if(static_cast<int>(s.find_first_not_of("0123456789"))>=0) throw FormatException("Invalid object generation", start);
-  long objgen=atol(s.c_str());
+  long objgen=::atol(s.c_str());
   
   skip_whitespace(f);
   s=read_token(f);
@@ -331,7 +333,7 @@ static Object * read_o_digits(std::istream & f, bool alt)
 		return new Real(v); // real
 	}
 
-  long firstint=atol(s.c_str());
+  long firstint=::atol(s.c_str());
   if(s[0] == '-' || s[0] == '+') return new Integer(firstint);
 
   // look what is there (another number + R => reference), else => integer
@@ -342,7 +344,7 @@ static Object * read_o_digits(std::istream & f, bool alt)
   s=read_token(f, alt);
   if(s.find_first_not_of("0123456789")>=0) // must be only digits
   {
-    long secondint=atol(s.c_str());
+    long secondint=::atol(s.c_str());
     skip_whitespace(f, alt);
     s=read_token(f, alt);
     if(s == "R") // Reference
