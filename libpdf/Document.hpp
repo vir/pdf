@@ -49,18 +49,6 @@ class Document
     /// identifiers of all page nodes
     std::vector<ObjId> all_pages;
 
-    /// All loaded document objects
-    std::map<ObjId, Object *> objects;
-    
-    class ObjCacheEntry
-    {
-      public:
-        ObjId id;
-        long counter;
-        ObjCacheEntry():counter(0) {}
-    };
-    std::map<Object *, ObjCacheEntry> obj_cache_data;
-    
   protected:
     void parse_pages_tree(OH pagenode_h);
 
