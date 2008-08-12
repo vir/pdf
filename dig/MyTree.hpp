@@ -1,9 +1,13 @@
 #ifndef MYTREE_HPP_INCLUDED
 #define MYTREE_HPP_INCLUDED
 #include "wx/treectrl.h"
+#include "wx/docview.h"
 
 class MyTree: public wxTreeCtrl
 {
+	private:
+		wxTreeItemId rootId;
+		wxView * m_view;
 	public:
 #if 0
 		enum
@@ -16,8 +20,11 @@ class MyTree: public wxTreeCtrl
 		};
 #endif
 		MyTree() { }
-		MyTree(wxWindow *parent, const wxWindowID id = wxID_ANY, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = 0);
+		MyTree(wxView * view, wxWindow *parent);
+	//	MyTree(wxWindow *parent, const wxWindowID id = wxID_ANY, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxTR_HAS_BUTTONS);
 		virtual ~MyTree(){};
+
+		void Update();
 
 #if 0
 		void OnBeginDrag(wxTreeEvent& event);
@@ -30,11 +37,13 @@ class MyTree: public wxTreeCtrl
 		void OnItemMenu(wxTreeEvent& event);
 		void OnGetInfo(wxTreeEvent& event);
 		void OnSetInfo(wxTreeEvent& event);
+#endif
 		void OnItemExpanded(wxTreeEvent& event);
 		void OnItemExpanding(wxTreeEvent& event);
 		void OnItemCollapsed(wxTreeEvent& event);
 		void OnItemCollapsing(wxTreeEvent& event);
 		void OnSelChanged(wxTreeEvent& event);
+#if 0
 		void OnSelChanging(wxTreeEvent& event);
 		void OnTreeKeyDown(wxTreeEvent& event);
 		void OnItemActivated(wxTreeEvent& event);

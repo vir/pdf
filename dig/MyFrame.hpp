@@ -1,21 +1,18 @@
 #ifndef MYFRAME_HPP_INCLUDED
 #define MYFRAME_HPP_INCLUDED
 #include <wx/wx.h>
-//#include <wx/spinctrl.h>
-#include "wx/splitter.h"
+#include "wx/docview.h"
 
-class MyTree;
-class MyFrame : public wxFrame
+class MyFrame:public wxDocParentFrame
 {
+	DECLARE_CLASS(MyFrame)
 	public:
-		MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size);
+		MyFrame(wxDocManager *manager, wxFrame *frame, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, const long type);
 		~MyFrame();
 		void OnQuit(wxCommandEvent& event);
 		void OnAbout(wxCommandEvent& event);
 
-		wxSplitterWindow * m_splitter;
-		MyTree * m_tree;
-    wxTextCtrl * m_right;
+		wxMenu * menuEdit;
 	private:
 		void AddToolbar();
 		DECLARE_EVENT_TABLE()

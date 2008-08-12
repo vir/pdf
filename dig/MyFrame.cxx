@@ -1,5 +1,4 @@
 #include "MyFrame.hpp"
-#include "MyTree.hpp"
 
 enum {
 	File_Quit = wxID_EXIT,
@@ -8,43 +7,66 @@ enum {
 
 const int ID_TOOLBAR = 500;
 
-BEGIN_EVENT_TABLE(MyFrame, wxFrame)
+
+IMPLEMENT_CLASS(MyFrame, wxDocParentFrame)
+BEGIN_EVENT_TABLE(MyFrame, wxDocParentFrame)
 	EVT_MENU      (File_Quit,     MyFrame::OnQuit)
 	EVT_MENU      (File_About,    MyFrame::OnAbout)
 END_EVENT_TABLE()
 
-MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
-	: wxFrame((wxFrame *)NULL, wxID_ANY, title, pos, size, wxDEFAULT_FRAME_STYLE | wxNO_FULL_REPAINT_ON_RESIZE)
+MyFrame::MyFrame(wxDocManager *manager, wxFrame *frame, wxWindowID id, const wxString& title,
+                 const wxPoint& pos, const wxSize& size, const long type):
+wxDocParentFrame(manager, frame, id, title, pos, size, type)
 {
-	m_splitter = new wxSplitterWindow(this, wxID_ANY,
-		wxDefaultPosition, wxDefaultSize,
-		wxSP_3D | wxSP_LIVE_UPDATE | wxCLIP_CHILDREN /* | wxSP_NO_XP_THEME */ );
-	m_splitter->SetSashGravity(1.0);
-
-	m_tree = new MyTree(m_splitter);
-	m_right = new wxTextCtrl(m_splitter, wxID_ANY, _T("second text"));
-
-	// you can also do this to start with a single window
-#if 0
-	m_right->Show(false);
-	m_splitter->Initialize(m_left);
-#else
-	// you can also try -100
-	m_splitter->SplitVertically(m_tree, m_right, 100);
-#endif
-
+	menuEdit = (wxMenu *) NULL;
 	/* Add Menu */
 	wxMenu *menuFile = new wxMenu;
+	menuFile->Append(wxID_NEW, _T("&New..."));
+	menuFile->Append(wxID_OPEN, _T("&Open..."));
+	menuFile->Append(wxID_CLOSE, _T("&Close"));
+	menuFile->Append(wxID_SAVE, _T("&Save"));
+	menuFile->Append(wxID_SAVEAS, _T("Save &As..."));
+	menuFile->AppendSeparator();
+	menuFile->Append(wxID_PRINT, _T("&Print..."));
+	menuFile->Append(wxID_PRINT_SETUP, _T("Print &Setup..."));
+	menuFile->Append(wxID_PREVIEW, _T("Print Pre&view"));
 	menuFile->AppendSeparator();
 	menuFile->Append(File_About, _T("&About...\tCtrl-A"), _T("Show about dialog"));
 	menuFile->AppendSeparator();
 	menuFile->Append(File_Quit, _T("E&xit\tAlt-X"), _T("Quit this program"));
+	m_docManager->FileHistoryUseMenu(menuFile);
 
 	wxMenuBar *menuBar = new wxMenuBar;
 	menuBar->Append(menuFile, _T("&File"));
 
 	SetMenuBar(menuBar);
 
+
+#if 0
+    wxMenu *edit_menu = (wxMenu *) NULL;
+    
+    if (isCanvas)
+    {
+        edit_menu = new wxMenu;
+        edit_menu->Append(wxID_UNDO, _T("&Undo"));
+        edit_menu->Append(wxID_REDO, _T("&Redo"));
+        edit_menu->AppendSeparator();
+        edit_menu->Append(DOCVIEW_CUT, _T("&Cut last segment"));
+        
+        doc->GetCommandProcessor()->SetEditMenu(edit_menu);
+    }
+    
+    wxMenu *help_menu = new wxMenu;
+    help_menu->Append(DOCVIEW_ABOUT, _T("&About"));
+    
+    wxMenuBar *menu_bar = new wxMenuBar;
+    
+    menu_bar->Append(file_menu, _T("&File"));
+    if (isCanvas)
+        menu_bar->Append(edit_menu, _T("&Edit"));
+    menu_bar->Append(help_menu, _T("&Help"));
+
+#endif
 	/* Add Toolbar */
 	AddToolbar();
 
@@ -55,8 +77,6 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
 
 MyFrame::~MyFrame()
 {
-	delete m_tree;
-	delete m_splitter;
 }
 
 void MyFrame::OnQuit(wxCommandEvent& WXUNUSED(event))
