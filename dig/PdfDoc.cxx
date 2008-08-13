@@ -10,15 +10,13 @@ std::cerr << "Created document" << std::endl;
 
 bool PdfDoc::OnOpenDocument(const wxString& filename)
 {
-std::cerr << "OnOpenDocument" << std::endl;
 	cache.flush();
 	if(! file.open(std::string(filename.mb_str())))
 		return false;
-std::cerr << "Opened file, loading" << std::endl;
+	GetDocumentManager()->AddFileToHistory(filename);
 	if(! file.load())
 		return false;
-std::cerr << "Loaded file" << std::endl;
-file.dump();
+//	file.dump();
 
 	SetFilename(filename, true);
 	Modify(false);

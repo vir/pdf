@@ -31,12 +31,6 @@ PdfExplorerView::~PdfExplorerView()
 bool PdfExplorerView::OnCreate(wxDocument *doc, long WXUNUSED(flags) )
 {
 std::cerr << "PdfExplorerView::OnCreate" << std::endl;
-#if 0
-	// Single-window mode
-	frame = GetMainFrame();
-	canvas = GetMainFrame()->canvas;
-	canvas->view = this;
-#endif
 	// Associate the appropriate frame with this view.
 	frame = static_cast<MyApp*>(wxTheApp)->GetMainFrame();
 	SetFrame(frame);
@@ -48,16 +42,9 @@ std::cerr << "PdfExplorerView::OnCreate" << std::endl;
 
 	m_tree = new MyTree(this, m_splitter);
 	m_right = new wxTextCtrl(m_splitter, wxID_ANY, _T("second text"), wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE|wxTE_READONLY|wxTE_DONTWRAP);
+	m_tree->m_details = m_right;
 
-	// you can also do this to start with a single window
-#if 0
-	m_right->Show(false);
-	m_splitter->Initialize(m_left);
-#else
-	// you can also try -100
-	m_splitter->SplitVertically(m_tree, m_right, 100);
-#endif
-
+	m_splitter->SplitVertically(m_tree, m_right, 300);
 
 	// Make sure the document manager knows that this is the
 	// current view.

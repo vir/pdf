@@ -2,13 +2,19 @@
 #define MYTREE_HPP_INCLUDED
 #include "wx/treectrl.h"
 #include "wx/docview.h"
+#include <PDF.hpp>
+#include <wx/textctrl.h>
 
 class MyTree: public wxTreeCtrl
 {
 	private:
 		wxTreeItemId rootId;
 		wxView * m_view;
+	protected:
+		wxTreeItemId AppendChild(wxTreeItemId parent, const wxString & name, PDF::OH obj, wxString fullpath = wxT(""));
+		void AppendChildren(wxTreeItemId item);
 	public:
+		wxTextCtrl * m_details;
 #if 0
 		enum
 		{
@@ -19,7 +25,7 @@ class MyTree: public wxTreeCtrl
 			TreeCtrlIcon_FolderOpened
 		};
 #endif
-		MyTree() { }
+		MyTree():m_view(NULL),m_details(NULL) { }
 		MyTree(wxView * view, wxWindow *parent);
 	//	MyTree(wxWindow *parent, const wxWindowID id = wxID_ANY, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxTR_HAS_BUTTONS);
 		virtual ~MyTree(){};

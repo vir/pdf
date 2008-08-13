@@ -87,6 +87,7 @@ class MyTreeItemData:public wxTreeItemData
 MyTree::MyTree(wxView * view, wxWindow *parent)
 	: wxTreeCtrl(parent, MyTree_Ctrl/*id*/, wxDefaultPosition, wxDefaultSize, wxTR_HAS_BUTTONS)
 	, m_view(view)
+	, m_details(NULL)
 {
 	CreateImageList();
 
@@ -100,19 +101,21 @@ MyTree::MyTree(wxView * view, wxWindow *parent)
 
 void MyTree::Update()
 {
-std::cerr << "Before GetDocument()" << std::endl;
+	wxString s;
 	PdfDoc * doc = static_cast<PdfDoc*>(m_view->GetDocument());
-std::cerr << "Before doc->get_root" << std::endl;
-	PDF::ObjId rrr = doc->get_root(0);
-std::cerr << "Before get_object()" << std::endl;
-	SetItemData(rootId, new MyTreeItemData( doc->get_object( rrr ) ));
-std::cerr << "Still alive?" << std::endl;
+	doc->GetPrintableName(s);
+	SetItemText(rootId, s);
+//	SetItemData(NULL);
+	wxTreeItemId id = AppendChild(rootId, wxT("Catalog"), doc->get_object( doc->get_root(0) ) );
+	AppendChildren(id);
 //	SetItemData(rootId, new MyTreeItemData( doc->get_object( doc->get_root(0) ) ));
+#if 0
 	wxString text;
 	text.Printf(wxT("Item #%d"), 666);
 	AppendItem(/*GetRootItem()*/ rootId, text /*, MyTreeCtrl::TreeCtrlIcon_File */ );
 	text.Printf(wxT("Item #%d"), 1998);
 	AppendItem(/*GetRootItem()*/ rootId, text /*, MyTreeCtrl::TreeCtrlIcon_File */ );
+#endif
 //	wxTreeItemId id = AppendItem(idParent, str, image, imageSel, new MyTreeItemData(str));
 }
 
@@ -170,12 +173,79 @@ void MyTree::OnItemExpanded(wxTreeEvent& event)
 {
 }
 
+wxTreeItemId MyTree::AppendChild(wxTreeItemId parent, const wxString & name, PDF::OH obj, wxString fullpath)
+{
+//std::cerr << "AppendChild(" << parent << ", " << name.mb_str() << ", " << obj->type() << "[" << std::hex << (unsigned long)obj.obj() << "]" << ", " << fullpath.mb_str() << ")" << std::endl;
+	wxString text;
+	wxTreeItemId id;
+	fullpath += wxT("/");
+	fullpath += name;
+	text.Printf(wxT("%s (%s)"), name.c_str(), wxString(obj->type().c_str(), wxConvUTF8).c_str());
+	id = AppendItem(parent, text, -1, -1, new MyTreeItemData( obj ));
+	return id;
+//	AppendChildren(id);
+}
+
+void MyTree::AppendChildren(wxTreeItemId id)
+{
+	MyTreeItemData * d = static_cast<MyTreeItemData*>(GetItemData(id));
+	if(!d) return;
+	PDF::OH obj = d->h;
+	switch(obj.otype()) {
+#if 0
+		case t_Null:
+		case t_Real:
+		case t_Integer:
+		case t_String:
+		case t_Name:
+		case t_Keyword:
+		case t_Object:
+			break;
+#endif
+//		case PDF::OH::t_Stream: // XXX
+		case PDF::OH::t_Dictionary:
+			{
+				PDF::OH::DictIterator it = obj.begin_dict();
+				while(it) {
+					AppendChild(id, wxString(it.key().c_str(), wxConvUTF8), it.value());
+					++it;
+				}
+			}
+			break;
+		case PDF::OH::t_Array:
+			{
+				unsigned int i;
+				for(i = 0; i < obj.size(); i++) {
+					wxString name;
+					name.Printf(wxT("#%d"), i);
+					AppendChild(id, name, obj[i]);
+				}
+			}
+			break;
+		case PDF::OH::t_ObjRef:
+			{
+				PDF::OH tmp = obj;
+				tmp.expand();
+				AppendChild(id, wxString(obj->dump().c_str(), wxConvUTF8), tmp);
+			}
+			break;
+		default:
+			break;
+	}
+}
+
 void MyTree::OnItemExpanding(wxTreeEvent& event)
 {
+	wxString text;
 	wxTreeItemId id = event.GetItem();
-	MyTreeItemData * d = static_cast<MyTreeItemData*>(GetItemData(id));
-	if(d)
-		std::cout << "OnItemExpanding" << d->dump() << std::endl;
+//	MyTreeItemData * d = static_cast<MyTreeItemData*>(GetItemData(id));
+//	if(d) std::cout << "OnItemExpanding" << d->dump() << std::endl;
+	wxTreeItemIdValue cookie;
+	wxTreeItemId child = GetFirstChild(id, cookie);
+	while(child.IsOk()) {
+		AppendChildren(child);
+		child = GetNextChild(id, cookie);
+	}
 }
 
 void MyTree::OnItemCollapsed(wxTreeEvent& event)
@@ -184,10 +254,25 @@ void MyTree::OnItemCollapsed(wxTreeEvent& event)
 
 void MyTree::OnItemCollapsing(wxTreeEvent& event)
 {
+	wxTreeItemId id = event.GetItem();
+//	MyTreeItemData * d = static_cast<MyTreeItemData*>(GetItemData(id));
+//	if(d) std::cout << "OnItemCollapsing" << d->dump() << std::endl;
+	wxTreeItemIdValue cookie;
+	wxTreeItemId child = GetFirstChild(id, cookie);
+	while(child.IsOk()) {
+		Collapse(child);
+		DeleteChildren(child);
+		child = GetNextChild(id, cookie);
+	}
 }
 
 void MyTree::OnSelChanged(wxTreeEvent& event)
 {
+	wxTreeItemId id = event.GetItem();
+	MyTreeItemData * d = static_cast<MyTreeItemData*>(GetItemData(id));
+	if(!d) return;
+	wxString s(d->h->dump().c_str(), wxConvUTF8);
+	m_details->SetValue(s);
 }
 
 

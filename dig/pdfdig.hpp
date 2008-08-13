@@ -16,7 +16,7 @@ class MyApp : public wxApp
 		MyFrame * GetMainFrame() const { return frame; }
 		MyApp():m_docManager(NULL),frame(NULL) {}
 		virtual bool OnInit();
-		virtual int OnExit() { return 0; }
+		virtual int OnExit();
 		virtual void OnInitCmdLine(wxCmdLineParser& parser);
 		virtual bool OnCmdLineParsed(wxCmdLineParser& parser);
 };
