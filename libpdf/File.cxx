@@ -21,13 +21,17 @@
 namespace PDF {
 // PDF::File class members ==========================================================
 // ============================================================================
-File::File(std::string fn):m_debug(0)
+File::File(std::string fn)
+	:strm(file)
+	,m_debug(0)
+	,m_security(NULL)
 {
   if(!fn.empty()) { open(fn); }
 }
 
 File::~File()
 {
+	delete m_security;
 }
 
 bool File::open(std::string fn)
@@ -72,6 +76,34 @@ bool File::load()
       root_refs.push_back(ref->ref());
     }
 
+		if(( o = trailer->find("ID") )) {
+			Array * a = dynamic_cast<Array *>(o);
+			if(!a)
+				throw FormatException("'ID' trailer entry must be an array of strings");
+			load_file_ids(a);
+		}
+
+		if(( o = trailer->find("Encrypt") )) {
+			bool need_destroy = false;
+			Dictionary * d = dynamic_cast<Dictionary *>(o);
+			if(!d) { // may be it is a ObjRef
+				ObjRef * ref = dynamic_cast<ObjRef *>(o);
+				if(ref) {
+					o = load_object(ref->ref(), false);
+					d = dynamic_cast<Dictionary *>(o);
+					need_destroy = true;
+				}
+			}
+			if(!d)
+				throw FormatException("Can not find 'Encrypt' dictionary");
+
+			delete m_security;
+			m_security = SecHandler::create(d, this);
+			strm.set_security_handler(m_security);
+			if(need_destroy)
+				delete d;
+		}
+
     if(!( o=trailer->find("Prev") )) { delete trailer; break; }
     
     Integer * i=dynamic_cast<Integer *>(o);
@@ -89,7 +121,7 @@ bool File::load()
 
 
 /// load object from file
-Object * File::load_object(const ObjId & oi)
+Object * File::load_object(const ObjId & oi, bool decrypt)
 {
 	if(m_debug>1) std::clog << "Loading object " << oi.dump() << std::endl;
   XrefTableType::const_iterator it=xref_table.find(oi);
@@ -97,7 +129,7 @@ Object * File::load_object(const ObjId & oi)
   if(it != xref_table.end())
   {
     file.seekg(it->second);
-    r=Object::read_indirect(file);
+		r = strm.read_indirect_object(decrypt);
 
 		Stream * str;
 		if((str = dynamic_cast<Stream *>(r))) { str->set_source(this); }
@@ -189,8 +221,8 @@ Dictionary * File::read_trailer()
 	s.erase(0, s.find_first_not_of("\r\n\t "));
   if(s.substr(0,7) != "trailer") throw std::string("No trailer");
 
-  Object * r=Object::read(file);
-  Dictionary * dic=dynamic_cast<Dictionary *>(r);
+	Object * r = strm.read_direct_object();
+	Dictionary * dic = dynamic_cast<Dictionary *>(r);
   if(!dic) { delete r; throw std::string("Error in trailer dictionary"); }
   return dic;
 }
@@ -201,6 +233,20 @@ long File::offset_lookup(const ObjId & oi) const
   return (it!=xref_table.end())?it->second:-1;
 }
 
+void File::load_crypto_dict(const Dictionary * d)
+{
+}
+
+void File::load_file_ids(const Array * a)
+{
+	Array::ConstIterator it;
+	for(it = a->get_const_iterator(); a->check_iterator(it); it++) {
+		String * s = dynamic_cast<String *>(*it);
+		if(!s)
+			continue;
+		m_file_ids.push_back( s->value() );
+	}
+}
 
 } // namespace PDF
 

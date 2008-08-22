@@ -72,7 +72,7 @@ class OH
     unsigned long size() const
     {
       Array * a; Dictionary * d;
-	  put(a); put(d);
+			put(a); put(d);
       // XXX check streams?
       if(a) return a->size();
       else if(d) return d->size();
@@ -135,6 +135,34 @@ class OH
 					return false;
 			}
 			return true;
+		}
+		class DictIterator
+		{
+			private:
+				Dictionary * d;
+				Dictionary::Iterator it;
+				ObjectsCache * m_cache;
+			public:
+				DictIterator(Dictionary * dict, ObjectsCache * cache)
+				{
+					d = dict;
+					it = dict->get_iterator();
+					m_cache = cache;
+				}
+				std::string key() const { return it->first; }
+				OH value() const { return OH(m_cache, it->second); }
+				DictIterator & operator++() { if(d->check_iterator(it)) it++; return *this; }
+				operator bool() { return d->check_iterator(it); }
+		};
+		DictIterator begin_dict() const
+		{
+			Dictionary * d;
+			if(!put(d)) {
+				Stream * s;
+				put(s, "Can't iterate - not a dictionatry or stream");
+				d = s->get_dict();
+			}
+			return DictIterator(d, m_cache);
 		}
 };
 

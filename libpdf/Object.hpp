@@ -24,7 +24,8 @@ class ObjId
 //		ObjId(long n=0, long g=0):num(n),gen(g) {}
 		bool operator ==(const ObjId & other) const { return (num==other.num) && (gen==other.gen); }
 		bool operator <(const ObjId & other) const { return (num==other.num)?gen<other.gen:num<other.num; }
-		std::string dump() const { std::stringstream ss; ss << "(" << num << "," << gen << ")"; return ss.str(); }
+		void dump(std::ostream & ss) const { ss << "(" << (int)num << "," << (int)gen << ")"; }
+		std::string dump() const { std::stringstream ss; dump(ss); return ss.str(); }
 };
 
 /// Generalized PDF object interface and common attributes
@@ -46,18 +47,15 @@ class Object
     Object() { m_id.num=0; m_id.gen=0; indirect=false; }
     virtual ~Object() {};
     /// returns string, somehow desribing object's content.
-    virtual std::string dump(int level=0) const=0;
+		virtual void dump(std::ostream & ss, int level=0) const=0;
+    virtual std::string dump(int level=0) const { std::stringstream ss; dump(ss, level); return ss.str(); }
     virtual std::string dump_objattr() const
     {
       std::stringstream ss;
-      if(indirect) ss << "{" << m_id.num << "," << m_id.gen << "}";
-      else         ss << "@" << m_offset <<"@";
+      if(indirect) m_id.dump(ss);
+      else ss << "@" << m_offset <<"@";
       return ss.str();
     }
-    /// read direct object from given stream
-    static Object * read(std::istream & f, bool alt=false);
-    /// read indirect object from given stream
-    static Object * read_indirect(std::istream & f);
     static unsigned int m_debug;
     /// dirty hack --- returns type name of this object
     std::string type() const;
@@ -70,7 +68,8 @@ class Null:public Object
 {
   public:
     Null() { }
-    std::string dump(int level=0) const { return "NULL"; }
+		virtual void dump(std::ostream & ss, int level=0) const { ss << "NULL"; }
+    virtual std::string dump(int level=0) const { return "NULL"; }
 };
 
 /// template for simple types (Bool, Integer, Real and String) generation.
@@ -83,7 +82,7 @@ template <class T> class ObjSimpleT:public Object
     ObjSimpleT(T v):my_value(v) { }
     virtual ~ObjSimpleT() {}
     virtual T value() const { return my_value; }
-    virtual std::string dump(int level=0) const { std::stringstream ss; ss << my_value; return ss.str(); }
+		virtual void dump(std::ostream & ss, int level=0) const { ss << my_value; }
 //      virtual std::string out() { return std::string(""); }
 };
 typedef ObjSimpleT<long> Integer;
@@ -93,6 +92,7 @@ class Boolean:public ObjSimpleT<bool>
 {
   public:
     Boolean(bool b):ObjSimpleT<bool>(b) {}
+		virtual void dump(std::ostream & ss, int level=0) const { ss << (my_value?"True":"False"); }
     virtual std::string dump(int level=0) const { return my_value?"True":"False"; }
 };
 /// PDF Object: String
@@ -101,13 +101,9 @@ class String:public ObjSimpleT<std::string>
   public:
     String():ObjSimpleT<std::string>() {}
     String(std::string s):ObjSimpleT<std::string>(s) {}
-    virtual std::string dump(int level=0) const
+		virtual void dump(std::ostream & ss, int level=0) const
 		{
-#if 0
-			return std::string("(")+my_value+std::string(")");
-#else
 			unsigned int pos;
-			std::stringstream ss;
 			ss << '(';
 			for(pos = 0; pos < my_value.length(); pos++) {
 				unsigned int c = (unsigned int)(unsigned char)my_value[pos];
@@ -117,8 +113,6 @@ class String:public ObjSimpleT<std::string>
 					ss << (char)c;
 			}
 			ss << ')';
-			return ss.str();
-#endif
 		}
 };
 /// PDF Object: Name --- represents some kind of name
@@ -126,6 +120,7 @@ class Name:public ObjSimpleT<std::string>
 {
   public:
     Name(std::string n):ObjSimpleT<std::string>(n) {}
+		virtual void dump(std::ostream & ss, int level=0) const { ss << "/" << my_value; }
     virtual std::string dump(int level=0) const { return std::string("/")+my_value; }
 };
 /// PDF Object: Array --- collection of other objects
@@ -145,18 +140,18 @@ class Array:public Object
       }
     }
     void push(Object * o) { d.push_back(o); }
-    std::string dump(int level=0) const
+		virtual void dump(std::ostream & ss, int level=0) const
     {
-      std::stringstream ss;
       ss << "Array[ " << std::endl;
       for(std::vector<Object *>::const_iterator it=d.begin(); it!= d.end(); it++)
       {
         for(int t=0; t<level; t++) { ss << "\t"; }
-        ss << "\t" << (*it)->dump() << std::endl;
+        ss << "\t";
+				(*it)->dump(ss, level+1);
+				ss << std::endl;
       }
       for(int t=0; t<level; t++) { ss << "\t"; }
       ss << "]" << std::endl;
-      return ss.str();
     }
     ConstIterator get_const_iterator() const { return d.begin(); }
     bool check_iterator(const ConstIterator & it) const { return it!=d.end(); }
@@ -183,18 +178,18 @@ class Dictionary:public Object
     }
     /// adds (replaces) mapping
     void set(std::string /*Name * */k, Object * v) { d[k]=v; }
-    virtual std::string dump(int level=0) const
+		virtual void dump(std::ostream & ss, int level=0) const
     {
-      std::stringstream ss;
       ss << dump_objattr() << "<<" << std::endl;
       for(std::map<std::string, Object *>::const_iterator it=d.begin(); it!=d.end(); it++)
       {
         for(int t=0; t<level; t++) { ss << "\t"; }
-        ss << "\t" << it->first << " => " << it->second->dump(level+1) << std::endl;
+        ss << "\t" << it->first << " => ";
+				it->second->dump(ss, level+1);
+				ss << std::endl;
       }
       for(int t=0; t<level; t++) { ss << "\t"; }
       ss << ">>";// << std::endl;
-      return ss.str();
     }
     /// returns member object or null if no such object found
     Object * find(std::string k) const
@@ -203,6 +198,16 @@ class Dictionary:public Object
       it=d.find(k);
       return (it != d.end())?it->second:NULL;
     }
+		/// sortcut for dynamic_cast<...>(find(...))
+		template<typename T>
+		bool find(std::string k, T *& pp) const
+		{
+			Object * o = find(k);
+			if(!o)
+				return false;
+			pp = dynamic_cast<T *>(o);
+			return !!pp;
+		}
     
     // iterator functions
     typedef std::map<std::string, Object *>::iterator Iterator;
@@ -212,28 +217,31 @@ class Dictionary:public Object
 };
 
 class File;
+class ObjIStream;
 
 /// PDF Object: Stream --- large/binary data container.
-class Stream:public Object
+class Stream:public Object // All streams must be indirect objects
 {
 /// \todo Make "more valid" stream (see http://www.cplusplus.com/ref/iostream/streambuf/)
+	friend class ObjIStream; // allow access to our internals
   private:
 		File * source;
     Dictionary * dict;
-		std::istream * file;
+		ObjIStream * ostrm;
 		unsigned long soffset;
-    std::vector<char> data;
+		unsigned long slength;
+    std::vector<char> m_data;
   public:
-    Stream(Dictionary * d, std::vector<char> & b):source(NULL),file(NULL) { dict=d; data=b; }
-		Stream(Dictionary * d, std::istream * strm, unsigned long offs):source(NULL),dict(d),file(strm),soffset(offs) { }
+    Stream(Dictionary * d, std::vector<char> & b):source(NULL),dict(d),ostrm(NULL),m_data(b) { }
+		Stream(Dictionary * d, ObjIStream * s, unsigned int offs, unsigned int length):source(NULL),dict(d),ostrm(s),soffset(offs),slength(length) { }
     virtual ~Stream() { if(dict) delete dict; }
-    std::string dump(int level=0) const
+		virtual void dump(std::ostream & ss, int level=0) const
     {
-			return std::string("Stream: ") + dict->dump();
-//      std::stringstream ss;
-//      ss << "Stream(" << data.size() << " bytes)";
-//      return ss.str();
+			ss << "Stream: " << slength << " bytes at offset " << soffset << " ";
+			dict->dump(ss);
     }
+		const Dictionary * get_dict() const { return dict; }
+		Dictionary * get_dict() { return dict; }
     bool get_data(std::vector<char> & buf);
     std::string value()
     {
@@ -252,11 +260,9 @@ class ObjRef:public Object
   public:
     ObjRef(long n, long g) { m_ref.num=n; m_ref.gen=g; }
     const ObjId & ref() const { return m_ref; }
-    std::string dump(int level=0) const
+		virtual void dump(std::ostream & ss, int level=0) const
     {
-      std::stringstream ss;
       ss << "ObjRef" << dump_objattr() << "(" << m_ref.num << "," << m_ref.gen << ")";
-      return ss.str();
     }
 };
 
@@ -265,6 +271,7 @@ class Keyword:public ObjSimpleT<std::string>
 {
   public:
     Keyword(std::string s):ObjSimpleT<std::string>(s) {}
+		virtual void dump(std::ostream & ss, int level=0) const { ss << "SW_" << my_value; }
     virtual std::string dump(int level=0) const { return std::string("KW_")+my_value; }
 };
 

@@ -11,6 +11,9 @@
 #include <string>
 #include <sstream>
 
+#define NOT_IMPLEMENTED(a) \
+ throw std::string(__FILE__ ": Not implemented: "a);
+
 namespace PDF {
 
 /// PDF File format exception class

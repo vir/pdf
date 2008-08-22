@@ -10,6 +10,7 @@
 #include "Font.hpp"
 #include "Object.hpp"
 #include "Media.hpp"
+#include "ObjStrm.hpp"
 
 #define TC_IS_KERNING 1
 
@@ -141,10 +142,12 @@ bool Page::load(OH pagenode)
 bool Page::parse(const std::vector<char> & data)
 {
   std::stringstream ss(std::string(data.begin(), data.end()));
+	ObjIStream strm(ss);
+	strm.throw_eof(false);
 
   std::vector<Object *> * args=NULL;
   Object * o=NULL;
-  while((o=Object::read(ss, true)))
+  while((o = strm.read_direct_object()))
   {
     Keyword * kw=dynamic_cast<Keyword *>(o);
     if(kw)

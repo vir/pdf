@@ -1,4 +1,5 @@
 #include "Font_CMap.hpp"
+#include "ObjStrm.hpp"
 
 namespace PDF {
 
@@ -11,13 +12,13 @@ inline unsigned long s2c(const std::string & s) {
 	return r;
 }
 
-bool Font::CMap::Range::load(std::istream & s)
+bool Font::CMap::Range::load(ObjIStream & s)
 {
 	int i;
 	String * sp[3]={NULL, NULL, NULL};
 	Object * o;
 	for(i=0; i<3; i++) {
-		o=Object::read(s, true);
+		o = s.read_direct_object();
 		if(!o) { std::cerr << "Error loading bfrange" << std::endl; return false; }
 		sp[i]=dynamic_cast<String *>(o);
 		if(!sp[i]) { std::cerr << "Found non-string in bfrange" << std::endl; return false; }
@@ -29,10 +30,10 @@ bool Font::CMap::Range::load(std::istream & s)
 	return true;
 }
 
-bool Font::CMap::load_bfchar(std::istream & s)
+bool Font::CMap::load_bfchar(ObjIStream & s)
 {
 	Object * o;
-	while((o=Object::read(s, true)))
+	while((o = s.read_direct_object()))
 	{
 		Keyword * kw=dynamic_cast<Keyword *>(o);
 		if(kw && kw->value()=="endbfchar") { delete o; break; }
@@ -40,7 +41,7 @@ bool Font::CMap::load_bfchar(std::istream & s)
 		String * os1=dynamic_cast<String *>(o);
 		if(!os1) { std::cerr << "Unexpected object " << o->type() << " in cmap" << std::endl; delete o; }
 
-		o=Object::read(s, true);
+		o = s.read_direct_object();
 		if(!o) { std::cerr << "Unexpected EOF in cmap" << std::endl; delete os1; return false; }
 		String * os2=dynamic_cast<String *>(o);
 		if(!os2) { std::cerr << "Unexpected object " << o->type() << " in cmap" << std::endl; delete o; }
@@ -62,13 +63,13 @@ bool Font::CMap::load_bfchar(std::istream & s)
 	return true;
 }
 
-bool Font::CMap::load_bfrange(std::istream & s)
+bool Font::CMap::load_bfrange(ObjIStream & s)
 {
 	Object * o;
 	String * str;
 	unsigned long rsp[3];
 	int i=0;
-	while((o=Object::read(s, true)))
+	while((o = s.read_direct_object()))
 	{
 		Keyword * kw=dynamic_cast<Keyword *>(o);
 		if(kw && kw->value()=="endbfrange") { break; }
@@ -90,12 +91,12 @@ bool Font::CMap::load_bfrange(std::istream & s)
 	return true;
 }
 
-unsigned int Font::CMap::load_codespacerange(std::istream & s)
+unsigned int Font::CMap::load_codespacerange(ObjIStream & s)
 {
 	Object * o;
 	String * str;
 	unsigned int len = 0;
-	while((o=Object::read(s, true)))
+	while((o = s.read_direct_object()))
 	{
 		Keyword * kw=dynamic_cast<Keyword *>(o);
 		if(kw && kw->value()=="endcodespacerange") { break; }
@@ -110,12 +111,12 @@ unsigned int Font::CMap::load_codespacerange(std::istream & s)
 	return len;
 }
 
-bool Font::CMap::load(std::istream & s)
+bool Font::CMap::load(ObjIStream & s)
 {
   Object * o=reinterpret_cast<Object *>(0x1);
   while(o)
   {
-    while((o=Object::read(s, true)))
+    while((o = s.read_direct_object()))
     {
       std::string str;
       Keyword * kw=dynamic_cast<Keyword *>(o);
@@ -140,7 +141,9 @@ bool Font::CMap::load(OH cmapnode)
 	map_stream->get_data(tv);
 	std::string str(tv.begin(), tv.end());
 	std::stringstream ss(str);
-	return load(ss);
+	ObjIStream strm(ss);
+	strm.throw_eof(false);
+	return load(strm);
 }
 
 wchar_t Font::CMap::map(unsigned long c, bool no_fallback) const
