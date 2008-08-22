@@ -146,11 +146,11 @@ wchar_t Font::to_unicode(int c) const
  **/
 bool Font::extract_text(const String * so, std::wstring & ws, double & twid, unsigned int & pos, wchar_t delimiter) const
 {
-	std::string s=so->value();
-	if(s.length() % charbytes)
+	std::vector<char> s=so->value(); /// \todo: eliminate copy?
+	if(s.size() % charbytes)
 		throw std::string("String length is not a multiple of charbytes: ") + dump();
 	twid = 0.0;
-	while( pos < s.length() )
+	while( pos < s.size() )
 	{
 		// Get glyph index
 		unsigned long c=0;
@@ -191,7 +191,7 @@ bool Font::extract_one_char(const String * so, std::wstring & ws, double & twid,
 	// Get glyph index
 	unsigned long c=0;
 	for(unsigned int k=0; k<charbytes; k++) {
-		if(pos >= so->value().length())
+		if(pos >= so->value().size())
 			return false;
 		c<<=8;
 		c|=(unsigned char)so->value()[pos++];

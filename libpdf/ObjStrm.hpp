@@ -2,6 +2,7 @@
 #define OBJSTRM_HPP_INCLUDED
 
 #include <iostream>
+#include <vector>
 
 namespace PDF {
 
@@ -22,7 +23,7 @@ class ObjIStream
 		inline void skip_whitespace();
 		std::string read_token();
 		// some very-low-level helper functions
-		std::string read_o_string();
+		std::vector<char> read_o_string();
 		Object * read_o_digits();
 		Object * read_o_chars();
 		Object * read_delimited(const ObjId * decrypt_info = NULL);

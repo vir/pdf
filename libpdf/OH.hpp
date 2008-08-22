@@ -100,7 +100,7 @@ class OH
 		std::string strvalue() const
 		{
 			const String * s;
-			if(put(s)) return s->value();
+			if(put(s)) return s->str();
 			const Name * n;
 			put(n, "can't extract string value from ");
 			return n->value();

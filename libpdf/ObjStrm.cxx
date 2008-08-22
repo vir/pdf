@@ -99,7 +99,7 @@ Object * ObjIStream::read_delimited(const ObjId * decrypt_info)
 	{
 		case '(':
 			{
-				std::string str = read_o_string();
+				std::vector<char> str = read_o_string();
 				if(decrypt_info && sechandler) {
 //					sechandler->decrypt_object(decrypt_info->num, decrypt_info->gen, (char*) .......
 				}
@@ -192,10 +192,10 @@ Object * ObjIStream::read_delimited(const ObjId * decrypt_info)
 					} while(f.peek() != '>' && f.peek() != EOF);
 					f.ignore(); // check for errors?
 					if(s.length() % 2) s+='0'; // pad to even length
-					std::string r;
+					std::vector<char> r;
 					for(unsigned int i=0; i<s.length(); i+=2) {
 						char c=(hex_to_int(s[i]) << 4) | hex_to_int(s[i+1]);
-						r+=c;
+						r.push_back(c);
 					}
 					return new String(r);
 				}
@@ -217,9 +217,9 @@ Object * ObjIStream::read_delimited(const ObjId * decrypt_info)
  * 
  * \todo add all valid escape sequences
  */
-std::string ObjIStream::read_o_string()
+std::vector<char> ObjIStream::read_o_string()
 {
-  std::string s; char c; bool escape=false;
+  std::vector<char> s; char c; bool escape=false;
 	int plevel = 0;
 	do {
 		c = f.get();
@@ -242,7 +242,7 @@ std::string ObjIStream::read_o_string()
 					default: break;
 				}
 			}
-			s += c;
+			s.push_back(c);
 			if(f.peek() == ')' && plevel == 0) break;
 		}
 	} while(f.peek() != EOF);

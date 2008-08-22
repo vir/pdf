@@ -88,10 +88,10 @@ void StdSecHandler::init(const Dictionary * cryptodict)
 	R = ii->value();
 	if(! cryptodict->find("O", ss))
 		throw std::string("Bad crypto dict: no O string");
-	O = ss->value();
+	O = ss->str();
 	if(! cryptodict->find("U", ss))
 		throw std::string("Bad crypto dict: no U string");
-	U = ss->value();
+	U = ss->str();
 	if(! cryptodict->find("P", ii))
 		throw std::string("Bad crypto dict: no P integer");
 	P = ii->value();

@@ -23,9 +23,9 @@ bool Font::CMap::Range::load(ObjIStream & s)
 		sp[i]=dynamic_cast<String *>(o);
 		if(!sp[i]) { std::cerr << "Found non-string in bfrange" << std::endl; return false; }
 	}
-	begin=s2c(sp[0]->value());
-	end=s2c(sp[1]->value());
-	res=(wchar_t)s2c(sp[2]->value());
+	begin=s2c(sp[0]->str());
+	end=s2c(sp[1]->str());
+	res=(wchar_t)s2c(sp[2]->str());
 	for(i=0; i<3; i++) delete sp[i];
 	return true;
 }
@@ -48,8 +48,8 @@ bool Font::CMap::load_bfchar(ObjIStream & s)
 
 		if(os1 && os2)
 		{
-			std::string s1=os1->value(); delete os1;
-			std::string s2=os2->value(); delete os2;
+			std::string s1=os1->str(); delete os1;
+			std::string s2=os2->str(); delete os2;
 #if 0
 			std::clog << "s1: " << std::hex << (int)((unsigned char)s1[0]) << " " << std::hex << (int)((unsigned char)s1[1]) << std::endl;
 			std::clog << "s2: " << std::hex << (int)((unsigned char)s2[0]) << " " << std::hex << (int)((unsigned char)s2[1]) << std::endl;
@@ -77,7 +77,7 @@ bool Font::CMap::load_bfrange(ObjIStream & s)
 		str=dynamic_cast<String *>(o);
 		if(!str) { std::cerr << "Found non-string in bfrange" << std::endl; break; }
 
-		rsp[i++]=s2c(str->value());
+		rsp[i++]=s2c(str->str());
 
 		delete o; o=NULL;
 
@@ -104,8 +104,8 @@ unsigned int Font::CMap::load_codespacerange(ObjIStream & s)
 		str=dynamic_cast<String *>(o);
 		if(!str) { std::cerr << "Found non-string in codespacerange" << std::endl; break; }
 
-		if(str->value().length() > len)
-			len = str->value().length();
+		if(str->str().length() > len) // XXX optimize it!!
+			len = str->str().length();
 	}
 	if(o) delete o;
 	return len;

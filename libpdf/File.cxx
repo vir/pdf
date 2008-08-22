@@ -244,7 +244,7 @@ void File::load_file_ids(const Array * a)
 		String * s = dynamic_cast<String *>(*it);
 		if(!s)
 			continue;
-		m_file_ids.push_back( s->value() );
+		m_file_ids.push_back( s->str() );
 	}
 }
 

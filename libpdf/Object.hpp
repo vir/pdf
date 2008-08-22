@@ -96,16 +96,18 @@ class Boolean:public ObjSimpleT<bool>
     virtual std::string dump(int level=0) const { return my_value?"True":"False"; }
 };
 /// PDF Object: String
-class String:public ObjSimpleT<std::string>
+class String:public Object
 {
+	private:
+		std::vector<char> my_value;
   public:
-    String():ObjSimpleT<std::string>() {}
-    String(std::string s):ObjSimpleT<std::string>(s) {}
+    String() {}
+    String(std::vector<char> s):my_value(s) {}
 		virtual void dump(std::ostream & ss, int level=0) const
 		{
 			unsigned int pos;
 			ss << '(';
-			for(pos = 0; pos < my_value.length(); pos++) {
+			for(pos = 0; pos < my_value.size(); pos++) {
 				unsigned int c = (unsigned int)(unsigned char)my_value[pos];
 				if(c < 0x20 || c >= 0x7F)
 					ss << "\\x" << std::uppercase << std::hex << std::setfill('0') << std::setw(2) << c;
@@ -114,6 +116,12 @@ class String:public ObjSimpleT<std::string>
 			}
 			ss << ')';
 		}
+		std::string str() const
+		{
+			return std::string(&my_value[0], my_value.size());
+		}
+		std::vector<char> value() { return my_value; }
+		const std::vector<char> value() const { return my_value; }
 };
 /// PDF Object: Name --- represents some kind of name
 class Name:public ObjSimpleT<std::string>
