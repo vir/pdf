@@ -29,10 +29,13 @@ class MD5
 	protected:
 		void transform(const unsigned char block[64]);
 	public:
+		MD5() { init(); }
 		void init();
 		void update(const unsigned char *input, unsigned int inputLen);
 		void update(const char *input, unsigned int inputLen) { update((const unsigned char *)input, inputLen); }
+		void update(const std::string & s) { update((const unsigned char *)s.c_str(), s.length()); }
 		void final(unsigned char digest[16]);
+		std::string final() { unsigned char digest[16]; final(digest); return std::string((char*)digest, sizeof(digest)); }
 };
 
 class RC4 // Description: http://en.wikipedia.org/wiki/RC4
@@ -56,7 +59,7 @@ class RC4 // Description: http://en.wikipedia.org/wiki/RC4
 		}
 	public:
 		RC4():i(0),j(0) {}
-		void init(std::string key)
+		void init(const std::string & key)
 		{
 			for(i = 0; i < 256; i++)
 				s[i] = i;
@@ -72,7 +75,13 @@ class RC4 // Description: http://en.wikipedia.org/wiki/RC4
 		{
 			return b ^ prga();
 		}
-		std::string transform(std::string data)
+		void transform(char * buf, int len)
+		{
+			for(int i = 0; i < len; i++) {
+				buf[i] = transform(buf[i]);
+			}
+		}
+		std::string transform(const std::string & data)
 		{
 			std::string r;
 			r.reserve(data.length());
@@ -80,6 +89,12 @@ class RC4 // Description: http://en.wikipedia.org/wiki/RC4
 			for(k = 0; k < data.length(); k++)
 				r += transform(data[k]);
 			return r;
+		}
+		static std::string transform(const std::string & key, const std::string & data)
+		{
+			RC4 rc4;
+			rc4.init(key);
+			return rc4.transform(data);
 		}
 };
 
