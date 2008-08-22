@@ -101,7 +101,7 @@ Object * ObjIStream::read_delimited(const ObjId * decrypt_info)
 			{
 				std::vector<char> str = read_o_string();
 				if(decrypt_info && sechandler) {
-//					sechandler->decrypt_object(decrypt_info->num, decrypt_info->gen, (char*) .......
+					sechandler->decrypt_object(decrypt_info->num, decrypt_info->gen, (char*)&str[0], str.size());
 				}
 				String * s = new String( str );
 				f.ignore(); // skip ')'
@@ -197,6 +197,8 @@ Object * ObjIStream::read_delimited(const ObjId * decrypt_info)
 						char c=(hex_to_int(s[i]) << 4) | hex_to_int(s[i+1]);
 						r.push_back(c);
 					}
+					if(sechandler && decrypt_info)
+						sechandler->decrypt_object(decrypt_info->num, decrypt_info->gen, (char*)&r[0], r.size());
 					return new String(r);
 				}
 			}
