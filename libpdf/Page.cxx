@@ -144,6 +144,7 @@ bool Page::parse(const std::vector<char> & data)
   std::stringstream ss(std::string(data.begin(), data.end()));
 	ObjIStream strm(ss);
 	strm.throw_eof(false);
+	strm.allow_keywords(true);
 
   std::vector<Object *> * args=NULL;
   Object * o=NULL;

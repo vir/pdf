@@ -17,7 +17,7 @@ class ObjIStream
 		std::istream & f;
 		SecHandler * sechandler;
 		bool will_throw_eof;
-		bool allow_keywords;
+		bool will_allow_keywords;
 	protected:
 		// elemental operations
 		inline void skip_whitespace();
@@ -29,10 +29,12 @@ class ObjIStream
 		Object * read_delimited(const ObjId * decrypt_info = NULL);
 		Object * read_direct_object(const ObjId * decrypt_info);
 	public:
-		ObjIStream(std::istream & sref, bool want_throw_eof = true):f(sref),sechandler(NULL),will_throw_eof(want_throw_eof),allow_keywords(false) { }
+		ObjIStream(std::istream & sref, bool want_throw_eof = true):f(sref),sechandler(NULL),will_throw_eof(want_throw_eof),will_allow_keywords(false) { }
 		void set_security_handler(SecHandler * h) { sechandler = h; }
 		void throw_eof(bool want) { will_throw_eof = want; }
 		bool throw_eof() { return will_throw_eof; }
+		void allow_keywords(bool want) { will_allow_keywords = want; }
+		bool allow_keywords() { return will_allow_keywords; }
 		Object * read_direct_object() { return read_direct_object(NULL); }
 		Object * read_indirect_object(bool need_decrypt = true);
 		void load_stream_data(Stream * s);
