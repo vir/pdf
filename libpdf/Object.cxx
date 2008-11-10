@@ -13,6 +13,7 @@
 #include "Exceptions.hpp"
 #include "Filter.hpp" // for stream
 #include "ObjStrm.hpp"
+#include "File.hpp" // for File::load_object
 #include <string.h>
 
 namespace PDF {
@@ -36,6 +37,24 @@ std::string Object::type() const
   return "Somthing strange";
 }
 #undef OBJECT_TYPE_ID_TRY
+
+/// Fetches stream's source file length
+unsigned int Stream::slength() const
+{
+	if(m_slength_ref) {
+		Integer * ii;
+		if(!source)
+			throw FormatException("Stream length is a reference and have no source - giving up!", soffset);
+		Object * o = source->load_object(m_slength_ref->ref());
+		ii = dynamic_cast<Integer *>(o);
+		if(!ii)
+			throw FormatException("Referenced Stream length is not an integer - giving up #@$#%!", soffset);
+		m_slength = ii->value();
+		delete o;
+	}
+	m_slength_ref = NULL;
+	return m_slength;
+}
 
 /// Fetches unencoded stream data
 bool Stream::get_data(std::vector<char> & buf)

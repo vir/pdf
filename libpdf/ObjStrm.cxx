@@ -77,10 +77,13 @@ Object * ObjIStream::read_indirect_object(bool need_decrypt)
 
 	Object * r = read_direct_object(need_decrypt?&objid:NULL); // read the object
 
-	skip_whitespace();
-	s = read_token();
-	if(s!="endobj")
-		throw FormatException("Error at object end", f.tellg());
+	Stream * ss = dynamic_cast<Stream *>(r);
+	if(!(ss && ss->delayed_load())) { // skip check if delayed stream loading as we don't know it's length
+		skip_whitespace();
+		s = read_token();
+		if(s!="endobj")
+			throw FormatException("Error at object end", f.tellg());
+	}
 
 	r->indirect = true;
 	r->m_id = objid;
@@ -157,25 +160,31 @@ Object * ObjIStream::read_delimited(const ObjId * decrypt_info)
 						skip_whitespace();
 						std::string s = read_token();
 						if(s == "stream") {
-							/* extract stream length */
-							Integer * ii = dynamic_cast<Integer *>(o);
-							if(!ii)
-								throw FormatException("Stream length is not an integer", savepos);
-							long stream_length = ii->value();
-
 							/* find stream data */
 							c=f.get(); if(c=='\x0D') c = f.get();
 							if(c != '\x0A')
 								throw FormatException("No newline after 'stream' keyword?", f.tellg());
 							long stream_begin = f.tellg();
 
-							/* skip to stream tail */
-							f.seekg(stream_begin + stream_length);
-							skip_whitespace();
-							s = read_token();
-							if(s != "endstream")
-								throw FormatException("Invlaid stream end", f.tellg());
-							return new Stream(r, this, stream_begin, stream_length);
+							/* extract stream length */
+							Integer * ii = dynamic_cast<Integer *>(o);
+							if(ii) {
+								long stream_length = ii->value();
+
+								/* skip to stream tail */
+								f.seekg(stream_begin + stream_length);
+								skip_whitespace();
+								s = read_token();
+								if(s != "endstream")
+									throw FormatException("Invlaid stream end", f.tellg());
+								return new Stream(r, this, stream_begin, stream_length);
+							} else {
+								ObjRef * rr = dynamic_cast<ObjRef *>(o);
+								if(!rr)
+									throw FormatException("Stream length is not an integer and not a reference - giving up!", savepos);
+								std::cerr << "Stream length is a reference - delaing length extraction (pos: " << savepos << ")" << std::endl;
+								return new Stream(r, this, stream_begin, rr);
+							}
 						} else
 							f.seekg(savepos);
 					}
@@ -294,7 +303,7 @@ Object * ObjIStream::read_o_chars()
 	if(b == "true") return new Boolean(true);
 	if(b == "false") return new Boolean(false);
 	if(b == "null") return new Null();
-	if(allow_keywords) return new Keyword(b);
+	if(will_allow_keywords) return new Keyword(b);
 	else {
 		std::cerr << "invalid boolean (or garbage?) object at offset " << startpos << std::endl;
 		return new Null();
@@ -328,11 +337,11 @@ std::string ObjIStream::read_token()
 
 void ObjIStream::load_stream_data(Stream * s)
 {
-	s->m_data.resize(s->slength);
+	s->m_data.resize(s->slength());
 	f.seekg(s->soffset);
-	f.read(&s->m_data[0], s->slength);
+	f.read(&s->m_data[0], s->slength());
 	if(sechandler && s->indirect)
-		sechandler->decrypt_object(s->m_id.num, s->m_id.gen, &s->m_data[0], s->slength);
+		sechandler->decrypt_object(s->m_id.num, s->m_id.gen, &s->m_data[0], s->slength());
 }
 
 

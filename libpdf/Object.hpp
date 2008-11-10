@@ -224,6 +224,7 @@ class Dictionary:public Object
     unsigned long size() const { return d.size(); }
 };
 
+class ObjRef;
 class File;
 class ObjIStream;
 
@@ -237,15 +238,17 @@ class Stream:public Object // All streams must be indirect objects
     Dictionary * dict;
 		ObjIStream * ostrm;
 		unsigned long soffset;
-		unsigned long slength;
+		mutable ObjRef * m_slength_ref;
+		mutable unsigned long m_slength;
     std::vector<char> m_data;
   public:
-    Stream(Dictionary * d, std::vector<char> & b):source(NULL),dict(d),ostrm(NULL),m_data(b) { }
-		Stream(Dictionary * d, ObjIStream * s, unsigned int offs, unsigned int length):source(NULL),dict(d),ostrm(s),soffset(offs),slength(length) { }
+    Stream(Dictionary * d, std::vector<char> & b):source(NULL),dict(d),ostrm(NULL),m_slength_ref(NULL),m_data(b) { }
+		Stream(Dictionary * d, ObjIStream * s, unsigned int offs, unsigned long length):source(NULL),dict(d),ostrm(s),soffset(offs),m_slength_ref(NULL),m_slength(length) { }
+		Stream(Dictionary * d, ObjIStream * s, unsigned int offs, ObjRef * length):source(NULL),dict(d),ostrm(s),soffset(offs),m_slength_ref(length),m_slength(0) { }
     virtual ~Stream() { if(dict) delete dict; }
 		virtual void dump(std::ostream & ss, int level=0) const
     {
-			ss << "Stream: " << slength << " bytes at offset " << soffset << " ";
+			ss << "Stream: " << slength() << " bytes at offset " << soffset << " ";
 			dict->dump(ss);
     }
 		const Dictionary * get_dict() const { return dict; }
@@ -258,6 +261,8 @@ class Stream:public Object // All streams must be indirect objects
       return std::string(v.begin(),v.end());
     }
 		void set_source(File * f) { source = f; }
+		unsigned int slength() const;
+		bool delayed_load() const { return m_slength_ref != NULL; }
 };
 
 /// PDF Psewdo-object: Reference to an Indirect object.
