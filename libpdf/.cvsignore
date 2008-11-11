@@ -1,2 +1,9 @@
 *.d
+Debug
+Release
+*.dep
+*.mak
+*.plg
+*.err
+*.swp
 
