@@ -16,7 +16,7 @@
 #include "File.hpp"
 #include "Exceptions.hpp"
 
-#define GETLINE_ENDL '\r'
+#define GETLINE_ENDL '\n'
 
 namespace PDF {
 // PDF::File class members ==========================================================
@@ -65,6 +65,7 @@ bool File::load()
   {
     if(m_debug) std::clog << "Xref table is at " << xref_off << "\n";
     read_xref_table_part(xref_off);
+    if(m_debug) std::clog << "Reading trailer at " << file.tellg() << "\n";
     Dictionary * trailer=read_trailer();
 //    trailer->dump();
     Object * o;
@@ -200,9 +201,11 @@ bool File::read_xref_table_part(long off)
 //  std::clog << "First object in this table: " << objnum << ", number of objects: " << count << std::endl;
   for(;count>0;count--,objnum++)
   {
+		// XXX We can read 20byte chunks here!
 		std::getline(file, s, GETLINE_ENDL);
+//std::clog << "XRef table line " << objnum << "/" << count << ": " << s << std::endl;
 		s.erase(0, s.find_first_not_of("\r\n\t "));
-    if(s.length() && s[17] == 'n') // read unly "used" refs
+    if(s.length() >= 17 && s[17] == 'n') // read unly "used" refs
     {
       ObjId oi;
       oi.num=objnum;
