@@ -85,6 +85,10 @@ LIB32=link.exe -lib
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
+SOURCE=.\Crypto.cxx
+# End Source File
+# Begin Source File
+
 SOURCE=.\Document.cxx
 # End Source File
 # Begin Source File
@@ -125,12 +129,24 @@ SOURCE=.\ObjectsCache.cxx
 # End Source File
 # Begin Source File
 
+SOURCE=.\ObjStrm.cxx
+# End Source File
+# Begin Source File
+
 SOURCE=.\Page.cxx
+# End Source File
+# Begin Source File
+
+SOURCE=.\SecHandler.cxx
 # End Source File
 # End Group
 # Begin Group "Header Files"
 
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
+# Begin Source File
+
+SOURCE=.\Crypto.hpp
+# End Source File
 # Begin Source File
 
 SOURCE=.\Ctm.hpp
@@ -177,6 +193,10 @@ SOURCE=.\ObjectsCache.hpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\ObjStrm.hpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\OH.hpp
 # End Source File
 # Begin Source File
@@ -190,6 +210,10 @@ SOURCE=.\Point.hpp
 # Begin Source File
 
 SOURCE=.\Rect.hpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\SecHandler.hpp
 # End Source File
 # End Group
 # End Target
