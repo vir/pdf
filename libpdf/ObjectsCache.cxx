@@ -25,6 +25,15 @@ OH ObjectsCache::get_object(const ObjId & id)
   }
 }
 
+OH ObjectsCache::get_handle(Object * o)
+{
+	if(o->indirect) {
+		return get_object(o->m_id);
+	} else {
+		return OH(this, o);
+	}
+}
+
 } // namespace PDF
 
 

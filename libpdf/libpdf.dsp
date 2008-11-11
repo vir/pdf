@@ -121,6 +121,10 @@ SOURCE=.\Font_Encoding.cxx
 # End Source File
 # Begin Source File
 
+SOURCE=.\Font_StdFonts.cxx
+# End Source File
+# Begin Source File
+
 SOURCE=.\Object.cxx
 # End Source File
 # Begin Source File
@@ -178,6 +182,10 @@ SOURCE=.\Font_CMap.hpp
 # Begin Source File
 
 SOURCE=.\Font_Encoding.hpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Font_StdFonts.hpp
 # End Source File
 # Begin Source File
 

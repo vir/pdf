@@ -2,9 +2,9 @@
 #ifndef PDF_PAGE_HPP
 #define PDF_PAGE_HPP
 
-// get rid of "identifier was truncated to '255' characters..."
 #ifdef _MSC_VER
-# pragma warning(disable : 4786)
+# pragma warning(disable : 4786) // get rid of "identifier was truncated to '255' characters..."
+# pragma warning(disable : 4284)
 #endif
 
 #include <fstream>

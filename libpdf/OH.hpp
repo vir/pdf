@@ -20,6 +20,7 @@ class File;
 class OH
 {
   friend class ObjectsCache;
+  friend class DictIterator;
   private:
     /// Pointer to an ObjectsCache, from which this OH was born
     ObjectsCache * m_cache;
@@ -150,7 +151,7 @@ class OH
 					m_cache = cache;
 				}
 				std::string key() const { return it->first; }
-				OH value() const { return OH(m_cache, it->second); }
+				OH value() const { return m_cache->get_handle(it->second); }
 				DictIterator & operator++() { if(d->check_iterator(it)) it++; return *this; }
 				operator bool() { return d->check_iterator(it); }
 		};

@@ -78,6 +78,7 @@ class ObjectsCache
       for(CacheIterator it=cache.begin(); it!=cache.end(); it++) delete it->second.obj;
     }
     OH get_object(const ObjId & id);
+	OH get_handle(Object * o);
 		void flush()
 		{
 			cache.clear();

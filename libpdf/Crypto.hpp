@@ -4,7 +4,13 @@
 #ifndef CRYPTO_HPP_INCLUDED
 #define CRYPTO_HPP_INCLUDED
 
-#include <stdint.h>
+#ifdef _MSC_VER
+# include <wtypes.h>
+# define uint32_t DWORD
+# define int32_t LONG
+#else
+# include <stdint.h>
+#endif
 #include <string>
 
 typedef unsigned char * POINTER;
