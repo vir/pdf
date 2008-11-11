@@ -33,11 +33,13 @@ wxtab: $(OBJS_WXTAB) ../libpdf/libpdf.a libtab.a
 %.o: %.cxx
 	$(COMPILE.cpp) $<
 
-.depend:
-	gcc -MM -MG *.cxx >.depend
+.depend: Makefile
+	gcc -MM -MG *.cxx > .depend
 
 ifeq (.depend,$(wildcard .depend))
 include .depend
+else
+all: .depend
 endif
 
 

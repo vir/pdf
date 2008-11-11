@@ -10,7 +10,7 @@ class WxTabTabulator:public Tabulator
 	public:
 		void Draw(wxDC * dc);
 		void ShowOptionsDialog(wxWindow * parent);
-		bool ok() const { return (table.ncols() && table.nrows()); } // XXX
+		bool ok() const { return (table.ncols() && table.nrows()); }
 };
 
 extern WxTabTabulator * theTabulator;

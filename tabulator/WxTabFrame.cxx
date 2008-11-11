@@ -176,7 +176,6 @@ void WxTabFrame::PrepareDC(wxDC& dc)
 void WxTabFrame::AddToolbar()
 {
 	wxToolBarBase *toolBar = CreateToolBar(wxTB_FLAT/* | wxTB_DOCKABLE*/ | wxTB_HORIZONTAL | wxTB_TEXT | wxTB_NOICONS, ID_TOOLBAR);
-	toolBar->AddTool(File_ShowTabulatorOptions, _T("Options"), wxBitmap(), _T("Show Tabulator options dialog"));
 
 	toolBar->AddTool(Go_First, _T("<<"), wxBitmap(), _T("Go to the first page"));
 	toolBar->AddTool(Go_Prev, _T("<"), wxBitmap(), _T("Go to the previous page"));
@@ -197,6 +196,8 @@ void WxTabFrame::AddToolbar()
 	m_oplimitspin->SetValue(0);
 	toolBar->AddControl(m_oplimitspin);
 	
+	toolBar->AddTool(File_ShowTabulatorOptions, _T("Options"), wxBitmap(), _T("Show Tabulator options dialog"));
+
 	toolBar->AddTool(Export_CSV, _T("CSV"), wxBitmap(), _T("Export current table as CSV to stdout"));
 	toolBar->AddTool(Export_HTML, _T("HTML"), wxBitmap(), _T("Export current table as HTML table to stdout"));
 #ifdef _WIN32
