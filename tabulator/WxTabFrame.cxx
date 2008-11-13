@@ -159,7 +159,10 @@ void WxTabFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
 
 void WxTabFrame::OnRotate(wxCommandEvent& event)
 {
-	theDocument->Rotate(event.GetId() - MenuRotate_First);
+	int rot = event.GetId() - MenuRotate_First;
+	theDocument->Rotate(rot);
+	theTabulator->metafile.set_rotation(rot);
+	theTabulator->full_process(theDocument->GetPageObject());
 	m_canvas->Refresh();
 }
 
