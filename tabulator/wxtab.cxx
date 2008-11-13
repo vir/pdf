@@ -51,7 +51,7 @@ bool MyApp::OnInit()
 	theTabulator->full_process(theDocument->GetPageObject());
 
 	if(need_gui) {
-		WxTabFrame *frame = new WxTabFrame(_T("My Buggy PDF Viewer"), wxPoint(10, 10), wxSize(1100, 1000));
+		WxTabFrame *frame = new WxTabFrame(_T("My PDF tables extractor"), wxPoint(0, 0), wxSize(1000, 750));
 		frame->Show(true);
 		SetTopWindow(frame);
 	}
