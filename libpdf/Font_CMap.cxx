@@ -106,8 +106,8 @@ unsigned int Font::CMap::load_codespacerange(ObjIStream & s)
 
 		if(str->str().length() > len) // XXX optimize it!!
 			len = str->str().length();
+		delete o;
 	}
-	if(o) delete o;
 	return len;
 }
 
@@ -143,6 +143,7 @@ bool Font::CMap::load(OH cmapnode)
 	std::stringstream ss(str);
 	ObjIStream strm(ss);
 	strm.throw_eof(false);
+	strm.allow_keywords(true);
 	return load(strm);
 }
 
