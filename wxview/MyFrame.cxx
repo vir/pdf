@@ -1,5 +1,6 @@
 #include "MyFrame.hpp"
 #include "MyCanvas.hpp"
+#include "MyDocument.hpp"
 
 enum {
 	File_Quit = wxID_EXIT,
@@ -11,6 +12,8 @@ enum {
 	Rotate_180,
 	Rotate_270,
 	MenuRotate_Last = Rotate_270,
+
+	Debug_DumpPage,
 };
 
 const int ID_TOOLBAR = 500;
@@ -20,6 +23,7 @@ const int ID_SPIN_OPLIMIT = 511;
 BEGIN_EVENT_TABLE(MyFrame, wxFrame)
 	EVT_MENU      (File_Quit,     MyFrame::OnQuit)
 	EVT_MENU      (File_About,    MyFrame::OnAbout)
+	EVT_MENU      (Debug_DumpPage,MyFrame::OnDumpPage)
 	EVT_MENU_RANGE(MenuRotate_First,   MenuRotate_Last,   MyFrame::OnRotate)
 	EVT_SPINCTRL  (ID_SPIN_PAGE,  MyFrame::OnPageSpinCtrl)
 	EVT_SPINCTRL  (ID_SPIN_OPLIMIT, MyFrame::OnOplimitSpinCtrl)
@@ -44,6 +48,9 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
 	menuRotate->Append(Rotate_90, _T("Rotate &90 degree\tF2"));
 	menuRotate->Append(Rotate_180, _T("Rotate &180 degree\tF3"));
 	menuRotate->Append(Rotate_270, _T("Rotate &270 degrees\tF4"));
+
+	wxMenu * menuDebug = new wxMenu;
+	menuDebug->Append(Debug_DumpPage, _T("Dump Page\td"));
 
 	wxMenuBar *menuBar = new wxMenuBar;
 	menuBar->Append(menuFile, _T("&File"));
@@ -84,6 +91,11 @@ void MyFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
 	wxMessageBox(msg, _T("About this buggy application"), wxOK | wxICON_INFORMATION, this);
 }
 
+void MyFrame::OnDumpPage(wxCommandEvent& WXUNUSED(event))
+{
+	std::cout << theDocument->GetPageObject()->dump();
+}
+
 void MyFrame::OnRotate(wxCommandEvent& event)
 {
 	m_canvas->Rotate(event.GetId() - MenuRotate_First);
@@ -98,8 +110,6 @@ void MyFrame::PrepareDC(wxDC& dc)
 	dc.SetMapMode( m_mapMode );
 #endif
 }
-
-#include "MyDocument.hpp"
 
 void MyFrame::AddToolbar()
 {
@@ -117,6 +127,8 @@ void MyFrame::AddToolbar()
 	m_oplimitspin->SetRange(0, 10000);
 	m_oplimitspin->SetValue(0);
 	toolBar->AddControl(m_oplimitspin);
+
+	toolBar->AddTool(Debug_DumpPage, _T("Dump"), wxBitmap(), _T("Dump Page"));
 
 	toolBar->Realize();
 }

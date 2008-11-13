@@ -11,6 +11,7 @@ class MyFrame : public wxFrame
 		~MyFrame();
 		void OnQuit(wxCommandEvent& event);
 		void OnAbout(wxCommandEvent& event);
+		void OnDumpPage(wxCommandEvent& event);
 		void OnRotate(wxCommandEvent &event);
 
 		void PrepareDC(wxDC& dc);
