@@ -2,6 +2,10 @@
 #define MYFRAME_HPP_INCLUDED
 #include <wx/wx.h>
 #include <wx/spinctrl.h>
+#ifdef WITH_AUI
+# include "wx/aui/aui.h"
+#endif
+
 
 class WxTabCanvas;
 class PageNumCtrl;
@@ -24,6 +28,9 @@ class WxTabFrame : public wxFrame
     void OnOplimitSpinCtrl(wxSpinEvent & event);
 		void OnPageNumChanged(wxCommandEvent &event);
 	private:
+#ifdef WITH_AUI
+		wxAuiManager m_mgr;
+#endif
 		wxSpinCtrl * m_oplimitspin;
 		PageNumCtrl * m_pagenum;
 		void AddToolbar();

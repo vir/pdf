@@ -1,3 +1,4 @@
+#define WITH_AUI
 #include "WxTabFrame.hpp"
 #include "WxTabCanvas.hpp"
 #include "WxTabDocument.hpp"
@@ -86,6 +87,54 @@ END_EVENT_TABLE()
 WxTabFrame::WxTabFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
 	: wxFrame((wxFrame *)NULL, wxID_ANY, title, pos, size, wxDEFAULT_FRAME_STYLE | wxNO_FULL_REPAINT_ON_RESIZE)
 {
+#ifdef WITH_AUI
+    // tell wxAuiManager to manage this frame
+    m_mgr.SetManagedWindow(this);
+	 // min size for the frame itself isn't completely done.
+    // see the end up wxAuiManager::Update() for the test
+    // code. For now, just hard code a frame minimum size
+    SetMinSize(wxSize(400,300));
+
+
+	m_mgr.SetFlags(m_mgr.GetFlags()
+		| wxAUI_MGR_ALLOW_FLOATING
+		| wxAUI_MGR_TRANSPARENT_DRAG
+		| wxAUI_MGR_HINT_FADE
+		| wxAUI_MGR_TRANSPARENT_HINT);
+
+#if 0
+	// add a bunch of panes
+    m_mgr.AddPane(CreateSizeReportCtrl(), wxAuiPaneInfo().
+                  Name(wxT("test1")).Caption(wxT("Pane Caption")).
+                  Top());
+
+    wxWindow* wnd10 = CreateTextCtrl(wxT("This pane will prompt the user before hiding."));
+    m_mgr.AddPane(wnd10, wxAuiPaneInfo().
+                  Name(wxT("test10")).Caption(wxT("Text Pane with Hide Prompt")).
+                  Bottom().Layer(1).Position(1));
+
+    // make some default perspectives
+
+    wxString perspective_all = m_mgr.SavePerspective();
+
+    int i, count;
+    wxAuiPaneInfoArray& all_panes = m_mgr.GetAllPanes();
+    for (i = 0, count = all_panes.GetCount(); i < count; ++i)
+        if (!all_panes.Item(i).IsToolbar())
+            all_panes.Item(i).Hide();
+    m_mgr.GetPane(wxT("tb1")).Hide();
+    m_mgr.GetPane(wxT("tb6")).Hide();
+    m_mgr.GetPane(wxT("test8")).Show().Left().Layer(0).Row(0).Position(0);
+    m_mgr.GetPane(wxT("test10")).Show().Bottom().Layer(0).Row(0).Position(0);
+    m_mgr.GetPane(wxT("notebook_content")).Show();
+    wxString perspective_default = m_mgr.SavePerspective();
+
+    m_perspectives.Add(perspective_default);
+    m_perspectives.Add(perspective_all);
+#endif
+#endif // WITH_AUI
+
+
 	m_oplimitspin = NULL;
 	m_pagenum = NULL;
 
@@ -134,10 +183,20 @@ WxTabFrame::WxTabFrame(const wxString& title, const wxPoint& pos, const wxSize& 
 	/* And finally owr main widget */
 	m_canvas = new WxTabCanvas( this );
 	m_canvas->SetScrollbars( 10, 10, 100, 240 );
+#ifdef WITH_AUI
+	m_mgr.AddPane(m_canvas, wxAuiPaneInfo().Name(wxT("canvas")).CenterPane().PaneBorder(false));
+
+    // "commit" all changes made to wxAuiManager
+    m_mgr.Update();
+#endif // WITH_AUI
 }
 
 WxTabFrame::~WxTabFrame()
 {
+#ifdef WITH_AUI
+    m_mgr.UnInit();
+#else
+#endif // WITH_AUI
 	delete m_pagenum;
 	delete m_oplimitspin;
 }
@@ -178,7 +237,13 @@ void WxTabFrame::PrepareDC(wxDC& dc)
 
 void WxTabFrame::AddToolbar()
 {
+#ifdef WITH_AUI
+	wxToolBar *toolBar = new wxToolBar(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTB_FLAT | wxTB_NODIVIDER | wxTB_HORZ_TEXT | wxTB_NOICONS);
+    toolBar->SetToolBitmapSize(wxSize(16,16));
+//    wxBitmap tb4_bmp1 = wxArtProvider::GetBitmap(wxART_NORMAL_FILE, wxART_OTHER, wxSize(16,16));
+#else
 	wxToolBarBase *toolBar = CreateToolBar(wxTB_FLAT/* | wxTB_DOCKABLE*/ | wxTB_HORIZONTAL | wxTB_TEXT | wxTB_NOICONS, ID_TOOLBAR);
+#endif
 
 	toolBar->AddTool(Go_First, _T("<<"), wxBitmap(), _T("Go to the first page"));
 	toolBar->AddTool(Go_Prev, _T("<"), wxBitmap(), _T("Go to the previous page"));
@@ -194,10 +259,12 @@ void WxTabFrame::AddToolbar()
 	toolBar->AddTool(wxID_EXIT, _T("Exit"), wxBitmap(), _T("Exit application"));
 //    toolBar->AddTool(wxID_OPEN, _T("Open"), toolBarBitmaps[Tool_open], _T("Open file"));
 
+#if 0 // Debugging option!
 	m_oplimitspin = new wxSpinCtrl( toolBar, ID_SPIN_OPLIMIT, _T("")/*, wxDefaultPosition, wxSize(40,wxDefaultCoord)*/ );
 	m_oplimitspin->SetRange(0, 10000);
 	m_oplimitspin->SetValue(0);
 	toolBar->AddControl(m_oplimitspin);
+#endif
 	
 	toolBar->AddTool(File_ShowTabulatorOptions, _T("Options"), wxBitmap(), _T("Show Tabulator options dialog"));
 
@@ -208,6 +275,12 @@ void WxTabFrame::AddToolbar()
 #endif
 
 	toolBar->Realize();
+
+#ifdef WITH_AUI
+	m_mgr.AddPane(toolBar, wxAuiPaneInfo().
+		Name(wxT("Toolbar1")).Caption(wxT("Main Toolbar")).ToolbarPane().Top().
+		LeftDockable(false).RightDockable(false));
+#endif
 }
 
 void WxTabFrame::OnOplimitSpinCtrl(wxSpinEvent& event)
