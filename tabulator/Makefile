@@ -34,7 +34,7 @@ wxtab: $(OBJS_WXTAB) ../libpdf/libpdf.a libtab.a
 	$(COMPILE.cpp) $<
 
 .depend: Makefile
-	gcc -MM -MG *.cxx > .depend
+	gcc -MM -MG -I.. `wx-config --cxxflags` *.cxx > .depend
 
 ifeq (.depend,$(wildcard .depend))
 include .depend
