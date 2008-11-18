@@ -13,7 +13,7 @@ class WxTabTabulator:public Tabulator
 		bool ok() const { return (table.ncols() && table.nrows()); }
 };
 
-extern WxTabTabulator * theTabulator;
+//extern WxTabTabulator * theTabulator;
 
 #endif /* WXTABTABULATOR_HPP_INCLUDED */
 

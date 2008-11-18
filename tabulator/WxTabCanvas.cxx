@@ -27,8 +27,8 @@ void WxTabCanvas::OnPaint(wxPaintEvent &WXUNUSED(event))
 	m_owner->PrepareDC(dc);
 
 	dc.Clear();
-	theDocument->Draw(&dc);
-	theTabulator->Draw(&dc);
+	if(theDocument)
+		theDocument->Draw(&dc);
 }
 
 void WxTabCanvas::OnMouseMove(wxMouseEvent &event)

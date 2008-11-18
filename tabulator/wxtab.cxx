@@ -8,7 +8,7 @@
 class MyApp : public wxApp
 {
 	private:
-		std::string fname;
+		wxString fname;
 		unsigned int startpage;
 		bool need_gui;
 	public:
@@ -39,16 +39,13 @@ bool MyApp::OnInit()
 	startpage = 1;
 	need_gui = true;
 
-	theDocument = new WxTabDocument();
-	theTabulator = new WxTabTabulator();
-
 	if(!wxApp::OnInit()) // parses command line
 		return false;
 
-	if(! theDocument->LoadFile(fname)) return false;
-	if(! theDocument->LoadPage(startpage)) return false;
-//	theTabulator->load_page(theDocument->GetPageObject());
-	theTabulator->full_process(theDocument->GetPageObject());
+	if(fname) {
+		theDocument = new WxTabDocument();
+		theDocument->Open(fname, startpage);
+	}
 
 	if(need_gui) {
 		WxTabFrame *frame = new WxTabFrame(_T("My PDF tables extractor"), wxPoint(0, 0), wxSize(1000, 750));
@@ -83,9 +80,8 @@ bool MyApp::OnCmdLineParsed(wxCmdLineParser& parser)
 	for (int i = 0; i < parser.GetParamCount(); i++) { files.Add(parser.GetParam(i)); }
 #endif
 	parser.Found(wxT("p"), (long int *)&startpage);
-std::cerr << "Params count: " << parser.GetParamCount() << std::endl;
 	if(parser.GetParamCount() == 1) {
-		fname = parser.GetParam(0).mb_str();
+		fname = parser.GetParam(0);
 	} else {
 		return false;
 	}

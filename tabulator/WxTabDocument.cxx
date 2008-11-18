@@ -87,8 +87,9 @@ void Metafile::Line(const Point & p1, const Point & p2)
 
 
 //===========================================================
-bool WxTabDocument::LoadFile(std::string fname)
+bool WxTabDocument::LoadFile(const wxString & fn)
 {
+	std::string fname = std::string(fn.mb_str());
 	if(doc) {
 		delete page;
 		delete doc;
@@ -143,6 +144,7 @@ bool WxTabDocument::LoadPage(int num)
 		page->load(doc->get_page_node(num-1));
 		std::clog << page->dump() << std::endl;
 		m_cur_page_num = num;
+		tabulator.full_process(page);
 		return true;
 	}
   catch(std::string s) {
@@ -173,6 +175,14 @@ void WxTabDocument::Draw(wxDC * dc)
 {
 	Metafile mf(*dc, m_rotation, m_scale);
 	page->draw(&mf);
+	tabulator.Draw(dc);
 }
 
+bool WxTabDocument::Open(const wxString & fn, unsigned int page)
+{
+	if(! LoadFile(fn)) return false;
+	if(! LoadPage(page)) return false;
+	retab();
+	return true;
+}
 

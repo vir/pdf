@@ -20,6 +20,7 @@ class WxTabFrame : public wxFrame
 	protected:
 		void OnQuit(wxCommandEvent& event);
 		void OnAbout(wxCommandEvent& event);
+		void OnDocumentOpen(wxCommandEvent& event);
 		void OnShowTabulatorOptions(wxCommandEvent& event);
 		void OnRotate(wxCommandEvent &event);
 		void OnMenuGo(wxCommandEvent &event);
@@ -33,7 +34,8 @@ class WxTabFrame : public wxFrame
 #endif
 		wxSpinCtrl * m_oplimitspin;
 		PageNumCtrl * m_pagenum;
-		void AddToolbar();
+		void PopulateToolbarDocument(wxToolBar * toolBar);
+		void PopulateToolbarTable(wxToolBar * toolBar);
 		DECLARE_EVENT_TABLE()
 };
 
