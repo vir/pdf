@@ -42,7 +42,7 @@ bool MyApp::OnInit()
 	if(!wxApp::OnInit()) // parses command line
 		return false;
 
-	if(fname) {
+	if(!fname.IsEmpty()) {
 		theDocument = new WxTabDocument();
 		theDocument->Open(fname, startpage);
 	}
