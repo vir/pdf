@@ -26,6 +26,7 @@ class PageNumCtrl:public wxTextCtrl
 		}
 		void OnChar( wxKeyEvent & event )
 		{
+#if 0
 			wxString backup = wxTextCtrl::GetValue();
 			long tmp;
 			if( event.GetKeyCode() < 32 || event.GetKeyCode() == 127 || event.GetKeyCode() > 256) event.Skip();
@@ -38,6 +39,9 @@ class PageNumCtrl:public wxTextCtrl
 			} else {
 				num = tmp;
 			}
+#else
+			event.Skip();
+#endif
 		}
 		void OnSetFocus( wxFocusEvent & event )
 		{
@@ -228,11 +232,13 @@ void WxTabFrame::OnDocumentOpen(wxCommandEvent& WXUNUSED(event))
 {
 	wxFileDialog of(this, wxT("Open PDF document"),
 		wxEmptyString, wxEmptyString,
-		_("Text files (*.pdf)|*.pdf|All Files (*.*)|*|"),
+		_("Text files (*.pdf)|*.pdf|All Files (*.*)|*"),
 		wxFD_OPEN, wxDefaultPosition);
 	if (of.ShowModal() == wxID_OK) // if the user click "Open" instead of "cancel"
 	{
 		wxString path = of.GetPath();
+		if(!theDocument)
+			theDocument = new WxTabDocument();
  		theDocument->Open(path);
 		SetTitle(of.GetFilename());
 	}
