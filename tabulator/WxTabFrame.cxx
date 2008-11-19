@@ -1,3 +1,7 @@
+// get rid of "identifier was truncated to '255' characters..."
+#ifdef _MSC_VER
+# pragma warning(disable : 4786)
+#endif
 #include <wx/version.h>
 #if wxCHECK_VERSION(2, 8, 0)
 # define WITH_AUI
@@ -218,6 +222,20 @@ void WxTabFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
 		wxT("Sorry for bugs.")
 	);
 	wxMessageBox(msg, _T("About this buggy application"), wxOK | wxICON_INFORMATION, this);
+}
+
+void WxTabFrame::OnDocumentOpen(wxCommandEvent& WXUNUSED(event))
+{
+	wxFileDialog of(this, wxT("Open PDF document"),
+		wxEmptyString, wxEmptyString,
+		_("Text files (*.pdf)|*.pdf|All Files (*.*)|*|"),
+		wxFD_OPEN, wxDefaultPosition);
+	if (of.ShowModal() == wxID_OK) // if the user click "Open" instead of "cancel"
+	{
+		wxString path = of.GetPath();
+ 		theDocument->Open(path);
+		SetTitle(of.GetFilename());
+	}
 }
 
 void WxTabFrame::OnRotate(wxCommandEvent& event)
