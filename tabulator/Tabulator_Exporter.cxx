@@ -59,7 +59,7 @@ static std::string ws2utf8(const std::wstring & ws)
 
 			while(n & ~0x3F)
 			{
-				cbuf[x++]=n&0x3F; n>>=6;
+				cbuf[x++]=static_cast<unsigned char>(n&0x3F); n>>=6;
 				header>>=1; header|=0x80;
 			}
 
@@ -156,7 +156,7 @@ void ExporterExcel::table_end()
 {
 	cur_sheet++;
 	if(!sheets_number || cur_sheet == sheets_number) { // move down and cur_sheet times left
-		move_cursor(-cur_col, rows_number);
+		move_cursor(-(int)cur_col, rows_number);
 		cur_col = 0;
 		cur_sheet = 0;
 	} else { // move right
