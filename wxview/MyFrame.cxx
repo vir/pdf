@@ -1,6 +1,7 @@
 #include "MyFrame.hpp"
 #include "MyCanvas.hpp"
 #include "MyDocument.hpp"
+#include <wx/artprov.h>
 
 enum {
 	File_Quit = wxID_EXIT,
@@ -130,7 +131,7 @@ void MyFrame::PrepareDC(wxDC& dc)
 void MyFrame::AddToolbar()
 {
 //	wxToolBarBase * toolBar = CreateToolBar(wxTB_FLAT/* | wxTB_DOCKABLE*/ | wxTB_HORIZONTAL | wxTB_TEXT | wxTB_NOICONS, ID_TOOLBAR);
-	wxAuiToolBar * toolBar	= new wxAuiToolBar(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_TB_DEFAULT_STYLE | wxAUI_TB_TEXT);
+	wxAuiToolBar * toolBar	= new wxAuiToolBar(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_TB_DEFAULT_STYLE | wxAUI_TB_TEXT | wxAUI_TB_HORZ_TEXT);
 	toolBar->SetToolBitmapSize(wxSize(16,16));
 
 	m_pagespin = new wxSpinCtrl( toolBar, ID_SPIN_PAGE, _T("")/*, wxDefaultPosition, wxSize(40,wxDefaultCoord)*/ );
@@ -138,7 +139,7 @@ void MyFrame::AddToolbar()
 	m_pagespin->SetValue(theDocument->GetPageNum());
 	toolBar->AddControl(m_pagespin);
 
-	toolBar->AddTool(wxID_EXIT, _T("Exit"), wxBitmap(), _T("Exit application"));
+	toolBar->AddTool(wxID_EXIT, _T("Exit"), wxArtProvider::GetBitmap(wxART_CROSS_MARK, wxART_OTHER, wxSize(16,16)), _T("Exit application"));
 //    toolBar->AddTool(wxID_OPEN, _T("Open"), toolBarBitmaps[Tool_open], _T("Open file"));
 
 	m_oplimitspin = new wxSpinCtrl( toolBar, ID_SPIN_OPLIMIT, _T("")/*, wxDefaultPosition, wxSize(40,wxDefaultCoord)*/ );
@@ -146,7 +147,7 @@ void MyFrame::AddToolbar()
 	m_oplimitspin->SetValue(0);
 	toolBar->AddControl(m_oplimitspin);
 
-	toolBar->AddTool(Debug_DumpPage, _T("Dump"), wxBitmap(), _T("Dump Page"));
+	toolBar->AddTool(Debug_DumpPage, _T("Dump"), wxArtProvider::GetBitmap(wxART_INFORMATION, wxART_OTHER, wxSize(16,16)), _T("Dump Page"));
 
 	toolBar->Realize();
 #if 1
