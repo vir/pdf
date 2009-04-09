@@ -36,6 +36,15 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
 	m_oplimitspin = NULL;
 	m_canvas = NULL;
 
+	m_mgr.SetManagedWindow(this);
+	SetMinSize(wxSize(400,300));
+	m_mgr.SetFlags(m_mgr.GetFlags()
+		| wxAUI_MGR_ALLOW_FLOATING
+		| wxAUI_MGR_TRANSPARENT_DRAG
+		| wxAUI_MGR_HINT_FADE
+		| wxAUI_MGR_TRANSPARENT_HINT
+	);
+
 	/* Add Menu */
 	wxMenu *menuFile = new wxMenu;
 	menuFile->AppendSeparator();
@@ -68,10 +77,17 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
 	/* And finally owr main widget */
 	m_canvas = new MyCanvas( this );
 	m_canvas->SetScrollbars( 10, 10, 100, 240 );
+#if 1
+	m_mgr.AddPane(m_canvas, wxAuiPaneInfo().Name(wxT("canvas")).CenterPane().PaneBorder(false));
+
+	// "commit" all changes made to wxAuiManager
+	m_mgr.Update();
+#endif
 }
 
 MyFrame::~MyFrame()
 {
+	m_mgr.UnInit();
 	delete m_oplimitspin;
 	delete m_pagespin;
 }
@@ -113,7 +129,9 @@ void MyFrame::PrepareDC(wxDC& dc)
 
 void MyFrame::AddToolbar()
 {
-	wxToolBarBase *toolBar = CreateToolBar(wxTB_FLAT/* | wxTB_DOCKABLE*/ | wxTB_HORIZONTAL | wxTB_TEXT | wxTB_NOICONS, ID_TOOLBAR);
+//	wxToolBarBase * toolBar = CreateToolBar(wxTB_FLAT/* | wxTB_DOCKABLE*/ | wxTB_HORIZONTAL | wxTB_TEXT | wxTB_NOICONS, ID_TOOLBAR);
+	wxAuiToolBar * toolBar	= new wxAuiToolBar(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_TB_DEFAULT_STYLE | wxAUI_TB_TEXT);
+	toolBar->SetToolBitmapSize(wxSize(16,16));
 
 	m_pagespin = new wxSpinCtrl( toolBar, ID_SPIN_PAGE, _T("")/*, wxDefaultPosition, wxSize(40,wxDefaultCoord)*/ );
 	m_pagespin->SetRange(1, theDocument->GetPagesNum());
@@ -131,6 +149,11 @@ void MyFrame::AddToolbar()
 	toolBar->AddTool(Debug_DumpPage, _T("Dump"), wxBitmap(), _T("Dump Page"));
 
 	toolBar->Realize();
+#if 1
+	m_mgr.AddPane(toolBar, wxAuiPaneInfo().
+		Name(wxT("Toolbar1")).Caption(wxT("Document Tools")).ToolbarPane().Top().
+		LeftDockable(false).RightDockable(false));
+#endif
 }
 
 void MyFrame::OnPageSpinCtrl(wxSpinEvent& event)

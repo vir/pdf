@@ -2,6 +2,7 @@
 #define MYFRAME_HPP_INCLUDED
 #include <wx/wx.h>
 #include <wx/spinctrl.h>
+#include <wx/aui/aui.h>
 
 class MyCanvas;
 class MyFrame : public wxFrame
@@ -22,6 +23,7 @@ class MyFrame : public wxFrame
 	private:
 		wxSpinCtrl * m_pagespin;
 		wxSpinCtrl * m_oplimitspin;
+		wxAuiManager m_mgr;
 		void AddToolbar();
 		DECLARE_EVENT_TABLE()
 };
