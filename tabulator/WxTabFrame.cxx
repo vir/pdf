@@ -2,18 +2,12 @@
 #ifdef _MSC_VER
 # pragma warning(disable : 4786)
 #endif
-#include <wx/version.h>
-#if wxCHECK_VERSION(2, 8, 0)
-# define WITH_AUI
-#else
-# warning "Old wxWidgets, disabling AUI"
-# undef WITH_AUI
-#endif
 #include <wx/artprov.h>
 #include "WxTabFrame.hpp"
 #include "WxTabCanvas.hpp"
 #include "WxTabDocument.hpp"
 #include "WxTabTabulator.hpp"
+#include "Tabulator_Exporter.hpp"
 
 class PageNumCtrl:public wxTextCtrl
 {
@@ -26,12 +20,13 @@ class PageNumCtrl:public wxTextCtrl
 		}
 		void OnChar( wxKeyEvent & event )
 		{
-#if 0
+#if 1
 			wxString backup = wxTextCtrl::GetValue();
 			long tmp;
 			if( event.GetKeyCode() < 32 || event.GetKeyCode() == 127 || event.GetKeyCode() > 256) event.Skip();
 			if( !isdigit( event.GetKeyCode() ) ) return;
-			EmulateKeyPress(event);
+//			EmulateKeyPress(event); // causes infinite recursion on win32
+			event.Skip();
 			wxString newval = wxTextCtrl::GetValue();
 			if( !newval.ToLong(&tmp) || tmp<min || tmp>max ) {
 				wxTextCtrl::SetValue(backup);
@@ -45,7 +40,7 @@ class PageNumCtrl:public wxTextCtrl
 		}
 		void OnSetFocus( wxFocusEvent & event )
 		{
-			std::cerr << "Got focus" << std::endl;
+			wxTextCtrl::SetSelection(-1, -1);
 		}
 		void SetRange(int r1, int r2)
 		{
@@ -59,6 +54,11 @@ class PageNumCtrl:public wxTextCtrl
 		}
 		int GetValue()
 		{
+			long tmp;
+			wxString newval = wxTextCtrl::GetValue();
+			if( newval.ToLong(&tmp) || tmp<min || tmp>max ) {
+				num = tmp;
+			}
 			return num;
 		}
     DECLARE_EVENT_TABLE()
@@ -102,28 +102,27 @@ BEGIN_EVENT_TABLE(WxTabFrame, wxFrame)
 	EVT_MENU_RANGE(MenuGo_First,  MenuGo_Last,   WxTabFrame::OnMenuGo)
 	EVT_MENU_RANGE(MenuRotate_First,   MenuRotate_Last,   WxTabFrame::OnRotate)
 	EVT_MENU_RANGE(MenuExport_First,   MenuExport_Last,   WxTabFrame::OnMenuExport)
+#if 0
 	EVT_SPINCTRL  (ID_SPIN_OPLIMIT, WxTabFrame::OnOplimitSpinCtrl)
+#endif
 	EVT_TEXT_ENTER(ID_PAGENUM,    WxTabFrame::OnPageNumChanged)
 END_EVENT_TABLE()
 
 WxTabFrame::WxTabFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
 	: wxFrame((wxFrame *)NULL, wxID_ANY, title, pos, size, wxDEFAULT_FRAME_STYLE | wxNO_FULL_REPAINT_ON_RESIZE)
+//	, m_mgr(this, wxAUI_MGR_DEFAULT | wxAUI_MGR_ALLOW_FLOATING)
 {
-	std::cerr << "WxTabFrame::WxTabFrame" << std::endl;
-#ifdef WITH_AUI
 	m_mgr.SetManagedWindow(this);
 	SetMinSize(wxSize(400,300));
-
 	m_mgr.SetFlags(m_mgr.GetFlags()
 		| wxAUI_MGR_ALLOW_FLOATING
 		| wxAUI_MGR_TRANSPARENT_DRAG
 		| wxAUI_MGR_HINT_FADE
 		| wxAUI_MGR_TRANSPARENT_HINT
 	);
-#endif // WITH_AUI
 
-	m_oplimitspin = NULL;
-	m_pagenum = NULL;
+//	m_oplimitspin = NULL;
+//	m_pagenum = NULL;
 
 	/* Add Menu */
 	wxMenu * menuDocument = new wxMenu;
@@ -162,31 +161,55 @@ WxTabFrame::WxTabFrame(const wxString& title, const wxPoint& pos, const wxSize& 
 	SetMenuBar(menuBar);
 
 	/* Add Toolbar */
-	wxToolBar *toolBar;
-#ifdef WITH_AUI
+	wxAuiToolBar *toolBar;
 //	toolBar	= new wxToolBar(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTB_FLAT | wxTB_NODIVIDER | wxTB_HORZ_TEXT | wxTB_NOICONS);
-	toolBar	= new wxToolBar(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTB_FLAT | wxTB_NODIVIDER);
+	toolBar	= new wxAuiToolBar(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_TB_DEFAULT_STYLE | wxAUI_TB_TEXT | wxAUI_TB_HORZ_TEXT);
 	toolBar->SetToolBitmapSize(wxSize(16,16));
 //    wxBitmap tb4_bmp1 = wxArtProvider::GetBitmap(wxART_NORMAL_FILE, wxART_OTHER, wxSize(16,16));
-#else
-	toolBar = CreateToolBar(wxTB_FLAT/* | wxTB_DOCKABLE*/ | wxTB_HORIZONTAL | wxTB_TEXT | wxTB_NOICONS, ID_TOOLBAR);
+
+	// Populate Document Toolbar
+	toolBar->AddTool(wxID_OPEN, _T("Open"), wxArtProvider::GetBitmap(wxART_FILE_OPEN, wxART_TOOLBAR, wxSize(16,16)), _T("Open file"));
+//	toolBar->AddTool(Go_First, _T("<<"), wxArtProvider::GetBitmap(wxART_GO_BEGIN, wxART_TOOLBAR, wxSize(16,16)), _T("Go to the first page"));
+	toolBar->AddTool(Go_Prev, _T("<"), wxArtProvider::GetBitmap(wxART_GO_BACK, wxART_TOOLBAR, wxSize(16,16)), _T("Go to the previous page"));
+
+	m_pagenum = new PageNumCtrl(toolBar, ID_PAGENUM, _T(""));
+	if(theDocument) {
+		m_pagenum->SetRange(1, theDocument->GetPagesNum());
+		m_pagenum->SetValue(theDocument->GetPageNum());
+	}
+	toolBar->AddControl(m_pagenum);
+
+	toolBar->AddTool(Go_Next, _T(">"), wxArtProvider::GetBitmap(wxART_GO_FORWARD, wxART_TOOLBAR, wxSize(16,16)), _T("Go to the next page"));
+//	toolBar->AddTool(Go_Last, _T(">>"), wxArtProvider::GetBitmap(wxART_GO_END, wxART_TOOLBAR, wxSize(16,16)), _T("Go to the last page"));
+
+//	toolBar->AddTool(wxID_EXIT, _T("Exit"), wxBitmap(), _T("Exit application"));
+#if 0 // Debugging option!
+	m_oplimitspin = new wxSpinCtrl( toolBar, ID_SPIN_OPLIMIT, _T("")/*, wxDefaultPosition, wxSize(40,wxDefaultCoord)*/ );
+	m_oplimitspin->SetRange(0, 10000);
+	m_oplimitspin->SetValue(0);
+	toolBar->AddControl(m_oplimitspin);
 #endif
-	PopulateToolbarDocument(toolBar);
-#ifdef WITH_AUI // Add second toolbar if possible
+	toolBar->Realize();
 	m_mgr.AddPane(toolBar, wxAuiPaneInfo().
 		Name(wxT("Toolbar1")).Caption(wxT("Document Tools")).ToolbarPane().Top().
 		LeftDockable(false).RightDockable(false));
-	toolBar	= new wxToolBar(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTB_FLAT | wxTB_NODIVIDER | wxTB_HORZ_TEXT | wxTB_NOICONS);
-	toolBar->SetToolBitmapSize(wxSize(16,16));
-#endif
-	PopulateToolbarTable(toolBar);
-	toolBar->Realize();
 
-#ifdef WITH_AUI
+	// one more toolbar
+	toolBar	= new wxAuiToolBar(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_TB_DEFAULT_STYLE | wxAUI_TB_TEXT | wxAUI_TB_HORZ_TEXT);
+	toolBar->SetToolBitmapSize(wxSize(16,16));
+
+	// 	Populate Table Toolbar
+	toolBar->AddTool(File_ShowTabulatorOptions, _T("Options"), wxBitmap(), _T("Show Tabulator options dialog"));
+	toolBar->AddTool(Export_CSV, _T("CSV"), wxBitmap(), _T("Export current table as CSV to stdout"));
+	toolBar->AddTool(Export_HTML, _T("HTML"), wxBitmap(), _T("Export current table as HTML table to stdout"));
+#ifdef _WIN32
+	toolBar->AddTool(Export_EXCEL, _T("Excel"), wxBitmap(), _T("Export current table to Microsoft Excel (Open empty sheet if already running!!!)"));
+#endif
+
+	toolBar->Realize();
 	m_mgr.AddPane(toolBar, wxAuiPaneInfo().
 		Name(wxT("Toolbar2")).Caption(wxT("Second Toolbar")).ToolbarPane().Top().Position(1).
 		LeftDockable(false).RightDockable(false));
-#endif
 
 	/* Add Status Bar */
 	CreateStatusBar(2);
@@ -195,22 +218,15 @@ WxTabFrame::WxTabFrame(const wxString& title, const wxPoint& pos, const wxSize& 
 	/* And finally owr main widget */
 	m_canvas = new WxTabCanvas( this );
 	m_canvas->SetScrollbars( 10, 10, 100, 240 );
-#ifdef WITH_AUI
 	m_mgr.AddPane(m_canvas, wxAuiPaneInfo().Name(wxT("canvas")).CenterPane().PaneBorder(false));
 
 	// "commit" all changes made to wxAuiManager
 	m_mgr.Update();
-#endif // WITH_AUI
 }
 
 WxTabFrame::~WxTabFrame()
 {
-#ifdef WITH_AUI
     m_mgr.UnInit();
-#else
-#endif // WITH_AUI
-//	delete m_pagenum;
-//	delete m_oplimitspin;
 }
 
 void WxTabFrame::OnQuit(wxCommandEvent& WXUNUSED(event))
@@ -222,7 +238,7 @@ void WxTabFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
 {
 	wxString msg;
 	msg.Printf(
-		wxT("This is my humble attempt to draw PDF page.\n")
+		wxT("This is my humble attempt to parse PDF page.\n")
 		wxT("Sorry for bugs.")
 	);
 	wxMessageBox(msg, _T("About this buggy application"), wxOK | wxICON_INFORMATION, this);
@@ -232,7 +248,7 @@ void WxTabFrame::OnDocumentOpen(wxCommandEvent& WXUNUSED(event))
 {
 	wxFileDialog of(this, wxT("Open PDF document"),
 		wxEmptyString, wxEmptyString,
-		_("Text files (*.pdf)|*.pdf|All Files (*.*)|*"),
+		_("PDF files (*.pdf)|*.pdf|All Files (*.*)|*"),
 		wxFD_OPEN, wxDefaultPosition);
 	if (of.ShowModal() == wxID_OK) // if the user click "Open" instead of "cancel"
 	{
@@ -241,6 +257,8 @@ void WxTabFrame::OnDocumentOpen(wxCommandEvent& WXUNUSED(event))
 			theDocument = new WxTabDocument();
  		theDocument->Open(path);
 		SetTitle(of.GetFilename());
+		m_pagenum->SetValue(theDocument->GetPageNum());
+		m_canvas->Refresh();
 	}
 }
 
@@ -261,51 +279,15 @@ void WxTabFrame::PrepareDC(wxDC& dc)
 #endif
 }
 
-void WxTabFrame::PopulateToolbarDocument(wxToolBar * toolBar)
-{
-	toolBar->AddTool(wxID_OPEN, _T("Open"), wxArtProvider::GetBitmap(wxART_FILE_OPEN, wxART_TOOLBAR, wxSize(16,16)), _T("Open file"));
-//	toolBar->AddTool(Go_First, _T("<<"), wxArtProvider::GetBitmap(wxART_GO_BEGIN, wxART_TOOLBAR, wxSize(16,16)), _T("Go to the first page"));
-	toolBar->AddTool(Go_Prev, _T("<"), wxArtProvider::GetBitmap(wxART_GO_BACK, wxART_TOOLBAR, wxSize(16,16)), _T("Go to the previous page"));
-
-	m_pagenum = new PageNumCtrl(toolBar, ID_PAGENUM, _T(""));
-	if(theDocument) {
-		m_pagenum->SetRange(1, theDocument->GetPagesNum());
-		m_pagenum->SetValue(theDocument->GetPageNum());
-	}
-	toolBar->AddControl(m_pagenum);
-
-	toolBar->AddTool(Go_Next, _T(">"), wxArtProvider::GetBitmap(wxART_GO_FORWARD, wxART_TOOLBAR, wxSize(16,16)), _T("Go to the next page"));
-//	toolBar->AddTool(Go_Last, _T(">>"), wxArtProvider::GetBitmap(wxART_GO_END, wxART_TOOLBAR, wxSize(16,16)), _T("Go to the last page"));
-
-//	toolBar->AddTool(wxID_EXIT, _T("Exit"), wxBitmap(), _T("Exit application"));
-
-#if 0 // Debugging option!
-	m_oplimitspin = new wxSpinCtrl( toolBar, ID_SPIN_OPLIMIT, _T("")/*, wxDefaultPosition, wxSize(40,wxDefaultCoord)*/ );
-	m_oplimitspin->SetRange(0, 10000);
-	m_oplimitspin->SetValue(0);
-	toolBar->AddControl(m_oplimitspin);
-#endif
-	
-}
-
-void WxTabFrame::PopulateToolbarTable(wxToolBar * toolBar)
-{
-	toolBar->AddTool(File_ShowTabulatorOptions, _T("Options"), wxBitmap(), _T("Show Tabulator options dialog"));
-
-	toolBar->AddTool(Export_CSV, _T("CSV"), wxBitmap(), _T("Export current table as CSV to stdout"));
-	toolBar->AddTool(Export_HTML, _T("HTML"), wxBitmap(), _T("Export current table as HTML table to stdout"));
-#ifdef _WIN32
-	toolBar->AddTool(Export_EXCEL, _T("Excel"), wxBitmap(), _T("Export current table to Microsoft Excel (Open empty sheet if already running!!!)"));
-#endif
-}
-
 void WxTabFrame::OnOplimitSpinCtrl(wxSpinEvent& event)
 {
+#if 0
 	if(m_oplimitspin) {
 		PDF::Page * p = theDocument->GetPageObject();
 		p->set_operators_number_limit(m_oplimitspin->GetValue());
 		m_canvas->Refresh();
 	}
+#endif
 }
 
 void WxTabFrame::OnMenuGo(wxCommandEvent &event)
@@ -336,12 +318,13 @@ void WxTabFrame::OnPageNumChanged(wxCommandEvent &event)
 
 void WxTabFrame::OnShowTabulatorOptions(wxCommandEvent& event)
 {
-	theDocument->tabulator.ShowOptionsDialog(this);
-	theDocument->tabulator.full_process(theDocument->GetPageObject()); // XXX
-	m_canvas->Refresh();
+	if(theDocument) {
+		theDocument->tabulator.ShowOptionsDialog(this);
+		theDocument->tabulator.full_process(theDocument->GetPageObject()); // XXX
+		m_canvas->Refresh();
+	}
 }
 
-#include "Tabulator_Exporter.hpp"
 void WxTabFrame::OnMenuExport(wxCommandEvent &event)
 {
 	Tabulator::Table::Exporter * exporter = NULL;

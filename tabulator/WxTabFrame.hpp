@@ -1,11 +1,8 @@
-#ifndef MYFRAME_HPP_INCLUDED
-#define MYFRAME_HPP_INCLUDED
+#ifndef WXTABFRAME_HPP_INCLUDED
+#define WXTABFRAME_HPP_INCLUDED
 #include <wx/wx.h>
 #include <wx/spinctrl.h>
-#ifdef WITH_AUI
-# include "wx/aui/aui.h"
-#endif
-
+#include "wx/aui/aui.h"
 
 class WxTabCanvas;
 class PageNumCtrl;
@@ -25,19 +22,14 @@ class WxTabFrame : public wxFrame
 		void OnRotate(wxCommandEvent &event);
 		void OnMenuGo(wxCommandEvent &event);
 		void OnMenuExport(wxCommandEvent &event);
-    void OnPageSpinCtrl(wxSpinEvent & event);
-    void OnOplimitSpinCtrl(wxSpinEvent & event);
+		void OnOplimitSpinCtrl(wxSpinEvent & event);
 		void OnPageNumChanged(wxCommandEvent &event);
 	private:
-#ifdef WITH_AUI
 		wxAuiManager m_mgr;
-#endif
-		wxSpinCtrl * m_oplimitspin;
+//		wxSpinCtrl * m_oplimitspin;
 		PageNumCtrl * m_pagenum;
-		void PopulateToolbarDocument(wxToolBar * toolBar);
-		void PopulateToolbarTable(wxToolBar * toolBar);
 		DECLARE_EVENT_TABLE()
 };
 
-#endif /* MYFRAME_HPP_INCLUDED */
+#endif /* WXTABFRAME_HPP_INCLUDED */
 
