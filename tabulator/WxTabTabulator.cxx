@@ -4,9 +4,6 @@
 #include <wx/spinctrl.h>
 #include <wx/valgen.h>
 
-WxTabTabulator * theTabulator = NULL;
-
-
 class WxTabOptionsDialog:public wxDialog
 {
 	public:
@@ -48,20 +45,11 @@ void WxTabTabulator::Draw(wxDC * dc)
 
 void WxTabTabulator::ShowOptionsDialog(wxWindow * parent)
 {
-	WxTabOptionsDialog opts(parent, &theTabulator->options);
+	WxTabOptionsDialog opts(parent, &this->options);
 	opts.ShowModal();
 }
 
 /*============================ Tabulator options dialog =========*/
-
-#if 0
-		struct Options {
-			bool find_table_header;
-			unsigned int find_more_rows_column;
-			bool postprocess;
-			bool find_joined_cells;
-		} options;
-#endif
 
 WxTabOptionsDialog::WxTabOptionsDialog( wxWindow * parent, struct Tabulator::Options * opts )
 	: wxDialog( parent, wxID_ANY, _("Tabulator options"), wxDefaultPosition, wxDefaultSize, wxRESIZE_BORDER),o(opts)
@@ -95,6 +83,7 @@ WxTabOptionsDialog::~WxTabOptionsDialog()
 	delete ui_find_joined_cells;
 	delete ui_postprocess;
 	delete ui_find_more_rows_column;
+	delete ui_find_table_header;
 }
 
 bool WxTabOptionsDialog::Validate()
@@ -106,9 +95,5 @@ void WxTabOptionsDialog::OnOk(wxCommandEvent & event)
 {
 	event.Skip();
 }
-
-
-
-
 
 
