@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="libpdf" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="libpdf" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="" />
+				<Option object_output="obj\Debug\" />
+				<Option type="2" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Compiler>
+					<Add option="-Wall" />
+					<Add option="-g" />
+				</Compiler>
+			</Target>
+			<Target title="Release">
+				<Option output="libpdf" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="" />
+				<Option object_output="obj\Release\" />
+				<Option type="2" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Compiler>
+					<Add option="-Wall" />
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add directory="..\win32" />
+		</Compiler>
+		<Linker>
+			<Add library="..\win32\zdll.lib" />
+			<Add directory="..\win32" />
+		</Linker>
+		<Unit filename="Crypto.cxx" />
+		<Unit filename="Crypto.hpp" />
+		<Unit filename="Ctm.hpp" />
+		<Unit filename="Document.cxx" />
+		<Unit filename="Document.hpp" />
+		<Unit filename="Exceptions.hpp" />
+		<Unit filename="File.cxx" />
+		<Unit filename="File.hpp" />
+		<Unit filename="Filter.cxx" />
+		<Unit filename="Filter.hpp" />
+		<Unit filename="Filter_Base85.cxx" />
+		<Unit filename="Filter_Flate.cxx" />
+		<Unit filename="Font.cxx" />
+		<Unit filename="Font.hpp" />
+		<Unit filename="Font_CMap.cxx" />
+		<Unit filename="Font_CMap.hpp" />
+		<Unit filename="Font_Encoding.cxx" />
+		<Unit filename="Font_Encoding.hpp" />
+		<Unit filename="Font_StdFonts.cxx" />
+		<Unit filename="Font_StdFonts.hpp" />
+		<Unit filename="Media.hpp" />
+		<Unit filename="OH.hpp" />
+		<Unit filename="ObjStrm.cxx" />
+		<Unit filename="ObjStrm.hpp" />
+		<Unit filename="Object.cxx" />
+		<Unit filename="Object.hpp" />
+		<Unit filename="ObjectsCache.cxx" />
+		<Unit filename="ObjectsCache.hpp" />
+		<Unit filename="PDF.hpp" />
+		<Unit filename="Page.cxx" />
+		<Unit filename="Page.hpp" />
+		<Unit filename="Point.hpp" />
+		<Unit filename="Rect.hpp" />
+		<Unit filename="SecHandler.cxx" />
+		<Unit filename="SecHandler.hpp" />
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<debugger />
+			<lib_finder disable_auto="1" />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>
