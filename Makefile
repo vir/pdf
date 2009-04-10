@@ -6,7 +6,7 @@ VERSION = 0.0.1
 TARNAME = proga-${VERSION}.tar.gz
 OBJS_MAIN = main.o libpdf/libpdf.a utf8.o
 OBJS_ALL = ${OBJS_MAIN}
-SUBDIRS = libpdf tests wxview tabulator #docs
+SUBDIRS = libpdf tests wxview tabulator dig #docs
 
 INCLUDEDIR = -Ilibpdf
 
