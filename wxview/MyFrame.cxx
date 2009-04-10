@@ -78,12 +78,10 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
 	/* And finally owr main widget */
 	m_canvas = new MyCanvas( this );
 	m_canvas->SetScrollbars( 10, 10, 100, 240 );
-#if 1
 	m_mgr.AddPane(m_canvas, wxAuiPaneInfo().Name(wxT("canvas")).CenterPane().PaneBorder(false));
 
 	// "commit" all changes made to wxAuiManager
 	m_mgr.Update();
-#endif
 }
 
 MyFrame::~MyFrame()
