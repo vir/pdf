@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_workspace_file>
+	<Workspace title="PDF workspace">
+		<Project filename="libpdf\libpdf.cbp" />
+		<Project filename="dump_object.cbp">
+			<Depends filename="libpdf\libpdf.cbp" />
+		</Project>
+		<Project filename="tabulator\libtab.cbp">
+			<Depends filename="libpdf\libpdf.cbp" />
+		</Project>
+		<Project filename="tabulator\wxtab.cbp" active="1">
+			<Depends filename="libpdf\libpdf.cbp" />
+			<Depends filename="tabulator\libtab.cbp" />
+		</Project>
+		<Project filename="tabulator\tabulator.cbp">
+			<Depends filename="libpdf\libpdf.cbp" />
+			<Depends filename="tabulator\libtab.cbp" />
+		</Project>
+		<Project filename="wxview\wxview.cbp" />
+	</Workspace>
+</CodeBlocks_workspace_file>
