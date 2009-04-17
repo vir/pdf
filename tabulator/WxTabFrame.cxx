@@ -8,6 +8,7 @@
 #include "WxTabDocument.hpp"
 #include "WxTabTabulator.hpp"
 #include "Tabulator_Exporter.hpp"
+#include "excel16.xpm"
 
 class PageNumCtrl:public wxTextCtrl
 {
@@ -203,7 +204,7 @@ WxTabFrame::WxTabFrame(const wxString& title, const wxPoint& pos, const wxSize& 
 	toolBar->AddTool(Export_CSV, _T("CSV"), wxBitmap(), _T("Export current table as CSV to stdout"));
 	toolBar->AddTool(Export_HTML, _T("HTML"), wxBitmap(), _T("Export current table as HTML table to stdout"));
 #ifdef _WIN32
-	toolBar->AddTool(Export_EXCEL, _T("Excel"), wxBitmap(), _T("Export current table to Microsoft Excel (Open empty sheet if already running!!!)"));
+	toolBar->AddTool(Export_EXCEL, _T("Excel"), wxBitmap(excel16_xpm), _T("Export current table to Microsoft Excel (Open empty sheet if already running!!!)"));
 #endif
 
 	toolBar->Realize();
