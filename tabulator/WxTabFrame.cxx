@@ -8,6 +8,9 @@
 #include "WxTabDocument.hpp"
 #include "WxTabTabulator.hpp"
 #include "Tabulator_Exporter.hpp"
+#include "options16.xpm"
+#include "csv16.xpm"
+#include "xml16.xpm"
 #include "excel16.xpm"
 
 class PageNumCtrl:public wxTextCtrl
@@ -164,7 +167,7 @@ WxTabFrame::WxTabFrame(const wxString& title, const wxPoint& pos, const wxSize& 
 	/* Add Toolbar */
 	wxAuiToolBar *toolBar;
 //	toolBar	= new wxToolBar(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTB_FLAT | wxTB_NODIVIDER | wxTB_HORZ_TEXT | wxTB_NOICONS);
-	toolBar	= new wxAuiToolBar(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_TB_DEFAULT_STYLE | wxAUI_TB_TEXT | wxAUI_TB_HORZ_TEXT);
+	toolBar	= new wxAuiToolBar(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_TB_DEFAULT_STYLE /*| wxAUI_TB_TEXT | wxAUI_TB_HORZ_TEXT*/);
 	toolBar->SetToolBitmapSize(wxSize(16,16));
 //    wxBitmap tb4_bmp1 = wxArtProvider::GetBitmap(wxART_NORMAL_FILE, wxART_OTHER, wxSize(16,16));
 
@@ -200,9 +203,9 @@ WxTabFrame::WxTabFrame(const wxString& title, const wxPoint& pos, const wxSize& 
 	toolBar->SetToolBitmapSize(wxSize(16,16));
 
 	// 	Populate Table Toolbar
-	toolBar->AddTool(File_ShowTabulatorOptions, _T("Options"), wxBitmap(), _T("Show Tabulator options dialog"));
-	toolBar->AddTool(Export_CSV, _T("CSV"), wxBitmap(), _T("Export current table as CSV to stdout"));
-	toolBar->AddTool(Export_HTML, _T("HTML"), wxBitmap(), _T("Export current table as HTML table to stdout"));
+	toolBar->AddTool(File_ShowTabulatorOptions, _T("Options"), wxBitmap(options16_xpm), _T("Show Tabulator options dialog"));
+	toolBar->AddTool(Export_CSV, _T("CSV"), wxBitmap(csv16_xpm), _T("Export current table as CSV"));
+	toolBar->AddTool(Export_HTML, _T("XML"), wxBitmap(xml16_xpm), _T("Export current table as XML table"));
 #ifdef _WIN32
 	toolBar->AddTool(Export_EXCEL, _T("Excel"), wxBitmap(excel16_xpm), _T("Export current table to Microsoft Excel (Open empty sheet if already running!!!)"));
 #endif
