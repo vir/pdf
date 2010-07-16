@@ -20,23 +20,23 @@ int main(int argc, char * argv[])
 	const char * fname;
 	int objnum;
 
-  if(argc != 3) {
+	if(argc != 3) {
 		help(argv[0]);
-    return -1;
-  }
+		return -1;
+	}
 
 	fname = argv[1];
 
-  try {
-    clog << "Constructing File" << endl;
-    PDF::File pf(fname);
-//	pf.debug(3);
-    if(!pf.load())
-    {
-      cerr << "Can't load " << fname << endl;
-      pf.close();
-      return 10;
-    }
+	try {
+		clog << "Constructing File" << endl;
+		PDF::File pf(fname);
+		//	pf.debug(3);
+		if(!pf.load())
+		{
+			cerr << "Can't load " << fname << endl;
+			pf.close();
+			return 10;
+		}
 
 		switch(*argv[2]) {
 			case 'p':
@@ -53,12 +53,14 @@ int main(int argc, char * argv[])
 				dump_generic_object(pf, objnum);
 				break;
 		}
-  }
-  catch(...)
-  {
-    cerr << "Exception!!" << endl;
-  }
-  return 0;
+	}
+	catch(std::exception & e) {
+		cerr << "Exception: " << e.what() << endl;
+	}
+	catch(...) {
+		cerr << "Unknown Exception!" << endl;
+	}
+	return 0;
 }
 
 void help(const char * myname)
