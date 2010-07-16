@@ -10,7 +10,7 @@
 #include "Rect.hpp"
 
 #ifndef M_PI
-#define M_PI atan2(0, -1)
+#define M_PI atan2(double(0), double(-1))
 #endif
 
 namespace PDF {
