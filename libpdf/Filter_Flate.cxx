@@ -2,10 +2,74 @@
 #include <zlib.h>
 #include <vector>
 #include <string>
-
+#include "Exceptions.hpp"
 #include "Filter.hpp"
+#include "Object.hpp"
 
 namespace PDF {
+
+class PredictorPNG_Up:public PredictorBase
+{
+	private:
+		unsigned int m_ncols;
+	public:
+		PredictorPNG_Up(unsigned int ncols):m_ncols(ncols) { }
+		virtual void Insert(std::vector<char> & data);
+		virtual void Remove(std::vector<char> & data);
+};
+
+void PredictorPNG_Up::Insert(std::vector<char> & data)
+{
+	throw UnimplementedException("PNG predictor insertion");
+}
+
+void PredictorPNG_Up::Remove(std::vector<char> & data)
+{
+	std::vector<char>::const_iterator r = data.begin();
+	std::vector<char>::iterator w = data.begin();
+	std::vector<char> prev_row(m_ncols, 0);
+	int col = -1;
+	while(r != data.end()) {
+		if(col == -1) {
+			if(*r != 2)
+				throw FormatException("Wrong predictor");
+		} else {
+			*w = prev_row[col] = *r + prev_row[col];
+			++w;
+		}
+		++r;
+		++col;
+		if((unsigned int)col >= m_ncols)
+			col = -1;
+	}
+	data.resize(w - data.begin());
+}
+
+/// Flate filter constructor
+/**
+ * \param params optional pointer to a parameters dictionaty
+ */
+FlateFilter::FlateFilter(const Dictionary * params)
+ : m_predictor(0)
+{
+	long predictor_id;
+	unsigned int cols;
+	if(!params)
+		return;
+	const Object * o = params->find("Predictor");
+	if(o && o->to_number(predictor_id)) {
+		switch(predictor_id) {
+			case 12:
+				if((o = params->find("Columns")) && o->to_number(cols))
+					m_predictor = new PredictorPNG_Up(cols);
+				else
+					throw FormatException("PNG Up predictor: required parameter 'Columns' not found in xref stream dictionary");
+				break;
+			default:
+				throw UnimplementedException("Only PNG Up predictor is implemented :(");
+		}
+	}
+}
 
 /// Calls zlib's deflate(...) to compress data.
 /**
@@ -57,6 +121,8 @@ bool FlateFilter::Decode(const std::vector<char> & src, std::vector<char> & dst)
 		r=inflateEnd(&zs);
 		if(r!=Z_OK)
 			throw std::string("Zlib error: ") + zs.msg;
+		if(m_predictor)
+			m_predictor->Remove(dst);
 	}
 	catch(...) {
 		inflateEnd(&zs);

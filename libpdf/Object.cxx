@@ -69,17 +69,20 @@ bool Stream::get_data(std::vector<char> & buf)
 		return true;
 	}
 
+	Object * po = dict->find("DecodeParms");
 	std::vector<Filter *> filters;
 
 	Array * a;
 	if(( a = dynamic_cast<Array *>(o) )) { // filter chain
-		for(Array::ConstIterator it = a->get_const_iterator(); a->check_iterator(it); it++) {
-			o = *it;
+		Array * pa = dynamic_cast<Array *>(po);
+		for(unsigned int index = 0; index < a->size(); ++index) {
+			o = a->at(index);
+			Dictionary * params = dynamic_cast<Dictionary *>(pa?pa->at(index):NULL);
 
 			Name * n=dynamic_cast<Name *>(o);
 			if(!n) throw std::string("Stream filter " + o->dump() + " is not implemented");
 
-			Filter * filter = Filter::Create(n->value());
+			Filter * filter = Filter::Create(n->value(), params);
 			if(!filter) throw std::string("Unimplemented stream filter ")+n->value();
 
 			filters.push_back(filter);
@@ -88,7 +91,9 @@ bool Stream::get_data(std::vector<char> & buf)
 		Name * n=dynamic_cast<Name *>(o);
 		if(!n) throw std::string("Stream filter " + o->dump() + " is not implemented");
 
-		Filter * filter = Filter::Create(n->value());
+		Dictionary * params = dynamic_cast<Dictionary *>(po);
+
+		Filter * filter = Filter::Create(n->value(), params);
 		if(!filter) throw std::string("Unimplemented stream filter ")+n->value();
 
 		filters.push_back(filter);
