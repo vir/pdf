@@ -59,6 +59,7 @@ class Object
     static unsigned int m_debug;
     /// dirty hack --- returns type name of this object
     std::string type() const;
+	template<typename T> bool to_number(T& rret) const;
   protected:
     static Object * read_delimited(std::istream & f, bool alt=false);
 };
@@ -287,6 +288,16 @@ class Keyword:public ObjSimpleT<std::string>
 		virtual void dump(std::ostream & ss, int level=0) const { ss << "SW_" << my_value; }
     virtual std::string dump(int level=0) const { return std::string("KW_")+my_value; }
 };
+
+template<typename T> bool Object::to_number(T& rret) const
+{
+	const Integer * i = dynamic_cast<const Integer *>(this);
+	const Real * r = dynamic_cast<const Real *>(this);
+	if(i) { rret = (T)i->value(); return true; }
+	if(r) { rret = (T)r->value(); return true; }
+	return false;
+}
+
 
 }; // namespace PDF
 
