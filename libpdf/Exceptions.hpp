@@ -43,6 +43,15 @@ class FormatException:public std::exception
     }
 };
 
+class UnimplementedException:public std::exception
+{
+public:
+	UnimplementedException(const char * s):std::exception(s) { }
+    virtual const char * what() throw()
+    {
+		return (std::string("Unimplemented: ") + std::exception::what()).c_str();
+    }
+};
 
 }; // namespace PDF
 
