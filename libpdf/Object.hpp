@@ -233,20 +233,19 @@ class ObjIStream;
 class Stream:public Object // All streams must be indirect objects
 {
 /// \todo Make "more valid" stream (see http://www.cplusplus.com/ref/iostream/streambuf/)
-	friend class ObjIStream; // allow access to our internals
-  private:
+	private:
 		File * source;
-    Dictionary * dict;
+		Dictionary * dict;
 		ObjIStream * ostrm;
 		unsigned long soffset;
 		mutable ObjRef * m_slength_ref;
 		mutable unsigned long m_slength;
-    std::vector<char> m_data;
-  public:
-    Stream(Dictionary * d, std::vector<char> & b):source(NULL),dict(d),ostrm(NULL),m_slength_ref(NULL),m_data(b) { }
+		std::vector<char> m_data;
+	public:
+		Stream(Dictionary * d, std::vector<char> & b):source(NULL),dict(d),ostrm(NULL),m_slength_ref(NULL),m_data(b) { }
 		Stream(Dictionary * d, ObjIStream * s, unsigned int offs, unsigned long length):source(NULL),dict(d),ostrm(s),soffset(offs),m_slength_ref(NULL),m_slength(length) { }
 		Stream(Dictionary * d, ObjIStream * s, unsigned int offs, ObjRef * length):source(NULL),dict(d),ostrm(s),soffset(offs),m_slength_ref(length),m_slength(0) { }
-    virtual ~Stream() { if(dict) delete dict; }
+		virtual ~Stream() { if(dict) delete dict; }
 		virtual void dump(std::ostream & ss, int level=0) const
     {
 			ss << "Stream: " << slength() << " bytes at offset " << soffset << " ";

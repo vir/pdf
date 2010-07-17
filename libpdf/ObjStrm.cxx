@@ -22,9 +22,9 @@ Object * ObjIStream::read_direct_object(const ObjId * decrypt_info)
 
 	Object * r = NULL;
 
-	long objstart = f.tellg();
+	long objstart = f->tellg();
 
-	char c = f.peek();
+	char c = f->peek();
 	if(!will_throw_eof && c == EOF)
 		return r;
 	if(is_a_delimiter(c)) {
@@ -57,7 +57,7 @@ Object * ObjIStream::read_indirect_object(bool need_decrypt)
   skip_whitespace();
 
 	/* read object number */
-	long start = f.tellg();
+	long start = f->tellg();
 	s = read_token();
 	if(static_cast<int>(s.find_first_not_of("0123456789")) >= 0)
 		throw FormatException("Invalid object number", start);
@@ -82,7 +82,7 @@ Object * ObjIStream::read_indirect_object(bool need_decrypt)
 		skip_whitespace();
 		s = read_token();
 		if(s!="endobj")
-			throw FormatException("Error at object end", f.tellg());
+			throw FormatException("Error at object end", f->tellg());
 	}
 
 	r->indirect = true;
@@ -95,8 +95,8 @@ Object * ObjIStream::read_indirect_object(bool need_decrypt)
  */
 Object * ObjIStream::read_delimited(const ObjId * decrypt_info)
 {
-	long start=f.tellg();
-	char c; f >> c;
+	long start = f->tellg();
+	char c; *f >> c;
 	Object * o;
 	switch(c)
 	{
@@ -107,7 +107,7 @@ Object * ObjIStream::read_delimited(const ObjId * decrypt_info)
 					sechandler->decrypt_object(decrypt_info->num, decrypt_info->gen, (char*)&str[0], str.size());
 				}
 				String * s = new String( str );
-				f.ignore(); // skip ')'
+				f->ignore(); // skip ')'
 				return s;
 			}
 			break;
@@ -115,7 +115,7 @@ Object * ObjIStream::read_delimited(const ObjId * decrypt_info)
 			{
 				Array * a = new Array();
 				skip_whitespace();
-				while(f.peek() != ']')
+				while(f->peek() != ']')
         {
 					Object * o=read_direct_object(decrypt_info);
 					if(o) a->push(o);
@@ -123,23 +123,23 @@ Object * ObjIStream::read_delimited(const ObjId * decrypt_info)
 						throw FormatException("EOF inside an array", start);
 					skip_whitespace();
 				}
-				f.ignore(); // skip ']'
+				f->ignore(); // skip ']'
 				return a;
 			}
 			break;
 		case '<':
 			{
-				c=f.get();
+				c = f->get();
 				if(c == '<') // second '<' => Dictionary
 				{
 					Dictionary * r = new Dictionary();
 					while(1) {
 						skip_whitespace();
-						if(f.peek() == '>') {
-							f.ignore();
-							if(f.peek() == '>') { f.ignore(); break; } // normal dict. end
+						if(f->peek() == '>') {
+							f->ignore();
+							if(f->peek() == '>') { f->ignore(); break; } // normal dict. end
 							else
-								throw FormatException("Invalid dictionary end", f.tellg());
+								throw FormatException("Invalid dictionary end", f->tellg());
 						}
 
 						o = read_direct_object(decrypt_info);
@@ -156,15 +156,15 @@ Object * ObjIStream::read_delimited(const ObjId * decrypt_info)
 					}
 
 					if(( o = r->find("Length") )) { // check for stream object
-						long savepos = f.tellg();
+						long savepos = f->tellg();
 						skip_whitespace();
 						std::string s = read_token();
 						if(s == "stream") {
 							/* find stream data */
-							c=f.get(); if(c=='\x0D') c = f.get();
+							c = f->get(); if(c=='\x0D') c = f->get();
 							if(c != '\x0A')
-								throw FormatException("No newline after 'stream' keyword?", f.tellg());
-							long stream_begin = f.tellg();
+								throw FormatException("No newline after 'stream' keyword?", f->tellg());
+							long stream_begin = f->tellg();
 
 							/* extract stream length */
 							Integer * ii = dynamic_cast<Integer *>(o);
@@ -172,11 +172,11 @@ Object * ObjIStream::read_delimited(const ObjId * decrypt_info)
 								long stream_length = ii->value();
 
 								/* skip to stream tail */
-								f.seekg(stream_begin + stream_length);
+								f->seekg(stream_begin + stream_length);
 								skip_whitespace();
 								s = read_token();
 								if(s != "endstream")
-									throw FormatException("Invlaid stream end", f.tellg());
+									throw FormatException("Invlaid stream end", f->tellg());
 								return new Stream(r, this, stream_begin, stream_length);
 							} else {
 								ObjRef * rr = dynamic_cast<ObjRef *>(o);
@@ -186,7 +186,7 @@ Object * ObjIStream::read_delimited(const ObjId * decrypt_info)
 								return new Stream(r, this, stream_begin, rr);
 							}
 						} else
-							f.seekg(savepos);
+							f->seekg(savepos);
 					}
 					return r;
 				}
@@ -198,8 +198,8 @@ Object * ObjIStream::read_delimited(const ObjId * decrypt_info)
 						skip_whitespace();
 						s+=read_token();
 						skip_whitespace();
-					} while(f.peek() != '>' && f.peek() != EOF);
-					f.ignore(); // check for errors?
+					} while(f->peek() != '>' && f->peek() != EOF);
+					f->ignore(); // check for errors?
 					if(s.length() % 2) s+='0'; // pad to even length
 					std::vector<char> r;
 					for(unsigned int i=0; i<s.length(); i+=2) {
@@ -233,7 +233,7 @@ std::vector<char> ObjIStream::read_o_string()
   std::vector<char> s; char c; bool escape=false;
 	int plevel = 0;
 	do {
-		c = f.get();
+		c = f->get();
 		if(c == '\\' && !escape) escape=true;
 		else
 		{
@@ -254,9 +254,9 @@ std::vector<char> ObjIStream::read_o_string()
 				}
 			}
 			s.push_back(c);
-			if(f.peek() == ')' && plevel == 0) break;
+			if(f->peek() == ')' && plevel == 0) break;
 		}
-	} while(f.peek() != EOF);
+	} while(f->peek() != EOF);
 	return s;
 }
 
@@ -277,7 +277,7 @@ Object * ObjIStream::read_o_digits()
 		return new Integer(firstint);
 
 	// look what is there (another number + R => reference), else => integer
-	long savepos = f.tellg();
+	long savepos = f->tellg();
 	skip_whitespace();
 
 	// check out next token --- must be an integer, and after it 'R'
@@ -291,14 +291,14 @@ Object * ObjIStream::read_o_digits()
 	}
 
 	// not a reference, get back...
-	f.seekg(savepos);
+	f->seekg(savepos);
 	return new Integer(firstint); // integer
 }
 
 /// \todo enable keywords reading only when they are allowed
 Object * ObjIStream::read_o_chars()
 {
-	long startpos=f.tellg();
+	long startpos = f->tellg();
 	std::string b=read_token();
 	if(b == "true") return new Boolean(true);
 	if(b == "false") return new Boolean(false);
@@ -313,10 +313,10 @@ Object * ObjIStream::read_o_chars()
 /// skip whitespace characters
 void ObjIStream::skip_whitespace()
 {
-	while(f.peek()!=EOF && (is_a_whitespace(f.peek()) || f.peek()=='\0')) {
-		f.ignore();
+	while(f->peek() != EOF && (is_a_whitespace(f->peek()) || f->peek()=='\0')) {
+		f->ignore();
 	}
-	if(will_throw_eof && f.peek() == EOF) throw FormatException("Unexpected EOF");
+	if(will_throw_eof && f->peek() == EOF) throw FormatException("Unexpected EOF");
 }
 
 /// read a single "word"
@@ -325,23 +325,49 @@ std::string ObjIStream::read_token()
 	std::string s;
 	char c;
 	do {
-		f >> c;
+		*f >> c;
 		s+=c;
-	} while(! is_a_delimiter(f.peek())
-			&& !is_a_whitespace(f.peek())
-			&& f.peek()!='\0'
-			&& f.peek()!=EOF);
-	if(will_throw_eof && f.peek() == EOF) throw FormatException("Unexpected EOF");
+	} while(! is_a_delimiter(f->peek())
+			&& !is_a_whitespace(f->peek())
+			&& f->peek()!='\0'
+			&& f->peek()!=EOF);
+	if(will_throw_eof && f->peek() == EOF) throw FormatException("Unexpected EOF");
 	return s;
 }
 
-void ObjIStream::load_stream_data(Stream * s)
+void ObjIStream::read_chunk(unsigned long offset, char * buf, unsigned int len, long obj_id_num, long obj_id_gen)
 {
-	s->m_data.resize(s->slength());
-	f.seekg(s->soffset);
-	f.read(&s->m_data[0], s->slength());
-	if(sechandler && s->indirect)
-		sechandler->decrypt_object(s->m_id.num, s->m_id.gen, &s->m_data[0], s->slength());
+	f->seekg(offset);
+	f->read(buf, len);
+	if(sechandler && obj_id_num)
+		sechandler->decrypt_object(obj_id_num, obj_id_gen, buf, len);
+}
+
+std::streambuf::int_type StreamBuffer::underflow()
+{
+	if(m_data.empty() && m_source) {
+		m_source->get_data(m_data);
+		setg(&*m_data.begin(), &*m_data.begin(), &*m_data.begin() + m_data.size());
+	}
+	return gptr() == egptr() ? traits_type::eof() : traits_type::to_int_type(*gptr());
+}
+
+ObjectStream::ObjectStream(Stream * s): m_sis(new StreamBuffer(s, true)), m_ois(m_sis, false)
+{
+	Dictionary * d = s->get_dict();
+	d->find("N")->to_number(m_objsnum);
+	unsigned long first_offset;
+	d->find("First")->to_number(first_offset);
+	for(unsigned int i = 0; i < m_objsnum; ++i) {
+		unsigned long offset;
+		Object * o;
+		o = m_ois.read_direct_object(); // object number - ignore it
+		delete o;
+		o = m_ois.read_direct_object(); // 
+		o->to_number(offset);
+		delete o;
+		m_offsets.push_back(first_offset + offset);
+	}
 }
 
 

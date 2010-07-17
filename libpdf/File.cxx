@@ -25,6 +25,7 @@ File::File(std::string fn)
 	:strm(file)
 	,m_debug(0)
 	,m_security(NULL)
+	,m_streams(*this)
 {
 	if(!fn.empty())
 		open(fn);
@@ -144,7 +145,12 @@ bool File::load()
 Object * File::load_object(const ObjId & oi, bool decrypt)
 {
 	if(m_debug>1) std::clog << "Loading object " << oi.dump() << std::endl;
-	long offset = xref_table.get_offset(oi);
+	const XRefTable::Entry * xe = xref_table.find(oi);
+
+	if(xe->compressed)
+		return m_streams.load_object(xe->offset, xe->obj_stream_index);
+
+	long offset = xe->offset;
 	Object * r;
 	if(offset) {
 		file.seekg(offset);
@@ -358,6 +364,24 @@ void File::load_file_ids(const Array * a)
 			continue;
 		m_file_ids.push_back( s->str() );
 	}
+}
+
+Object * ObjectStreamsCache::load_object(long obj_stream_num, unsigned int obj_stream_index)
+{
+	std::map<long, Entry>::iterator it = m_stash.find(obj_stream_num);
+	if(it == m_stash.end()) { // Load object
+		ObjId oid;
+		oid.num = obj_stream_num;
+		oid.gen = 0;
+		Object * o = m_file.load_object(oid);
+		Stream * s = dynamic_cast<Stream *>(o);
+		if(!s)
+			throw std::exception("Can not load object stream");
+		ObjectStream * os = new ObjectStream(s);
+		delete s;
+		it = m_stash.insert(std::make_pair(obj_stream_num, Entry(os))).first;
+	}
+	return it->second.s->load_object(obj_stream_index);
 }
 
 } // namespace PDF

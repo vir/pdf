@@ -40,7 +40,7 @@ class FlateFilter:public Filter
 		PredictorBase * m_predictor;
 	public:
 		FlateFilter(const Dictionary * params = NULL);
-		virtual ~FlateFilter() {};
+		virtual ~FlateFilter() { delete m_predictor; };
 		virtual bool Encode(const std::vector<char> & src, std::vector<char> & dst);
 		virtual bool Decode(const std::vector<char> & src, std::vector<char> & dst);
 		virtual const char * Name() { return "FlateFilter"; };

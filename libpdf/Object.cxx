@@ -61,7 +61,8 @@ bool Stream::get_data(std::vector<char> & buf)
 {
 	Object * o;
 
-	ostrm->load_stream_data(this);
+	m_data.resize(slength());
+	ostrm->read_chunk(soffset, &m_data[0], m_data.size(), m_id.num, m_id.gen);
 
 	if(!(o = dict->find("Filter"))) {
 		std::cerr << "no filter in stream object" << std::endl;

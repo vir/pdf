@@ -79,6 +79,21 @@ public:
 	}
 };
 
+class ObjectStreamsCache
+{
+	private:
+		struct Entry
+		{
+			ObjectStream * s;
+			Entry(ObjectStream * strm):s(strm) { }
+		};
+		std::map<long, Entry> m_stash;
+		File & m_file;
+	public:
+		ObjectStreamsCache(File & f):m_file(f) { }
+		Object * load_object(long obj_stream_num, unsigned int obj_stream_index);
+};
+
 /** \brief Represents pdf file
  * 
  * Used to access PDF low level file internals, such as xref table and
@@ -102,6 +117,7 @@ class File
     int m_debug;
 		SecHandler * m_security;
 		std::vector< std::string > m_file_ids;
+		ObjectStreamsCache m_streams;
   protected:
     long offset_lookup(const ObjId & oi) const;
     std::string check_header();
