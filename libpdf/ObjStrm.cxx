@@ -282,7 +282,7 @@ Object * ObjIStream::read_o_digits()
 
 	// check out next token --- must be an integer, and after it 'R'
 	s = read_token();
-	if(s.find_first_not_of("0123456789") >= 0) { // must be only digits
+	if(s.find_first_not_of("0123456789") > 0) { // must be only digits
 		long secondint = ::atol(s.c_str()); // XXX replace with istringstream
 		skip_whitespace();
 		s = read_token();
