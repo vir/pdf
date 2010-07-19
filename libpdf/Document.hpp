@@ -23,17 +23,6 @@ namespace PDF {
 //class OH;
 //class ObjectsCache;
 
-/// Error in document structure
-class DocumentStructureException:public std::exception
-{
-  private:
-    std::string msg;
-  public:
-    DocumentStructureException(std::string s="") throw() :msg(s) { }
-    virtual ~DocumentStructureException() throw() {}
-    virtual const char * what() throw() { return (std::string("DocStrucErr: ")+msg).c_str(); }
-};
-
 /// Represents document structure and content
 class Document
 {
