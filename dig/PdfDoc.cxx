@@ -14,10 +14,9 @@ bool PdfDoc::OnOpenDocument(const wxString& filename)
 	if(! file.open(std::string(filename.mb_str())))
 		return false;
 	// XXX Causes a lot of disasters on win32
-	//GetDocumentManager()->AddFileToHistory(filename);
+	GetDocumentManager()->AddFileToHistory(filename);
 	if(! file.load())
 		return false;
-//	file.dump();
 
 	SetFilename(filename, true);
 	Modify(false);
@@ -38,6 +37,13 @@ bool PdfDoc::OnCloseDocument()
 PDF::OH PdfDoc::get_object(const PDF::ObjId & id)
 {
 	return cache.get_object(id);
+}
+
+wxString PdfDoc::get_file_brief() const
+{
+	std::stringstream ss;
+	file.dump(ss);
+	return wxString(ss.str().c_str(), wxConvUTF8);
 }
 
 #if 0

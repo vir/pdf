@@ -23,6 +23,7 @@ class PdfDoc:public wxDocument
 		/// returns root object id for a given generation
 		const PDF::ObjId & get_root(long generation=0) const { return file.get_root(generation); }
 		PDF::OH get_object(const PDF::ObjId & id);
+		wxString get_file_brief() const;
 
 /*		bool open(std::string fname);
 		void close();
