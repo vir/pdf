@@ -14,6 +14,9 @@ IMPLEMENT_APP(MyApp)
 // `Main program' equivalent: the program execution "starts" here
 bool MyApp::OnInit()
 {
+	if(!wxApp::OnInit()) // it parses command line
+		return false;
+
 	SetVendorName(_T("vir"));
 	SetAppName(_T("pdfdig")); // not needed, it's the default value
 
@@ -26,22 +29,18 @@ bool MyApp::OnInit()
 
 	//// Create a document manager
 	m_docManager = new wxDocManager;
-	m_docManager->FileHistoryLoad(*wxConfigBase::Get());
+	//XXX m_docManager->FileHistoryLoad(*wxConfigBase::Get());
 
 	//// Create a template relating drawing documents to their views
 	(void) new wxDocTemplate(m_docManager, _T("PDF document"), _T("*.pdf"), _T(""), _T("pdf"), _T("PDF Document"), _T("PDF View"), CLASSINFO(PdfDoc), CLASSINFO(PdfExplorerView));
     
 	m_docManager->SetMaxDocsOpen(1);
 
-
-	if(!wxApp::OnInit()) // it parses command line
-		return false;
-
 	frame = new MyFrame(m_docManager, (wxFrame *) NULL, wxID_ANY, _T("PDF Digger"), wxPoint(0, 0), wxSize(800, 600), wxDEFAULT_FRAME_STYLE);
 
 #ifdef __WXMSW__
 	//// Give it an icon (this is ignored in MDI mode: uses resources)
-	frame->SetIcon(wxIcon(_T("doc_icn")));
+	//frame->SetIcon(wxIcon(_T("doc_icn")));
 #endif
 
 	frame->Centre(wxBOTH);
@@ -52,7 +51,8 @@ bool MyApp::OnInit()
 
 int MyApp::OnExit()
 {
-	m_docManager->FileHistorySave(*wxConfigBase::Get());
+	//XXX m_docManager->FileHistorySave(*wxConfigBase::Get());
+	delete m_docManager;
 	return wxApp::OnExit();
 }
 

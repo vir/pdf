@@ -13,7 +13,8 @@ bool PdfDoc::OnOpenDocument(const wxString& filename)
 	cache.flush();
 	if(! file.open(std::string(filename.mb_str())))
 		return false;
-	GetDocumentManager()->AddFileToHistory(filename);
+	// XXX Causes a lot of disasters on win32
+	//GetDocumentManager()->AddFileToHistory(filename);
 	if(! file.load())
 		return false;
 //	file.dump();

@@ -2,8 +2,10 @@
 #define MYFRAME_HPP_INCLUDED
 #include <wx/wx.h>
 #include "wx/docview.h"
+//#include <wx/aui/aui.h>
+#include <wx/docmdi.h>
 
-class MyFrame:public wxDocParentFrame
+class MyFrame:public wxDocMDIParentFrame
 {
 	DECLARE_CLASS(MyFrame)
 	public:
@@ -14,6 +16,7 @@ class MyFrame:public wxDocParentFrame
 
 		wxMenu * menuEdit;
 	private:
+		//wxAuiManager m_mgr;
 		void AddToolbar();
 		DECLARE_EVENT_TABLE()
 };

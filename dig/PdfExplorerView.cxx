@@ -10,33 +10,22 @@ END_EVENT_TABLE()
 
 
 PdfExplorerView::PdfExplorerView()
-	:m_splitter(NULL),m_tree(NULL),m_right(NULL),frame(NULL)
+	:m_splitter(NULL),m_tree(NULL),m_right(NULL), m_frame(NULL)
 {
-}
-
-PdfExplorerView::~PdfExplorerView()
-{
-	delete m_right;
-	delete m_tree;
-	delete m_splitter;
-}
-
-
-#if 0
-
+#if 1
+	//// Make a child frame
+	wxDocMDIChildFrame *subframe = new wxDocMDIChildFrame(GetDocument(), this, static_cast<MyApp*>(wxTheApp)->GetMainFrame(), wxID_ANY, _T("Child Frame"), wxPoint(10, 10), wxSize(300, 300), wxDEFAULT_FRAME_STYLE);
+#ifdef __WXMSW__
+	//subframe->SetIcon(wxString(isCanvas ? _T("chrt_icn") : _T("notepad_icn")));
 #endif
-
-// What to do when a view is created. Creates actual
-// windows for displaying the view.
-bool PdfExplorerView::OnCreate(wxDocument *doc, long WXUNUSED(flags) )
-{
-std::cerr << "PdfExplorerView::OnCreate" << std::endl;
-	// Associate the appropriate frame with this view.
-	frame = static_cast<MyApp*>(wxTheApp)->GetMainFrame();
-	SetFrame(frame);
-
-	m_splitter = new wxSplitterWindow(frame, wxID_ANY,
-		wxDefaultPosition, wxDefaultSize,
+	subframe->Centre(wxBOTH);
+	m_frame = subframe;
+	m_frame->Show(true);
+#else
+	m_frame = static_cast<MyApp*>(wxTheApp)->GetMainFrame();
+#endif
+	SetFrame(m_frame);
+	m_splitter = new wxSplitterWindow(m_frame, wxID_ANY, wxDefaultPosition, wxDefaultSize,
 		wxSP_3D | wxSP_LIVE_UPDATE | wxCLIP_CHILDREN /* | wxSP_NO_XP_THEME */ );
 	m_splitter->SetSashGravity(1.0);
 
@@ -44,64 +33,54 @@ std::cerr << "PdfExplorerView::OnCreate" << std::endl;
 	m_right = new wxTextCtrl(m_splitter, wxID_ANY, _T("second text"), wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE|wxTE_READONLY|wxTE_DONTWRAP);
 	m_tree->m_details = m_right;
 
+	subframe->Maximize();
 	m_splitter->SplitVertically(m_tree, m_right, 300);
+}
+
+PdfExplorerView::~PdfExplorerView()
+{
+	delete m_right;
+	delete m_tree;
+	delete m_splitter;
+	delete m_frame;
+}
+
+// What to do when a view is created.
+bool PdfExplorerView::OnCreate(wxDocument *doc, long WXUNUSED(flags) )
+{
+	wxTrace("PdfExplorerView::OnCreate");
+
+	m_splitter->SetSize(m_frame->GetClientSize());
 
 	// Make sure the document manager knows that this is the
 	// current view.
 	Activate(true);
 
-#if 0
-	// Initialize the edit menu Undo and Redo items
-	doc->GetCommandProcessor()->SetEditMenu(((MyFrame *)frame)->editMenu);
-	doc->GetCommandProcessor()->Initialize();
-#endif
 	return true;
 }
 
 // Used for default print/preview as well as drawing on the screen.
 void PdfExplorerView::OnDraw(wxDC *dc)
 {
-std::cerr << "PdfExplorerView::OnDraw" << std::endl;
-	dc->SetFont(*wxNORMAL_FONT);
-	dc->SetPen(*wxBLACK_PEN);
-
+	wxTrace("PdfExplorerView::OnDraw");
 }
 
 void PdfExplorerView::OnUpdate(wxView *WXUNUSED(sender), wxObject *WXUNUSED(hint))
 {
-std::cerr << "PdfExplorerView::OnUpdate" << std::endl;
+	wxTrace("PdfExplorerView::OnUpdate");
 	m_tree->Update();
-//	m_splitter->Refresh();
-#if 0
-    if (canvas)
-        canvas->Refresh();
-    
-/* Is the following necessary?
-#ifdef __WXMSW__
-    if (canvas)
-        canvas->Refresh();
-#else
-    if (canvas)
-    {
-        wxClientDC dc(canvas);
-        dc.Clear();
-        OnDraw(& dc);
-    }
-#endif
-*/
-#endif
 }
 
 // Clean up windows used for displaying the view.
 bool PdfExplorerView::OnClose(bool deleteWindow)
 {
-std::cerr << "PdfExplorerView::OnClose" << std::endl;
+	wxTrace("PdfExplorerView::OnClose");
 	if (!GetDocument()->Close())
 		return false;
 
 	wxString s(wxTheApp->GetAppName());
-	if (frame)
-		frame->SetTitle(s);
+	if (m_frame)
+		m_frame->SetTitle(s);
 
 	SetFrame((wxFrame *) NULL);
 
@@ -110,12 +89,5 @@ std::cerr << "PdfExplorerView::OnClose" << std::endl;
 	return true;
 }
 
-#if 0
-void PdfExplorerView::OnCut(wxCommandEvent& WXUNUSED(event) )
-{
-	DrawingDocument *doc = (DrawingDocument *)GetDocument();
-	doc->GetCommandProcessor()->Submit(new DrawingCommand(_T("Cut Last Segment"), DOODLE_CUT, doc, (DoodleSegment *) NULL));
-}
-#endif
 
 

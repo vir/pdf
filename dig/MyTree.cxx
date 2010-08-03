@@ -107,7 +107,6 @@ void MyTree::Update()
 	SetItemText(rootId, s);
 //	SetItemData(NULL);
 	wxTreeItemId id = AppendChild(rootId, wxT("Catalog"), doc->get_object( doc->get_root(0) ) );
-	AppendChildren(id);
 //	SetItemData(rootId, new MyTreeItemData( doc->get_object( doc->get_root(0) ) ));
 #if 0
 	wxString text;
@@ -164,7 +163,9 @@ void MyTree::CreateImageList()
 
 	AssignButtonsImageList(bimages);
 #else
+# ifndef _WIN32
 	SetButtonsImageList(NULL);
+# endif
 #endif
 }
 
@@ -191,46 +192,23 @@ void MyTree::AppendChildren(wxTreeItemId id)
 	MyTreeItemData * d = static_cast<MyTreeItemData*>(GetItemData(id));
 	if(!d) return;
 	PDF::OH obj = d->h;
-	switch(obj.otype()) {
-#if 0
-		case t_Null:
-		case t_Real:
-		case t_Integer:
-		case t_String:
-		case t_Name:
-		case t_Keyword:
-		case t_Object:
-			break;
-#endif
-//		case PDF::OH::t_Stream: // XXX
-		case PDF::OH::t_Dictionary:
-			{
-				PDF::OH::DictIterator it = obj.begin_dict();
-				while(it) {
-					AppendChild(id, wxString(it.key().c_str(), wxConvUTF8), it.value());
-					++it;
-				}
-			}
-			break;
-		case PDF::OH::t_Array:
-			{
-				unsigned int i;
-				for(i = 0; i < obj.size(); i++) {
-					wxString name;
-					name.Printf(wxT("#%d"), i);
-					AppendChild(id, name, obj[i]);
-				}
-			}
-			break;
-		case PDF::OH::t_ObjRef:
-			{
-				PDF::OH tmp = obj;
-				tmp.expand();
-				AppendChild(id, wxString(obj->dump().c_str(), wxConvUTF8), tmp);
-			}
-			break;
-		default:
-			break;
+	if(dynamic_cast<PDF::Dictionary *>(obj.obj())) {
+		PDF::OH::DictIterator it = obj.begin_dict();
+		while(it) {
+			AppendChild(id, wxString(it.key().c_str(), wxConvUTF8), it.value());
+			++it;
+		}
+	} else if(dynamic_cast<PDF::Array *>(obj.obj())) {
+		unsigned int i;
+		for(i = 0; i < obj.size(); i++) {
+			wxString name;
+			name.Printf(wxT("#%d"), i);
+			AppendChild(id, name, obj[i]);
+		}
+	} else if(dynamic_cast<PDF::ObjRef *>(obj.obj())) {
+		PDF::OH tmp = obj;
+		tmp.expand();
+		AppendChild(id, wxString(obj->dump().c_str(), wxConvUTF8), tmp);
 	}
 }
 

@@ -14,7 +14,7 @@ class PdfExplorerView:public wxView
 		wxSplitterWindow * m_splitter;
 		MyTree * m_tree;
 		wxTextCtrl * m_right;
-		MyFrame * frame;
+		wxFrame * m_frame;
 	public:
 		PdfExplorerView();
 		~PdfExplorerView();

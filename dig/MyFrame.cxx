@@ -1,4 +1,5 @@
 #include "MyFrame.hpp"
+#include "pdfglass.xpm"
 
 enum {
 	File_Quit = wxID_EXIT,
@@ -8,71 +9,48 @@ enum {
 const int ID_TOOLBAR = 500;
 
 
-IMPLEMENT_CLASS(MyFrame, wxDocParentFrame)
-BEGIN_EVENT_TABLE(MyFrame, wxDocParentFrame)
+IMPLEMENT_CLASS(MyFrame, wxDocMDIParentFrame)
+BEGIN_EVENT_TABLE(MyFrame, wxDocMDIParentFrame)
 	EVT_MENU      (File_Quit,     MyFrame::OnQuit)
 	EVT_MENU      (File_About,    MyFrame::OnAbout)
 END_EVENT_TABLE()
 
 MyFrame::MyFrame(wxDocManager *manager, wxFrame *frame, wxWindowID id, const wxString& title,
-                 const wxPoint& pos, const wxSize& size, const long type):
-wxDocParentFrame(manager, frame, id, title, pos, size, type)
+                 const wxPoint& pos, const wxSize& size, const long type)
+	: wxDocMDIParentFrame(manager, frame, id, title, pos, size, type)
 {
-	menuEdit = (wxMenu *) NULL;
+	SetMinSize(wxSize(400,300));
+#if 0
+	m_mgr.SetFlags(m_mgr.GetFlags()
+		| wxAUI_MGR_ALLOW_FLOATING
+		| wxAUI_MGR_TRANSPARENT_DRAG
+		| wxAUI_MGR_HINT_FADE
+		| wxAUI_MGR_TRANSPARENT_HINT
+	);
+	// tell wxAuiManager to manage this frame
+	m_mgr.SetManagedWindow(this);
+#endif
+	SetIcon(wxIcon(pdfglass_xpm));
+
 	/* Add Menu */
 	wxMenu *menuFile = new wxMenu;
-	menuFile->Append(wxID_NEW, _T("&New..."));
 	menuFile->Append(wxID_OPEN, _T("&Open..."));
 	menuFile->Append(wxID_CLOSE, _T("&Close"));
-	menuFile->Append(wxID_SAVE, _T("&Save"));
-	menuFile->Append(wxID_SAVEAS, _T("Save &As..."));
-	menuFile->AppendSeparator();
-	menuFile->Append(wxID_PRINT, _T("&Print..."));
-	menuFile->Append(wxID_PRINT_SETUP, _T("Print &Setup..."));
-	menuFile->Append(wxID_PREVIEW, _T("Print Pre&view"));
 	menuFile->AppendSeparator();
 	menuFile->Append(File_About, _T("&About...\tCtrl-A"), _T("Show about dialog"));
 	menuFile->AppendSeparator();
 	menuFile->Append(File_Quit, _T("E&xit\tAlt-X"), _T("Quit this program"));
-	m_docManager->FileHistoryUseMenu(menuFile);
+	//m_docManager->FileHistoryUseMenu(menuFile);
 
 	wxMenuBar *menuBar = new wxMenuBar;
 	menuBar->Append(menuFile, _T("&File"));
-
 	SetMenuBar(menuBar);
 
-
-#if 0
-    wxMenu *edit_menu = (wxMenu *) NULL;
-    
-    if (isCanvas)
-    {
-        edit_menu = new wxMenu;
-        edit_menu->Append(wxID_UNDO, _T("&Undo"));
-        edit_menu->Append(wxID_REDO, _T("&Redo"));
-        edit_menu->AppendSeparator();
-        edit_menu->Append(DOCVIEW_CUT, _T("&Cut last segment"));
-        
-        doc->GetCommandProcessor()->SetEditMenu(edit_menu);
-    }
-    
-    wxMenu *help_menu = new wxMenu;
-    help_menu->Append(DOCVIEW_ABOUT, _T("&About"));
-    
-    wxMenuBar *menu_bar = new wxMenuBar;
-    
-    menu_bar->Append(file_menu, _T("&File"));
-    if (isCanvas)
-        menu_bar->Append(edit_menu, _T("&Edit"));
-    menu_bar->Append(help_menu, _T("&Help"));
-
-#endif
-	/* Add Toolbar */
 	AddToolbar();
-
-	/* Add Status Bar */
 	CreateStatusBar(2);
-	SetStatusText(_T("Welcome to wxWidgets!"));
+	SetStatusText(_T("pdfdig ready to rock"));
+
+	SetMinSize(wxSize(400,300));
 }
 
 MyFrame::~MyFrame()
@@ -88,7 +66,7 @@ void MyFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
 {
 	wxString msg;
 	msg.Printf(
-		wxT("This is my humble attempt to draw PDF page.\n")
+		wxT("Pdf internals exploration tool.\n")
 		wxT("Sorry for bugs.")
 	);
 	wxMessageBox(msg, _T("About this buggy application"), wxOK | wxICON_INFORMATION, this);

@@ -7,7 +7,7 @@
 
 class PdfDoc:public wxDocument
 {
-	DECLARE_DYNAMIC_CLASS(DrawingDocument)
+	DECLARE_DYNAMIC_CLASS(PdfDoc)
 	private:
 		PDF::File file;
 		/// pointer to the object cache
