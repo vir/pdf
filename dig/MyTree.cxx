@@ -116,6 +116,8 @@ void MyTree::Update()
 	AppendItem(/*GetRootItem()*/ rootId, text /*, MyTreeCtrl::TreeCtrlIcon_File */ );
 #endif
 //	wxTreeItemId id = AppendItem(idParent, str, image, imageSel, new MyTreeItemData(str));
+	Expand(rootId);
+	SelectItem(rootId);
 }
 
 
@@ -248,9 +250,16 @@ void MyTree::OnSelChanged(wxTreeEvent& event)
 {
 	wxTreeItemId id = event.GetItem();
 	MyTreeItemData * d = static_cast<MyTreeItemData*>(GetItemData(id));
-	if(!d) return;
+	if(!d) {
+		if(m_details) {
+			PdfDoc * doc = static_cast<PdfDoc *>(m_view->GetDocument());
+			m_details->SetValue(doc->get_file_brief());
+		}
+		return;
+	}
 	wxString s(d->h->dump().c_str(), wxConvUTF8);
-	m_details->SetValue(s);
+	if(m_details)
+		m_details->SetValue(s);
 }
 
 
