@@ -13,11 +13,8 @@ class MyFrame:public wxDocMDIParentFrame
 		~MyFrame();
 		void OnQuit(wxCommandEvent& event);
 		void OnAbout(wxCommandEvent& event);
-
-		wxMenu * menuEdit;
 	private:
 		//wxAuiManager m_mgr;
-		void AddToolbar();
 		DECLARE_EVENT_TABLE()
 };
 

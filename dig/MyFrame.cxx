@@ -46,7 +46,11 @@ MyFrame::MyFrame(wxDocManager *manager, wxFrame *frame, wxWindowID id, const wxS
 	menuBar->Append(menuFile, _T("&File"));
 	SetMenuBar(menuBar);
 
-	AddToolbar();
+	wxToolBarBase *toolBar = CreateToolBar(wxTB_FLAT/* | wxTB_DOCKABLE*/ | wxTB_HORIZONTAL | wxTB_TEXT | wxTB_NOICONS, ID_TOOLBAR);
+	toolBar->AddTool(wxID_EXIT, _T("Exit"), wxBitmap(), _T("Exit application"));
+	toolBar->AddTool(wxID_OPEN, _T("Open"), wxBitmap(), _T("Open file"));
+	toolBar->Realize();
+
 	CreateStatusBar(2);
 	SetStatusText(_T("pdfdig ready to rock"));
 
@@ -66,20 +70,11 @@ void MyFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
 {
 	wxString msg;
 	msg.Printf(
-		wxT("Pdf internals exploration tool.\n")
+		wxT("Pdf file exploration tool.\n")
 		wxT("Sorry for bugs.")
 	);
 	wxMessageBox(msg, _T("About this buggy application"), wxOK | wxICON_INFORMATION, this);
 }
 
-void MyFrame::AddToolbar()
-{
-	wxToolBarBase *toolBar = CreateToolBar(wxTB_FLAT/* | wxTB_DOCKABLE*/ | wxTB_HORIZONTAL | wxTB_TEXT | wxTB_NOICONS, ID_TOOLBAR);
-
-	toolBar->AddTool(wxID_EXIT, _T("Exit"), wxBitmap(), _T("Exit application"));
-//    toolBar->AddTool(wxID_OPEN, _T("Open"), toolBarBitmaps[Tool_open], _T("Open file"));
-
-	toolBar->Realize();
-}
 
 

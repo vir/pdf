@@ -15,6 +15,7 @@ class PdfExplorerView:public wxView
 		MyTree * m_tree;
 		wxTextCtrl * m_right;
 		wxFrame * m_frame;
+		wxMDIParentFrame * m_mainframe;
 	public:
 		PdfExplorerView();
 		~PdfExplorerView();

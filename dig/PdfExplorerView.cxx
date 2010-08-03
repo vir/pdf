@@ -12,18 +12,15 @@ END_EVENT_TABLE()
 PdfExplorerView::PdfExplorerView()
 	:m_splitter(NULL),m_tree(NULL),m_right(NULL), m_frame(NULL)
 {
-#if 1
+	m_mainframe = static_cast<MyApp*>(wxTheApp)->GetMainFrame();
 	//// Make a child frame
-	wxDocMDIChildFrame *subframe = new wxDocMDIChildFrame(GetDocument(), this, static_cast<MyApp*>(wxTheApp)->GetMainFrame(), wxID_ANY, _T("Child Frame"), wxPoint(10, 10), wxSize(300, 300), wxDEFAULT_FRAME_STYLE);
+	wxDocMDIChildFrame *subframe = new wxDocMDIChildFrame(GetDocument(), this, m_mainframe, wxID_ANY, _T("Child Frame"), wxPoint(10, 10), wxSize(300, 300), wxDEFAULT_FRAME_STYLE);
 #ifdef __WXMSW__
 	//subframe->SetIcon(wxString(isCanvas ? _T("chrt_icn") : _T("notepad_icn")));
 #endif
 	subframe->Centre(wxBOTH);
 	m_frame = subframe;
 	m_frame->Show(true);
-#else
-	m_frame = static_cast<MyApp*>(wxTheApp)->GetMainFrame();
-#endif
 	SetFrame(m_frame);
 	m_splitter = new wxSplitterWindow(m_frame, wxID_ANY, wxDefaultPosition, wxDefaultSize,
 		wxSP_3D | wxSP_LIVE_UPDATE | wxCLIP_CHILDREN /* | wxSP_NO_XP_THEME */ );
@@ -49,13 +46,7 @@ PdfExplorerView::~PdfExplorerView()
 bool PdfExplorerView::OnCreate(wxDocument *doc, long WXUNUSED(flags) )
 {
 	wxTrace("PdfExplorerView::OnCreate");
-
-	m_splitter->SetSize(m_frame->GetClientSize());
-
-	// Make sure the document manager knows that this is the
-	// current view.
 	Activate(true);
-
 	return true;
 }
 
@@ -75,17 +66,6 @@ void PdfExplorerView::OnUpdate(wxView *WXUNUSED(sender), wxObject *WXUNUSED(hint
 bool PdfExplorerView::OnClose(bool deleteWindow)
 {
 	wxTrace("PdfExplorerView::OnClose");
-	if (!GetDocument()->Close())
-		return false;
-
-	wxString s(wxTheApp->GetAppName());
-	if (m_frame)
-		m_frame->SetTitle(s);
-
-	SetFrame((wxFrame *) NULL);
-
-	Activate(false);
-
 	return true;
 }
 
