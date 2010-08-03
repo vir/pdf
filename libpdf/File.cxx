@@ -200,14 +200,15 @@ long File::get_first_xreftable_offset()
 	return atol(p);
 }
 
-void File::dump() const
+void File::dump(std::ostream & s) const
 {
-  std::clog << "Xref table for " << filename << std::endl;
-  xref_table.dump(std::clog);
-  for(unsigned int i = 0; i < root_refs.size(); i++)
-  {
-    std::clog << "Root Element: (" << root_refs[i].num << "," << root_refs[i].gen << ")" << std::endl;
-  }
+	s << "File: " << filename << " Version: " << version() << std::endl;
+	if(m_security)
+		s << "Security handler present" << std::endl;
+	s << "Xref table:" << std::endl;
+	xref_table.dump(s);
+	for(unsigned int i = 0; i < root_refs.size(); i++)
+		s << "Root Element " << i << ": " << root_refs[i].dump() << std::endl;
 }
 
 /// Read segment of "xref table"

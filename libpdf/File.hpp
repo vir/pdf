@@ -139,7 +139,7 @@ class File
     bool open(std::string fname="");
     bool close();
     bool load();
-    void dump() const;
+	void dump(std::ostream & s) const;
 		SecHandler * security() { return m_security; };
     
     Object * load_object(const ObjId & oi, bool decrypt = true);
