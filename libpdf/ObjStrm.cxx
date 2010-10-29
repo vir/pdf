@@ -244,7 +244,29 @@ std::vector<char> ObjIStream::read_o_string()
 					case 'r': c = '\r'; break;
 					case 'b': c = '\x08'; break;
 					case '(': case ')': case '\\': break;
-					default: std::cerr << "Unknown escaped char " << c << std::endl; break;
+					default:
+						if(c >= '0' && c < '8') {
+							// read 3 octal digits
+							char buf[4];
+							buf[0] = c;
+							if(!IsOctalDigit(c = f->peek())) {
+								std::cerr << "Invalid octal digit " << c << std::endl;
+								break;
+							}
+							buf[1] = f->get();
+							if(!IsOctalDigit(c = f->peek())) {
+								std::cerr << "Invalid octal digit " << c << std::endl;
+								break;
+							}
+							buf[2] = f->get();
+							buf[3] = '\0';
+							int t;
+							sscanf(buf, "%o", &t);
+							c = (char)t;
+							break;
+						}
+						std::cerr << "Unknown escaped char " << c << std::endl;
+						break;
 				}
 			} else {
 				switch(c) {
@@ -355,6 +377,8 @@ std::streambuf::int_type StreamBuffer::underflow()
 ObjectStream::ObjectStream(Stream * s): m_sis(new StreamBuffer(s, true)), m_ois(m_sis, false)
 {
 	Dictionary * d = s->get_dict();
+	if(d->find("Extends"))
+		throw UnimplementedException("ObjectStream 'Extends' feature");
 	d->find("N")->to_number(m_objsnum);
 	unsigned long first_offset;
 	d->find("First")->to_number(first_offset);

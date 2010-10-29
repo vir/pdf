@@ -65,6 +65,7 @@ class ObjIStream
 		Object * read_o_chars();
 		Object * read_delimited(const ObjId * decrypt_info = NULL);
 		Object * read_direct_object(const ObjId * decrypt_info);
+		bool IsOctalDigit(char c) { return c >= '0' && c < '8'; }
 	public:
 		ObjIStream(std::istream & sref, bool want_throw_eof = true):f(&sref),ownstream(false),sechandler(NULL),will_throw_eof(want_throw_eof),will_allow_keywords(false) { }
 		ObjIStream(Stream * object_stream):f(new std::istream(new StreamBuffer(object_stream))), ownstream(true), sechandler(NULL), will_throw_eof(false), will_allow_keywords(false) { }
