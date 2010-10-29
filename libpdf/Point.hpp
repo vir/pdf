@@ -27,6 +27,7 @@ class Point
 		Point & operator-=(const Point & p) { x-=p.x; y+=p.y; return *this; }
 		Point operator-(const Point & p) { return Point(x - p.x, y - p.y); }
     bool operator < (const Point & p) const { return (y == p.y)?x<p.x:y<p.y; }
+	bool operator == (const Point & p) const { return x == p.x && y == p.y; }
 };
   
 };
