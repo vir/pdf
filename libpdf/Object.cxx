@@ -57,12 +57,12 @@ unsigned int Stream::slength() const
 }
 
 /// Fetches unencoded stream data
-bool Stream::get_data(std::vector<char> & buf)
+bool Stream::get_data(std::vector<char> & buf, bool decrypt)
 {
 	Object * o;
 
 	m_data.resize(slength());
-	ostrm->read_chunk(soffset, &m_data[0], m_data.size(), m_id.num, m_id.gen);
+	ostrm->read_chunk(soffset, &m_data[0], m_data.size(), decrypt?m_id.num:0, decrypt?m_id.gen:0);
 
 	if(!(o = dict->find("Filter"))) {
 		std::cerr << "no filter in stream object" << std::endl;

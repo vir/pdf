@@ -253,7 +253,7 @@ class Stream:public Object // All streams must be indirect objects
     }
 		const Dictionary * get_dict() const { return dict; }
 		Dictionary * get_dict() { return dict; }
-    bool get_data(std::vector<char> & buf);
+    bool get_data(std::vector<char> & buf, bool decrypt = true);
     std::string value()
     {
       std::vector<char> v;

@@ -301,7 +301,7 @@ void File::read_xref_stream(Stream * s)
 
 	// Load xref table
 	std::vector<char> buf;
-	s->get_data(buf);
+	s->get_data(buf, false);
 
 	for(unsigned int pos = 0; pos < buf.size(); pos += rowsize) {
 		std::vector<unsigned long> row;
