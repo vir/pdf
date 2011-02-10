@@ -81,7 +81,7 @@ bool File::load()
 			o = strm.read_indirect_object(false);
 			Stream * s = dynamic_cast<Stream *>(o);
 			if(!s)
-				throw FormatException("Error reading xsref stream", xref_off);
+				throw FormatException("Error reading xref stream", xref_off);
 			read_xref_stream(s);
 			trailer = s->get_dict();
 			victim = s;
@@ -147,7 +147,10 @@ Object * File::load_object(const ObjId & oi, bool decrypt)
 	if(m_debug>1) std::clog << "Loading object " << oi.dump() << std::endl;
 	const XRefTable::Entry * xe = xref_table.find(oi);
 
-	if(xe->compressed)
+	if(xe->free())
+		return new FreeObjectPlaceholder;
+
+	if(xe->compressed())
 		return m_streams.load_object(xe->offset, xe->obj_stream_index);
 
 	long offset = xe->offset;
@@ -232,17 +235,24 @@ bool File::read_xref_table_part(long off)
 	//  std::clog << "First object in this table: " << objnum << ", number of objects: " << count << std::endl;
 	for(;count>0;count--,objnum++)
 	{
+		long linestart = file.tellg();
 		// XXX We can read 20byte chunks here!
 		std::getline(file, s, GETLINE_ENDL);
 		//std::clog << "XRef table line " << objnum << "/" << count << ": " << s << std::endl;
 		s.erase(0, s.find_first_not_of("\r\n\t "));
-		if(s.length() >= 17 && s[17] == 'n') // read unly "used" refs
-		{
-			ObjId oi;
-			oi.num=objnum;
-			oi.gen=atol(s.substr(11,5).c_str());
-			xref_table.insert_normal(oi, atol(s.substr(0,10).c_str()));
-		}
+		if(s.length() < 17)
+			throw FormatException("Too short line in xref table", linestart);
+		ObjId oi;
+		oi.num=objnum;
+		oi.gen=atol(s.substr(11,5).c_str());
+		unsigned long offset = atol(s.substr(0,10).c_str());
+
+		if(s[17] == 'n')
+			xref_table.insert_normal(oi, offset);
+		else if(s[17] == 'f')
+			xref_table.insert_empty(oi, offset);
+		else
+			throw FormatException("Unknown object type in xref", linestart);
 	}
 
 	return true;

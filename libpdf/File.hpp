@@ -28,11 +28,14 @@ class XRefTable
 public: // types
 	struct Entry
 	{
+		enum { Normal, Compressed, Free } type;
 		unsigned long offset;
 		unsigned int obj_stream_index;
-		bool compressed;
-		Entry(unsigned long off = 0):offset(off), obj_stream_index(0), compressed(false) { }
-		Entry(unsigned long objnum, unsigned int index):offset(objnum), obj_stream_index(index), compressed(true) { }
+		bool compressed() const { return type == Compressed; };
+		bool free() const { return type == Free; };
+		explicit Entry(): offset(0), obj_stream_index(0), type(Free) { }
+		Entry(unsigned long off):offset(off), obj_stream_index(0), type(Normal) { }
+		Entry(unsigned long objnum, unsigned int index):offset(objnum), obj_stream_index(index), type(Compressed) { }
 	};
 private:
 	std::map<ObjId, Entry> m_table;
@@ -52,17 +55,28 @@ public:
 		const Entry * e = find(oid);
 		if(!e)
 			return 0; // XXX may be throw somthing?
-		if(e->compressed)
+		if(e->free())
+			throw FreeObjectUsageException(oid.dump().c_str());
+		if(e->compressed())
 			throw UnimplementedException("Compressed objects streams");
 		return e->offset;
 	}
 	void dump(std::ostream & strm = std::clog) const
 	{
 		for(std::map<ObjId, Entry>::const_iterator it = m_table.begin(); it != m_table.end(); ++it) {
-			if(it->second.compressed)
-				strm << "  object (" << it->first.num << "," << it->first.gen << ") is in stream " << it->second.offset << ", index: " << it->second.obj_stream_index << std::endl;
-			else
-				strm << "  object (" << it->first.num << "," << it->first.gen << ") is at " << it->second.offset << std::endl;
+			strm << "  object (" << it->first.num << "," << it->first.gen << ") is ";
+			switch(it->second.type) {
+			case Entry::Free:
+				strm << "a free object";
+				break;
+			case Entry::Compressed:
+				strm << "in stream " << it->second.offset << ", index: " << it->second.obj_stream_index;
+				break;
+			case Entry::Normal:
+				strm << "at " << it->second.offset << std::endl;
+				break;
+			}
+			strm << std::endl;
 		}
 	}
 	void insert_normal(const ObjId & objid, unsigned long offset)
@@ -71,7 +85,7 @@ public:
 	}
 	void insert_empty(const ObjId & objid, unsigned long offset)
 	{
-		// we currently ignore free objects lists
+		m_table[objid] = Entry();
 	}
 	void insert_compressed(const ObjId & objid, unsigned long stream_id, unsigned int index)
 	{
@@ -147,7 +161,15 @@ class File
     /// returns number of root element references found in file
     long generations_num() const { return root_refs.size(); }
     /// returns root object id for a given generation
-    const ObjId & get_root(long generation=0) const { return root_refs[generation]; }
+	const ObjId & get_root(long generation=0) const
+	{
+		try {
+			return root_refs[generation];
+		}
+		catch(...) {
+			throw FormatException("No root references");
+		}
+	}
 };
 
 

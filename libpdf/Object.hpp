@@ -19,11 +19,23 @@ namespace PDF {
 /// Indirect object identifier
 class ObjId
 {
+	static const long gen_wildcard = 65535;
 	public:
 		long num, gen;
 //		ObjId(long n=0, long g=0):num(n),gen(g) {}
-		bool operator ==(const ObjId & other) const { return (num==other.num) && (gen==other.gen); }
-		bool operator <(const ObjId & other) const { return (num==other.num)?gen<other.gen:num<other.num; }
+		bool operator ==(const ObjId & other) const
+		{
+			return (num==other.num)
+				&& ((gen==other.gen) || gen == gen_wildcard || other.gen == gen_wildcard);
+		}
+		bool operator <(const ObjId & other) const
+		{
+			if(num==other.num)
+				return (!(gen == gen_wildcard || other.gen == gen_wildcard))
+					&& gen<other.gen;
+			else
+				return num<other.num;
+		}
 		void dump(std::ostream & ss) const { ss << "(" << (int)num << "," << (int)gen << ")"; }
 		std::string dump() const { std::stringstream ss; dump(ss); return ss.str(); }
 };
@@ -277,6 +289,17 @@ class ObjRef:public Object
     {
       ss << "ObjRef" << dump_objattr() << "(" << m_ref.num << "," << m_ref.gen << ")";
     }
+};
+
+/// PDF Psewdo-object: Reference to an Indirect object.
+class FreeObjectPlaceholder:public Object
+{
+public:
+	FreeObjectPlaceholder() {  }
+	virtual void dump(std::ostream & ss, int level=0) const
+	{
+		ss << "FreeObject" << dump_objattr();
+	}
 };
 
 /// PDF Psewdo-object: Keyword in some internal structures

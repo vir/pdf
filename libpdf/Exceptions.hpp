@@ -64,6 +64,16 @@ public:
     }
 };
 
+class FreeObjectUsageException:public std::exception
+{
+public:
+	FreeObjectUsageException(const char * s):std::exception(s) { }
+	virtual const char * what() throw()
+	{
+		return (std::string("Usage of free object: ") + std::exception::what()).c_str();
+	}
+};
+
 }; // namespace PDF
 
 
