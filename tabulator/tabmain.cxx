@@ -39,7 +39,7 @@ int main(int argc, char * argv[])
 	while(1)
 	{
 		int c;
-		c = getopt(argc, argv, "hp:r:c:R:f:PE:J");
+		c = getopt(argc, argv, "hp:r:c:R:S:f:PE:J");
 		if(c == -1) break;
 		switch(c)
 		{
@@ -63,6 +63,9 @@ int main(int argc, char * argv[])
 				exit(1);
 			case 'R':
 				t.options.find_more_rows_column = atoi(optarg);
+				break;
+			case 'S':
+				t.options.split_columns.push_back(atoi(optarg));
 				break;
 			case 'f':
 				format = *optarg;
@@ -186,12 +189,13 @@ int main(int argc, char * argv[])
 void help(std::ostream & s)
 {
 	s << "Usage: rot [options] file.pdf" << std::endl
-	  << "Options:" << std::endl
-	  << "\t-h or --help --- this help" << std::endl
-	  << "\t-pN-M or -p NNN or --page NN-MM --- pages to process" << std::endl
-	  << "\t-rR --- rotate page R*90degree CCW before processing" << std::endl
-	  << "\t-cXXXX --- UNIMPLEMENTED crop rectangle" << std::endl
+		<< "Options:" << std::endl
+		<< "\t-h or --help --- this help" << std::endl
+		<< "\t-pN-M or -p NNN or --page NN-MM --- pages to process" << std::endl
+		<< "\t-rR --- rotate page R*90degree CCW before processing" << std::endl
+		<< "\t-cXXXX --- UNIMPLEMENTED crop rectangle" << std::endl
 		<< "\t-R COL --- add rows by looking at text in col COL (1...n), 0 - disable" << std::endl
+		<< "\t-S COL --- try to split column COL with vertical line" << std::endl
 		<< "\t-f F --- set output format to F: c h e" << std::endl
 		<< "\t-P --- postprocess table - use if got many W O R D S W I T H S P A C E S" << std::endl
 		<< "\t-E PARAMS --- set exporter-specific params" << std::endl

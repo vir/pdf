@@ -43,6 +43,7 @@ class Tabulator
 		class TextBlock
 		{
 			public:
+				static bool debug;
 				PDF::Point pos;
 				std::wstring text;
 				double width;
@@ -52,11 +53,13 @@ class Tabulator
 				bool merge_ok(const TextBlock & oth) const;
 				TextBlock operator +(const TextBlock & oth) const;
 				bool operator <  (const TextBlock & oth) const { int r = Coord::compare(pos.y, oth.pos.y); return r?(r < 0):(pos.x < oth.pos.x); }
-				bool operator == (const TextBlock & oth) const { return pos < oth.pos; }
+				//bool operator == (const TextBlock & oth) const { return pos < oth.pos; }
+				bool operator == (const TextBlock & oth) const { return Coord::compare(pos.y, oth.pos.y) == 0 && Coord::compare(pos.x, oth.pos.x) == 0 && text == oth.text; }
 				TextBlock & operator = (const TextBlock & oth) { pos = oth.pos; text = oth.text; width = oth.width; height = oth.height; angle = oth.angle; return *this; }
 				TextBlock():width(0),height(0),angle(0) {}
 				TextBlock(const PDF::Point & p, std::wstring s):pos(p),text(s),width(0),height(0),angle(0) {}
 				TextBlock(const PDF::Point & p, double a, std::wstring s, double w, double h):pos(p),text(s),width(w),height(h),angle(a) {}
+				std::string dump() const;
 		};
 		/** Abstract surface on which PDF page will be drawn */
 		class Metafile:public PDF::Media
@@ -95,26 +98,36 @@ class Tabulator
 					public:
 						Line() {}
 						Line(unsigned int size, bool defval = false):std::vector<bool>(size, defval) {}
-						void set_bits(unsigned int b1, unsigned int b2)
+						void set_bits(unsigned int b1, unsigned int b2, bool value = true)
 						{
-							for(unsigned int i = b1; i <= b2; i++) { at(i) = true; }
+							for(unsigned int i = b1; i <= b2; i++) { at(i) = value; }
 						}
 						std::string dump() const;
 				};
+				struct {
+					double bottom;
+				} margins;
 				typedef std::map< Coord, Line > KnotsMap;
 				typedef KnotsMap::const_iterator KnotsIterator;
 				KnotsMap h_knots, v_knots;
 				double headers_end; /**< y coord of line, dividing headers and body */
 				Grid():headers_end(-1E10) {}
 				void build(const Metafile * mf);
-				unsigned int find_col(double x) const;
-				unsigned int find_row(double y) const;
+				int find_col(double x) const;
+				int find_row(double y) const;
 				std::string dump() const;
 				void clear() {
 					h_knots.clear();
 					v_knots.clear();
 					headers_end = -1E10;
 				}
+				void split_column(unsigned int col, double x);
+				bool auto_split_column(unsigned int col, const Tabulator::Metafile * mf);
+				void add_horizontal_line(double y)
+				{
+					KnotsMap::iterator iit = v_knots.insert(KnotsMap::value_type(y, Line(h_knots.size()-1, true))).first;
+				}
+
 		};
 		/** Table of cells */
 		class Table
@@ -184,17 +197,19 @@ class Tabulator
 				void clear();
 				std::string dump() const;
 		};
-	public:
-		Metafile metafile;
-		Grid grid;
-		Table table;
 		struct Options {
 			bool find_table_header;
 			unsigned int find_more_rows_column;
 			bool postprocess;
 			bool find_joined_cells;
+			std::vector<int> split_columns;
 			Options():find_table_header(true),find_more_rows_column(0),postprocess(false),find_joined_cells(true) { }
-		} options;
+		};
+	public:
+		Metafile metafile;
+		Grid grid;
+		Table table;
+		Options options;
 		void set_tolerance(double tx, double ty);
 		void flush() { metafile.Clear(); grid.clear(); table.clear(); }
 		void load_page(PDF::Page * page);
@@ -207,6 +222,7 @@ class Tabulator
 
     Tabulator() {  }
     virtual ~Tabulator()   {  };
+	static bool debug;
 };
 
 
