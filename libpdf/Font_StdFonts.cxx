@@ -29,7 +29,7 @@ void load_stdfont_widths_table(std::map<int, unsigned long> & charwidths, std::s
 			return;
 		}
 	} // for all fonts
-	std::cerr << "Can not found widths array for standard font " << basefont << std::cerr;
+	std::cerr << "Can not find widths array for standard font " << basefont << std::endl;
 }
 
 
