@@ -186,7 +186,7 @@ bool Font::extract_text(const String * so, std::wstring & ws, double & twid, uns
 	return false;
 }
 
-bool Font::extract_one_char(const String * so, std::wstring & ws, double & twid, unsigned int & pos) const
+bool Font::extract_one_char(const String * so, wchar_t & nextchar, double & charwidth, unsigned int & pos) const
 {
 	// Get glyph index
 	unsigned long c=0;
@@ -199,15 +199,13 @@ bool Font::extract_one_char(const String * so, std::wstring & ws, double & twid,
 
 	// Get glyph width
 	std::map<int, unsigned long>::const_iterator it = charwidths.find(c);
-	twid += ((it != charwidths.end()) ? it->second : defcharwidth)/1000.0;
+	charwidth = ((it != charwidths.end()) ? it->second : defcharwidth)/1000.0;
 
 	// Convert to unicode
-	wchar_t res = to_unicode(c);
-	if(res) {
-		ws+=res;
-	} else {
+	nextchar = to_unicode(c);
+	if(!nextchar) {
 		fprintf(stderr, "Can not translate char %04lX (font: %s)\n", c, fontname.c_str());
-		ws+=L'@';
+		nextchar = L'@';
 	}
 	return true;
 }
