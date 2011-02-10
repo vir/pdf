@@ -34,6 +34,7 @@ std::string Object::type() const
   OBJECT_TYPE_ID_TRY(ObjRef);
   OBJECT_TYPE_ID_TRY(Keyword);
   OBJECT_TYPE_ID_TRY(FreeObjectPlaceholder);
+  OBJECT_TYPE_ID_TRY(MissingObjectPlaceholder);
   OBJECT_TYPE_ID_TRY(Object);
   return "Somthing strange";
 }

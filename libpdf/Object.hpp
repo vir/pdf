@@ -291,15 +291,20 @@ class ObjRef:public Object
     }
 };
 
-/// PDF Psewdo-object: Reference to an Indirect object.
+/// Placeholder for an free object identifier. Should not appear if all is good.
 class FreeObjectPlaceholder:public Object
 {
 public:
-	FreeObjectPlaceholder() {  }
-	virtual void dump(std::ostream & ss, int level=0) const
-	{
-		ss << "FreeObject" << dump_objattr();
-	}
+	FreeObjectPlaceholder() { }
+	virtual void dump(std::ostream & ss, int level=0) const { ss << "FreeObject" << dump_objattr(); }
+};
+
+/// Placeholder for a missing object. May appear in totally broken PDF only.
+class MissingObjectPlaceholder:public Object
+{
+public:
+	MissingObjectPlaceholder() { }
+	virtual void dump(std::ostream & ss, int level=0) const { ss << "MissingObject" << dump_objattr(); }
 };
 
 /// PDF Psewdo-object: Keyword in some internal structures
