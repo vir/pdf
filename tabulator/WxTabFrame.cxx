@@ -28,7 +28,7 @@ class PageNumCtrl:public wxTextCtrl
 			wxString backup = wxTextCtrl::GetValue();
 			long tmp;
 			if( event.GetKeyCode() < 32 || event.GetKeyCode() == 127 || event.GetKeyCode() > 256) event.Skip();
-			if( !isdigit( event.GetKeyCode() ) ) return;
+			if( event.GetKeyCode() > 255 || !isdigit( event.GetKeyCode() ) ) return;
 //			EmulateKeyPress(event); // causes infinite recursion on win32
 			event.Skip();
 			wxString newval = wxTextCtrl::GetValue();
@@ -314,6 +314,11 @@ void WxTabFrame::OnMenuGo(wxCommandEvent &event)
 void WxTabFrame::OnPageNumChanged(wxCommandEvent &event)
 {
 	int v = m_pagenum->GetValue();
+	if(v > theDocument->GetPagesNum()) {
+		v = theDocument->GetPagesNum();
+		m_pagenum->SetValue(v);
+	}
+	
 	theDocument->LoadPage(v);
 	std::clog << "Page switched to " << v << std::endl;
 	m_pagenum->SetValue(v);
