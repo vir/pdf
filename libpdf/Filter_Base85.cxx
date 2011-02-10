@@ -52,7 +52,7 @@ class b85dh
 				for(i = ql+1; i < 5; i++, q*=85) ;
 			}
 			for(ql-=2, i = 24; ql >= 0; ql--, i-=8) {
-				v.push_back(q>>i);
+				v.push_back(char(q>>i));
 			}
 			q = 0; ql = 0;
 		}
