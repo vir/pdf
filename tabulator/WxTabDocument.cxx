@@ -138,13 +138,25 @@ bool WxTabDocument::LoadPage(int num)
 {
 	if(page) delete page;
 	try {
+		if(num <= 0)
+			num = 1;
+		if((unsigned int)num > doc->get_pages_count())
+			num = doc->get_pages_count();
 		page = new PDF::Page();
 		page->debug(5);
 		std::clog << "Loading " << num << "th page" << std::endl;
 		page->load(doc->get_page_node(num-1));
 		std::clog << page->dump() << std::endl;
 		m_cur_page_num = num;
-		tabulator.full_process(page);
+		try {
+			tabulator.full_process(page);
+		}
+		catch(std::exception & e) {
+			wxMessageBox(wxString(e.what(), wxConvUTF8), wxT("Exception"));
+		}
+		catch(...) {
+			wxMessageBox(wxT("Unknown exception"), wxT("Exception"));
+		}
 		return true;
 	}
   catch(std::string s) {
