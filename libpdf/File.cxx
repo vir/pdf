@@ -64,75 +64,10 @@ bool File::load()
 
 	// load xref table
 	long xref_off = get_first_xreftable_offset();
-	while(xref_off)
-	{
-		Object * o;
-		Dictionary * trailer = NULL;
-		Object * victim = NULL; // Will be delete()d after segment is read
-		file.seekg(xref_off);
-		if(file.peek() == 'x') { // Normal xref table
-			if(m_debug)
-				std::clog << "Xref table is at " << xref_off << "\n";
-			read_xref_table_part(xref_off);
-			if(m_debug)
-				std::clog << "Reading trailer at " << file.tellg() << "\n";
-			victim = trailer = read_trailer();
-		} else {
-			o = strm.read_indirect_object(false);
-			Stream * s = dynamic_cast<Stream *>(o);
-			if(!s)
-				throw FormatException("Error reading xref stream", xref_off);
-			read_xref_stream(s);
-			trailer = s->get_dict();
-			victim = s;
-		}
-		//    trailer->dump();
-
-		if(( o=trailer->find("Root") ))
-		{
-			ObjRef * ref = dynamic_cast<ObjRef *>(o);
-			if(!ref)
-				throw FormatException("Root must be an Indirect Reference", xref_off);
-			root_refs.push_back(ref->ref());
-		}
-
-		if(( o = trailer->find("ID") )) {
-			Array * a = dynamic_cast<Array *>(o);
-			if(!a)
-				throw FormatException("'ID' trailer entry must be an array of strings");
-			load_file_ids(a);
-		}
-
-		if(( o = trailer->find("Encrypt") )) {
-			bool need_destroy = false;
-			Dictionary * d = dynamic_cast<Dictionary *>(o);
-			if(!d) { // may be it is a ObjRef
-				ObjRef * ref = dynamic_cast<ObjRef *>(o);
-				if(ref) {
-					o = load_object(ref->ref(), false);
-					d = dynamic_cast<Dictionary *>(o);
-					need_destroy = true;
-				}
-			}
-			if(!d)
-				throw FormatException("Can not find 'Encrypt' dictionary");
-
-			delete m_security;
-			m_security = SecHandler::create(d, this);
-			strm.set_security_handler(m_security);
-			if(need_destroy)
-				delete d;
-		}
-
-		if(( o = trailer->find("Prev") )) {
-			Integer * i = dynamic_cast<Integer *>(o);
-			if(!i)
-				throw FormatException("Invalid 'Prev' type in xref table trailer");
-			xref_off = i->value();
-		} else
-			xref_off = 0; // break out of the loop
-		delete victim;
-	} // for each xref table segment
+	if(xref_off)
+		LoadXRefTable(xref_off);
+	else
+		ReconstructXRefTable();
 	return true;
 }
 
@@ -146,6 +81,9 @@ Object * File::load_object(const ObjId & oi, bool decrypt)
 {
 	if(m_debug>1) std::clog << "Loading object " << oi.dump() << std::endl;
 	const XRefTable::Entry * xe = xref_table.find(oi);
+
+	if(!xe)
+		return new MissingObjectPlaceholder;
 
 	if(xe->free())
 		return new FreeObjectPlaceholder;
@@ -175,12 +113,21 @@ Object * File::load_object(const ObjId & oi, bool decrypt)
 // Returns version or empty string if not a PDF
 std::string File::check_header()
 {
-  if(!file.good()) { throw std::string("Bad file"); }
-  std::string line, version;
-  file.seekg(0, std::ios::beg);
+	if(!file.good())
+		throw std::string("Bad file");
+	std::string line, version;
+	file.seekg(0, std::ios::beg);
 	std::getline(file, line, GETLINE_ENDL);
-  if(line.substr(0,5) == "%PDF-") { version=line.substr(5,3); }
-  return version;
+	if(line.substr(0,5) == "%PDF-")
+		version=line.substr(5,3);
+	else
+		throw FormatException("No PDF header", 0);
+	// Find headers end in case wi will read linearised pdfs one day
+	do {
+		m_header_end_offset = file.tellg();
+		std::getline(file, line, GETLINE_ENDL);
+	} while(line[0] == '%');
+	return version;
 }
 
 // Returns first (last in file) xref table offset
@@ -215,11 +162,9 @@ void File::dump(std::ostream & s) const
 }
 
 /// Read segment of "xref table"
-/// \todo Read "unused" refs too?
-bool File::read_xref_table_part(long off)
+bool File::read_xref_table_part(bool try_recover)
 {
 	std::string s;
-	file.seekg(off, std::ios::beg);
 	std::getline(file, s, GETLINE_ENDL); // get 'xref' header
 	//  std::clog << "Read first xref header: " << s << std::endl;
 	if(s.substr(0, 4) != "xref") {
@@ -233,15 +178,21 @@ bool File::read_xref_table_part(long off)
 	sep=s.find_first_not_of(" \t", sep);
 	int count=atoi(s.substr(sep).c_str());
 	//  std::clog << "First object in this table: " << objnum << ", number of objects: " << count << std::endl;
-	for(;count>0;count--,objnum++)
+	for(; count>0 && !file.eof(); count--, objnum++)
 	{
 		long linestart = file.tellg();
 		// XXX We can read 20byte chunks here!
 		std::getline(file, s, GETLINE_ENDL);
 		//std::clog << "XRef table line " << objnum << "/" << count << ": " << s << std::endl;
 		s.erase(0, s.find_first_not_of("\r\n\t "));
-		if(s.length() < 17)
-			throw FormatException("Too short line in xref table", linestart);
+		if(s.length() < 17) {
+			if(!try_recover)
+				throw FormatException("Too short line in xref table", linestart);
+			else {
+				std::cerr << "Ignoring too short line in xref table at " << linestart << std::endl;
+				continue;
+			}
+		}
 		ObjId oi;
 		oi.num=objnum;
 		oi.gen=atol(s.substr(11,5).c_str());
@@ -251,8 +202,12 @@ bool File::read_xref_table_part(long off)
 			xref_table.insert_normal(oi, offset);
 		else if(s[17] == 'f')
 			xref_table.insert_empty(oi, offset);
-		else
-			throw FormatException("Unknown object type in xref", linestart);
+		else {
+			if(!try_recover)
+				throw FormatException("Unknown object type in xref", linestart);
+			else
+				std::cerr << "Ignoring unknown object type in xref " << linestart << std::endl;
+		}
 	}
 
 	return true;
@@ -375,6 +330,146 @@ void File::load_file_ids(const Array * a)
 			continue;
 		m_file_ids.push_back( s->str() );
 	}
+}
+
+long File::LoadXRefTable( long xref_off, bool try_recover )
+{
+	while(xref_off)
+	{
+		Object * o;
+		Dictionary * trailer = NULL;
+		Object * victim = NULL; // Will be delete()d after segment is read
+		file.seekg(xref_off);
+		while(isspace(file.peek()))
+			file.ignore();
+		if(file.eof()) {
+			if(try_recover) {
+				std::cerr << "Ignoring EOF in XRef table" << std::endl;
+				break;
+			} else
+				throw FormatException("EOF in XRef table", xref_off);
+		}
+		if(file.peek() == 'x') { // Normal xref table
+			if(m_debug)
+				std::clog << "Xref table is at " << xref_off << "\n";
+			read_xref_table_part(try_recover);
+			if(m_debug)
+				std::clog << "Reading trailer at " << file.tellg() << "\n";
+			try {
+				victim = trailer = read_trailer();
+			}
+			catch(...) {
+				if(try_recover) {
+					std::cerr << "Error reading trailer, ignoring" << std::endl;
+					victim = trailer = NULL;
+				} else
+					throw;
+			}
+		} else {
+			o = strm.read_indirect_object(false);
+			Stream * s = dynamic_cast<Stream *>(o);
+			if(!s)
+				throw FormatException("Error reading xref stream", xref_off);
+			read_xref_stream(s);
+			trailer = s->get_dict();
+			victim = s;
+		}
+		if(!trailer) // may occur in recover mode
+			continue;
+		//    trailer->dump();
+
+		if(( o=trailer->find("Root") ))
+		{
+			ObjRef * ref = dynamic_cast<ObjRef *>(o);
+			if(!ref)
+				throw FormatException("Root must be an Indirect Reference", xref_off);
+			root_refs.push_back(ref->ref());
+		}
+
+		if(( o = trailer->find("ID") )) {
+			Array * a = dynamic_cast<Array *>(o);
+			if(!a)
+				throw FormatException("'ID' trailer entry must be an array of strings");
+			load_file_ids(a);
+		}
+
+		if(( o = trailer->find("Encrypt") )) {
+			bool need_destroy = false;
+			Dictionary * d = dynamic_cast<Dictionary *>(o);
+			if(!d) { // may be it is a ObjRef
+				ObjRef * ref = dynamic_cast<ObjRef *>(o);
+				if(ref) {
+					o = load_object(ref->ref(), false);
+					d = dynamic_cast<Dictionary *>(o);
+					need_destroy = true;
+				}
+			}
+			if(!d)
+				throw FormatException("Can not find 'Encrypt' dictionary");
+
+			delete m_security;
+			m_security = SecHandler::create(d, this);
+			strm.set_security_handler(m_security);
+			if(need_destroy)
+				delete d;
+		}
+
+		if(( o = trailer->find("Prev") )) {
+			Integer * i = dynamic_cast<Integer *>(o);
+			if(!i)
+				throw FormatException("Invalid 'Prev' type in xref table trailer");
+			xref_off = i->value();
+		} else
+			xref_off = 0; // break out of the loop
+		delete victim;
+	} // for each xref table segment
+	return xref_off;
+}
+
+void File::ReconstructXRefTable()
+{
+	std::fstream::pos_type objstart = m_header_end_offset;
+	std::cerr << "Trying to reconstruct missing XRef table" << std::endl;
+	file.seekg(objstart);
+	// Here should be linearization dictionary
+	Object * o = strm.read_indirect_object(false);
+	Dictionary * lindict = dynamic_cast<Dictionary *>(o);
+	if(lindict && lindict->find("Linearized")) {
+		std::clog << "Found Linearization dictionary, good" << std::clog;
+		// Load "first page xref table" and may be some parts of other(s)
+		std::fstream::pos_type xreftablestart = file.tellg();
+		LoadXRefTable(file.tellg(), true);
+
+#if 0
+		Integer * offs;
+		if(lindict->find("T", offs)) {
+			// In case of "normal" table, T points to fitsh table row, tot to "xref"
+			// But in case of srefstream we can grt somthing useful here...
+			// XXX TODO LoadXRefTable(offs->value(), true);
+		}
+#endif
+		// LoadXRefTable may reposition file anywhere
+		file.seekg(xreftablestart);
+
+		// Skip all linearization stuff
+		std::string line;
+		do {
+			std::getline(file, line, GETLINE_ENDL);
+		} while(line.substr(0, 5) != "%%EOF" && !file.eof());
+	} // if linearized
+
+	unsigned int count = 0;
+	try {
+		while(o) {
+			xref_table.insert_normal(o->m_id, objstart);
+			delete o;
+			++count;
+			objstart = file.tellg();
+			o = strm.read_indirect_object(true);
+		}
+	}
+	catch(...) { }
+	std::clog << "XRef table recovery: found " << count << " objects" << std::endl;
 }
 
 Object * ObjectStreamsCache::load_object(long obj_stream_num, unsigned int obj_stream_index)

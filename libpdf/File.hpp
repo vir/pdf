@@ -116,7 +116,6 @@ class ObjectStreamsCache
  */
 class File
 {
-//	friend class Object;
   private:
     std::string filename;
     std::fstream file;
@@ -132,11 +131,12 @@ class File
 		SecHandler * m_security;
 		std::vector< std::string > m_file_ids;
 		ObjectStreamsCache m_streams;
+		std::fstream::pos_type m_header_end_offset;
   protected:
     long offset_lookup(const ObjId & oi) const;
     std::string check_header();
     long get_first_xreftable_offset();
-    bool read_xref_table_part(long off);
+    bool read_xref_table_part(bool try_recover = false);
 		void read_xref_stream(Stream * s);
     Dictionary * read_trailer();
     void load_xref_table();
@@ -153,6 +153,9 @@ class File
     bool open(std::string fname="");
     bool close();
     bool load();
+
+	long LoadXRefTable( long xref_off, bool try_recover = false );
+
 	void dump(std::ostream & s) const;
 		SecHandler * security() { return m_security; };
     
@@ -163,13 +166,11 @@ class File
     /// returns root object id for a given generation
 	const ObjId & get_root(long generation=0) const
 	{
-		try {
-			return root_refs[generation];
-		}
-		catch(...) {
+		if(root_refs.empty())
 			throw FormatException("No root references");
-		}
+		return root_refs[generation];
 	}
+	void ReconstructXRefTable();
 };
 
 
