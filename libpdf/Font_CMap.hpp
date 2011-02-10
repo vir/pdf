@@ -18,7 +18,7 @@ class Font::CMap
 				Range(long l1, long l2, wchar_t wc):begin(l1),end(l2),res(wc) {}
 				bool load(ObjIStream & s);
 				bool yours(long c) const { return(c>=begin && c<=end); }
-				wchar_t map(long c) const { return res+(c-begin); }
+				wchar_t map(long c) const { return wchar_t(res+(c-begin)); }
 		};
 		std::map<long,wchar_t> charmap;
 		std::vector<Range> charranges;
