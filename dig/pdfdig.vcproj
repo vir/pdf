@@ -92,7 +92,7 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)Output$(ConfigurationName)"
+			OutputDirectory="$(SolutionDir)Output$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
 			CharacterSet="1"
@@ -136,6 +136,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="Comdlg32.lib comctl32.lib rpcrt4.lib winmm.lib wsock32.lib zdll.lib libpdf.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="$(OutDir)"
 				GenerateDebugInformation="true"
