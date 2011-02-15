@@ -46,12 +46,21 @@ class FormatException:public std::exception
 /// Error in document structure
 class DocumentStructureException:public std::exception
 {
-  private:
+  protected:
     std::string msg;
   public:
     DocumentStructureException(std::string s="") throw() :msg(s) { }
     virtual ~DocumentStructureException() throw() {}
     virtual const char * what() throw() { return (std::string("DocStrucErr: ")+msg).c_str(); }
+    DocumentStructureException& operator << (const std::string& s) { msg += s; return *this; }
+    DocumentStructureException& operator << (const char * s) { msg += s; return *this; }
+};
+
+class InvalidNodeTypeException: public DocumentStructureException
+{
+public:
+	InvalidNodeTypeException(std::string s="") throw() :DocumentStructureException(s) { }
+	virtual const char * what() throw() { return (std::string("NodeTypeErr: ")+msg).c_str(); }
 };
 
 class UnimplementedException:public std::exception

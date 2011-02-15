@@ -11,6 +11,7 @@
 #include <map>
 #include "Object.hpp"
 #include "ObjectsCache.hpp"
+#include "Exceptions.hpp"
 
 namespace PDF {
 
@@ -56,7 +57,8 @@ class OH
     template<typename T> T cast(std::string errstr="") const
     {
       T r=dynamic_cast<T>(m_ptr);
-      if(!errstr.empty() && !r) throw errstr;
+      if(!errstr.empty() && !r)
+          throw InvalidNodeTypeException(errstr);
       return r;
     }
     /// returns handle to child object
@@ -84,7 +86,7 @@ class OH
     {
       Dictionary * d=dynamic_cast<Dictionary*>(m_ptr);
 			if(!d)
-				throw std::string("Can't 'find' - ") + m_ptr->type() + " is not a dictionary";
+				throw InvalidNodeTypeException("Can't 'find' - ") << m_ptr->type() << " is not a dictionary";
       OH r(m_cache, d->find(s));
 			if(autoexpand)
 				r.expand();
@@ -130,9 +132,12 @@ class OH
 		{
 			pp = dynamic_cast<T*>(m_ptr);
 			if(!pp) {
-				if(errstr.length())
-					throw (errstr[errstr.length()-1]==' ')?errstr + m_ptr->type():errstr;
-				else
+				if(errstr.length()) {
+					InvalidNodeTypeException e(errstr);
+					if(errstr[errstr.length()-1]==' ')
+						e << m_ptr->type();
+					throw e;
+				} else
 					return false;
 			}
 			return true;
