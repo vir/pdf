@@ -135,6 +135,10 @@ bool Font::CMap::load(OH cmapnode)
 {
 	if(!cmapnode)
 		return false;
+	Name * name;
+	if(cmapnode.put(name)) {
+		return load(name->value());
+	}
 	Stream * map_stream;
 	cmapnode.put(map_stream, "CMap is not a Stream Object: ");
 	std::vector<char> tv;
@@ -145,6 +149,18 @@ bool Font::CMap::load(OH cmapnode)
 	strm.throw_eof(false);
 	strm.allow_keywords(true);
 	return load(strm);
+}
+
+/// Load named CMap
+bool Font::CMap::load( std::string & s )
+{
+	if(s == "Identity-H" || s == "Identity-V") {
+		charmap.clear();
+		charranges.clear();
+		charbytes = 2;
+		m_identity = true;
+	} else
+		throw UnimplementedException("Named CMaps (other than Identity)");
 }
 
 wchar_t Font::CMap::map(unsigned long c, bool no_fallback) const

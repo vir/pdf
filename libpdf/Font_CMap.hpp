@@ -22,19 +22,23 @@ class Font::CMap
 		};
 		std::map<long,wchar_t> charmap;
 		std::vector<Range> charranges;
+		bool m_identity;
 		unsigned int charbytes;
 		unsigned int load_codespacerange(ObjIStream & s);
 		bool load_bfchar(ObjIStream & s);
 		bool load_bfrange(ObjIStream & s);
 	public:
-		CMap():charbytes(1) {}
+		CMap():charbytes(1),m_identity(false) {}
 		~CMap() {}
 		bool load(ObjIStream & s);
+		bool load(std::string & s);
 		bool load(OH cmapnode);
 		unsigned int cbytes() const { return charbytes; }
 		wchar_t map(unsigned long c, bool no_fallback = false) const;
 		std::string dump() const
 		{
+			if(m_identity)
+				return "Identity";
 			std::stringstream ss; 
 			for(std::map<long,wchar_t>::const_iterator it=charmap.begin(); it!=charmap.end(); it++)
 			{
