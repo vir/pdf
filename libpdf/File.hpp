@@ -61,24 +61,7 @@ public:
 			throw UnimplementedException("Compressed objects streams");
 		return e->offset;
 	}
-	void dump(std::ostream & strm = std::clog) const
-	{
-		for(std::map<ObjId, Entry>::const_iterator it = m_table.begin(); it != m_table.end(); ++it) {
-			strm << "  object (" << it->first.num << "," << it->first.gen << ") is ";
-			switch(it->second.type) {
-			case Entry::Free:
-				strm << "a free object";
-				break;
-			case Entry::Compressed:
-				strm << "in stream " << it->second.offset << ", index: " << it->second.obj_stream_index;
-				break;
-			case Entry::Normal:
-				strm << "at " << it->second.offset << std::endl;
-				break;
-			}
-			strm << std::endl;
-		}
-	}
+	void dump(std::ostream & strm = std::clog) const;
 	void insert_normal(const ObjId & objid, unsigned long offset)
 	{
 		m_table[objid] = Entry(offset);
@@ -132,7 +115,8 @@ class File
 		std::vector< std::string > m_file_ids;
 		ObjectStreamsCache m_streams;
 		std::fstream::pos_type m_header_end_offset;
-  protected:
+	protected:
+		void getline(std::string & s);
     long offset_lookup(const ObjId & oi) const;
     std::string check_header();
     long get_first_xreftable_offset();

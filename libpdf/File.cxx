@@ -16,9 +16,28 @@
 
 #include "File.hpp"
 
-#define GETLINE_ENDL '\n'
-
 namespace PDF {
+
+
+void XRefTable::dump( std::ostream & strm /*= std::clog*/ ) const
+{
+	for(std::map<ObjId, Entry>::const_iterator it = m_table.begin(); it != m_table.end(); ++it) {
+		strm << "  object (" << it->first.num << "," << it->first.gen << ") is ";
+		switch(it->second.type) {
+		case Entry::Free:
+			strm << "a free object";
+			break;
+		case Entry::Compressed:
+			strm << "in stream " << it->second.offset << ", index: " << it->second.obj_stream_index;
+			break;
+		case Entry::Normal:
+			strm << "at " << it->second.offset;
+			break;
+		}
+		strm << std::endl;
+	}
+}
+
 // PDF::File class members ==========================================================
 // ============================================================================
 File::File(std::string fn)
@@ -117,7 +136,7 @@ std::string File::check_header()
 		throw std::string("Bad file");
 	std::string line, version;
 	file.seekg(0, std::ios::beg);
-	std::getline(file, line, GETLINE_ENDL);
+	getline(line);
 	if(line.substr(0,5) == "%PDF-")
 		version=line.substr(5,3);
 	else
@@ -125,7 +144,7 @@ std::string File::check_header()
 	// Find headers end in case wi will read linearised pdfs one day
 	do {
 		m_header_end_offset = file.tellg();
-		std::getline(file, line, GETLINE_ENDL);
+		getline(line);
 	} while(line[0] == '%');
 	return version;
 }
@@ -165,13 +184,13 @@ void File::dump(std::ostream & s) const
 bool File::read_xref_table_part(bool try_recover)
 {
 	std::string s;
-	std::getline(file, s, GETLINE_ENDL); // get 'xref' header
+	getline(s); // get 'xref' header
 	//  std::clog << "Read first xref header: " << s << std::endl;
 	if(s.substr(0, 4) != "xref") {
 		std::cerr << "Error in xref table" << std::endl;
 		return false;
 	}
-	std::getline(file, s, GETLINE_ENDL); // get numbers
+	getline(s); // get numbers
 	//  std::clog << "Read first line of xref: " << s << std::endl;
 	int sep=s.find_first_of(" \t");
 	int objnum=atoi(s.substr(0,sep).c_str());
@@ -182,7 +201,7 @@ bool File::read_xref_table_part(bool try_recover)
 	{
 		long linestart = file.tellg();
 		// XXX We can read 20byte chunks here!
-		std::getline(file, s, GETLINE_ENDL);
+		getline(s);
 		//std::clog << "XRef table line " << objnum << "/" << count << ": " << s << std::endl;
 		s.erase(0, s.find_first_not_of("\r\n\t "));
 		if(s.length() < 17) {
@@ -217,7 +236,7 @@ Dictionary * File::read_trailer()
 {
 	std::string s;
 	size_t pos = file.tellg();
-	std::getline(file, s, GETLINE_ENDL);
+	getline(s);
 	s.erase(0, s.find_first_not_of("\r\n\t "));
 	if(s.substr(0,7) != "trailer")
 		throw FormatException("No trailer", pos);
@@ -443,7 +462,7 @@ void File::ReconstructXRefTable()
 #if 0
 		Integer * offs;
 		if(lindict->find("T", offs)) {
-			// In case of "normal" table, T points to fitsh table row, tot to "xref"
+			// In case of "normal" table, T points to fitsh table row, not to "xref"
 			// But in case of srefstream we can grt somthing useful here...
 			// XXX TODO LoadXRefTable(offs->value(), true);
 		}
@@ -454,7 +473,7 @@ void File::ReconstructXRefTable()
 		// Skip all linearization stuff
 		std::string line;
 		do {
-			std::getline(file, line, GETLINE_ENDL);
+			getline(line);
 		} while(line.substr(0, 5) != "%%EOF" && !file.eof());
 	} // if linearized
 
@@ -470,6 +489,25 @@ void File::ReconstructXRefTable()
 	}
 	catch(...) { }
 	std::clog << "XRef table recovery: found " << count << " objects" << std::endl;
+}
+
+void File::getline( std::string & s )
+{
+#if 1 // Use my own getline to handle all weird line endings
+	char c;
+	s.clear();
+	for(;;)
+	{
+		c = file.get();
+		if(c == '\r' || c == '\n' || file.eof())
+			break;
+		s += c;
+	}
+	if(c == '\r' && file.peek() == '\n')
+		file.ignore();
+#else
+	std::getline(file, s, '\n');
+#endif
 }
 
 Object * ObjectStreamsCache::load_object(long obj_stream_num, unsigned int obj_stream_index)
