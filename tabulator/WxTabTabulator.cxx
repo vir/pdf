@@ -92,6 +92,9 @@ WxTabOptionsDialog::~WxTabOptionsDialog()
 	delete ui_postprocess;
 	delete ui_find_more_rows_column;
 	delete ui_find_table_header;
+	delete ui_split_column;
+	delete ui_find_more_rows_label;
+	delete ui_split_column_label;
 }
 
 bool WxTabOptionsDialog::Validate()
