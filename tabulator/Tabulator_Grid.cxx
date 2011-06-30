@@ -47,6 +47,7 @@ void Tabulator::Grid::split_column(unsigned int col, double x)
 	}
 }
 
+#if 0
 /** automatically find place for new vertical line
  *
  * This algorithm works only if "second" column is left-aligned
@@ -131,18 +132,78 @@ bool Tabulator::Grid::auto_split_column(unsigned int col, const Tabulator::Metaf
 	return false;
 }
 
-class IntervalCounter
+#else
+
+/** Intervals usage counter */
+class IntervalHystogram
 {
-	class Interval:public std::pair<double, double>
+private:
+	std::map<double, unsigned int> m_space;
+	double m_right_margin;
+public:
+	IntervalHystogram(double left, double right)
+		: m_right_margin(right)
 	{
-	public:
-		bool operator < (const Interval& other) { return first < other.first; }
-		Interval(double x1, double x2):pair(x1, x2) { }
-	};
+		m_space.insert(std::make_pair(left, 0U));
+	}
+	void use(double left, double right)
+	{
+		// trim input range
+		if(left < m_space.begin()->first)
+			left = m_space.begin()->first;
+		if(right > m_right_margin)
+			right = m_right_margin;
+
+		std::map<double, unsigned int>::iterator left_it = m_space.upper_bound(left);
+		--left_it;
+		if(left_it->first != left)
+			left_it = m_space.insert(left_it, std::make_pair(left, left_it->second));
+
+		std::map<double, unsigned int>::iterator right_it = m_space.upper_bound(right);
+		if(right != m_right_margin) {
+			--right_it;
+			right_it = m_space.insert(right_it, std::make_pair(right, right_it->second));
+		}
+		for(; left_it != right_it; ++left_it)
+			++left_it->second;
+	}
+	/** Removes first and last intervals if they are unused */
+	void trim()
+	{
+		if(! m_space.begin()->second)
+			m_space.erase(m_space.begin());
+		std::map<double, unsigned int>::iterator it = m_space.end();
+		--it;
+		if(! it->second)
+			m_space.erase(it);
+	}
+	/** Finds next unused interval (on right hand respective to the current pos) */
+	bool find_next_unused_space(double & pos)
+	{
+		std::map<double, unsigned int>::iterator it = m_space.upper_bound(pos);
+		for(;;) {
+			if(it == m_space.end())
+				return false;
+			if(it->second == 0)
+				break;
+			++it;
+		}
+		double left = it->first;
+		++it;
+		double right = it == m_space.end() ? m_right_margin : it->first;
+		pos = (left + right) / 2;
+		return true;
+	}
+	void dump()
+	{
+		std::map<double, unsigned int>::const_iterator it;
+		for(it = m_space.begin(); it != m_space.end(); ++it)
+			std::cout << "-- " << it->first << std::endl << " " << std::setw(3) << it->second << std::endl;
+		std::cout << "-- " << m_right_margin << std::endl;
+	}
 };
 
-#if 0
-bool Tabulator::Grid::auto_split_column_new(unsigned int col, const Tabulator::Metafile * mf)
+bool Tabulator::Grid::auto_split_column(unsigned int col, const Tabulator::Metafile * mf)
 {
 	KnotsIterator kit;
 	double x1, x2;
@@ -155,23 +216,31 @@ bool Tabulator::Grid::auto_split_column_new(unsigned int col, const Tabulator::M
 	if(debug)
 		std::clog << "Splitting " << col << "th column (between " << x1 << " and " << x2 << ")" << std::endl;
 
+	IntervalHystogram h(x1, x2);
+
 	// Collect some stats
 	std::map<Coord, unsigned int> xpos_hits;
-	unsigned int text_lines_count = 0;
-	Coord last_y = 1E-10;
 	Tabulator::Metafile::TextMap::const_iterator tit; // text iterator
 	for(tit = mf->all_text.begin(); tit != mf->all_text.end() && tit->pos.y < margins.bottom; tit++) { /* check all text */
 		if(tit->pos.y < headers_end) // skip table header
 			continue;
-		if(tit->pos.x >= x1 && tit->pos.x < x2) {
-			if(tit->pos.y != last_y) {
-				++text_lines_count;
-				last_y = tit->pos.y;
-			}
-			std::map<Coord, unsigned int>::iterator hit = xpos_hits.insert(std::make_pair(tit->pos.x, (unsigned int)0)).first;
-			++hit->second;
-		}
+		if(tit->pos.x < x1 || tit->pos.x >= x2) // skip other columns
+			continue;
+		h.use(tit->pos.x, tit->pos.x + tit->width);
 	}
+	if(debug)
+		h.dump();
+
+	h.trim();
+	double x = x1;
+	unsigned int count = 0;
+	while(h.find_next_unused_space(x)) {
+		if(debug)
+			std::clog << "Adding vertical line at " << x << std::endl;
+		split_column(col, x);
+		++count;
+	}
+	return count != 0;
 }
 #endif
 
