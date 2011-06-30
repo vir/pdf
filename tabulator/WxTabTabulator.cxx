@@ -12,12 +12,13 @@ class WxTabOptionsDialog:public wxDialog
 		virtual bool Validate();
 	private:
 		wxCheckBox * ui_find_table_header;
-		wxSpinCtrl * ui_find_more_rows_column;
+		wxSpinCtrl * ui_find_more_rows_column, * ui_split_column;
 		wxCheckBox * ui_postprocess;
 		wxCheckBox * ui_find_joined_cells;
-		struct Tabulator::Options * o;
-		void OnOk( wxCommandEvent & event );
-//		DECLARE_EVENT_TABLE()
+		wxStaticText * ui_find_more_rows_label, * ui_split_column_label;
+		int m_split_column_num;
+		struct Tabulator::Options * opts;
+		virtual void EndModal(int retCode);
 };
 
 /*============================ WxTabTabulator ===================*/
@@ -52,24 +53,31 @@ void WxTabTabulator::ShowOptionsDialog(wxWindow * parent)
 /*============================ Tabulator options dialog =========*/
 
 WxTabOptionsDialog::WxTabOptionsDialog( wxWindow * parent, struct Tabulator::Options * opts )
-	: wxDialog( parent, wxID_ANY, _("Tabulator options"), wxDefaultPosition, wxDefaultSize, wxRESIZE_BORDER),o(opts)
+	: wxDialog( parent, wxID_ANY, _("Tabulator options"), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER),opts(opts)
 {
 	wxBoxSizer * s = new wxBoxSizer( wxVERTICAL /* wxHORIZONTAL */ );
 
 	ui_find_table_header = new wxCheckBox(this, wxID_ANY, _T("Find table headers"));
+	s->Add(ui_find_table_header);
+	ui_find_more_rows_label = new wxStaticText(this, wxID_ANY, _T("Find more rows column"));
+	s->Add(ui_find_more_rows_label);
 	ui_find_more_rows_column = new wxSpinCtrl(this, wxID_ANY, _T("0"));
+	s->Add(ui_find_more_rows_column);
 	ui_postprocess = new wxCheckBox(this, wxID_ANY, _T("Postprocess"));
+	s->Add(ui_postprocess);
 	ui_find_joined_cells = new wxCheckBox(this, wxID_ANY, _T("Find joined cells"));
+	s->Add(ui_find_joined_cells);
+	ui_split_column_label = new wxStaticText(this, wxID_ANY, _T("Split column"));
+	s->Add(ui_split_column_label);
+	ui_split_column = new wxSpinCtrl(this, wxID_ANY, _T("0"));
+	s->Add(ui_split_column);
 
 	ui_find_table_header->SetValidator(wxGenericValidator(&opts->find_table_header));
 	ui_find_more_rows_column->SetValidator(wxGenericValidator((int*)&opts->find_more_rows_column));
 	ui_postprocess->SetValidator(wxGenericValidator(&opts->postprocess));
 	ui_find_joined_cells->SetValidator(wxGenericValidator(&opts->find_joined_cells));
-
-	s->Add(ui_find_table_header);
-	s->Add(ui_find_more_rows_column);
-	s->Add(ui_postprocess);
-	s->Add(ui_find_joined_cells);
+	m_split_column_num = opts->split_columns.size() ? opts->split_columns.at(0) : 0;
+	ui_split_column->SetValidator(wxGenericValidator(&m_split_column_num));
 
 	s->Add(new wxButton( this, wxID_OK, _("OK") ));
 	SetAutoLayout( TRUE );
@@ -91,9 +99,14 @@ bool WxTabOptionsDialog::Validate()
 	return true;
 }
 
-void WxTabOptionsDialog::OnOk(wxCommandEvent & event)
+void WxTabOptionsDialog::EndModal( int retCode )
 {
-	event.Skip();
+	if(retCode == wxID_OK) {
+		opts->split_columns.clear();
+		if(m_split_column_num)
+			opts->split_columns.push_back(m_split_column_num);
+	}
+	wxDialog::EndModal(retCode);
 }
 
 
