@@ -112,4 +112,3 @@ void WxTabOptionsDialog::EndModal( int retCode )
 	wxDialog::EndModal(retCode);
 }
 
-

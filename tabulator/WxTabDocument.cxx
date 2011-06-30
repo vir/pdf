@@ -89,6 +89,7 @@ void Metafile::Line(const Point & p1, const Point & p2)
 //===========================================================
 bool WxTabDocument::LoadFile(const wxString & fn)
 {
+	filename = fn;
 	std::string fname = std::string(fn.mb_str());
 	if(doc) {
 		delete page;
@@ -196,5 +197,20 @@ bool WxTabDocument::Open(const wxString & fn, unsigned int page)
 	if(! LoadPage(page)) return false;
 	retab();
 	return true;
+}
+
+void WxTabDocument::ExportPage( int pagenum, Tabulator::Table::Exporter * exporter )
+{
+	PDF::Page * p=new PDF::Page();
+	if(p)
+	{
+		std::clog << "Page " << pagenum << std::endl;
+		p->load(doc->get_page_node(pagenum-1)); // 0-based
+
+		std::clog << "Drawing page " << pagenum << std::endl;
+		tabulator.full_process(p); // do the final pretty structure construction!
+		tabulator.output(exporter);
+		delete p;
+	}
 }
 

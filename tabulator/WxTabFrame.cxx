@@ -8,69 +8,16 @@
 #include "WxTabDocument.hpp"
 #include "WxTabTabulator.hpp"
 #include "Tabulator_Exporter.hpp"
+#include "PageNumCtrl.hpp"
+#include "WxTabBatchExportDlg.hpp"
 #include "options16.xpm"
 #include "csv16.xpm"
 #include "xml16.xpm"
-#include "excel16.xpm"
-
-class PageNumCtrl:public wxTextCtrl
-{
-	private:
-		long num;
-		long min, max;
-	public:
-		PageNumCtrl(wxWindow* parent, wxWindowID id, const wxString& value = _T(""), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxTE_CENTRE|wxTE_PROCESS_ENTER, const wxString& name = wxTextCtrlNameStr):wxTextCtrl(parent, id, value, pos, size, style, wxDefaultValidator, name),num(0),min(0),max(10000)
-		{
-		}
-		void OnChar( wxKeyEvent & event )
-		{
-#if 1
-			wxString backup = wxTextCtrl::GetValue();
-			long tmp;
-			if( event.GetKeyCode() < 32 || event.GetKeyCode() == 127 || event.GetKeyCode() > 256) event.Skip();
-			if( event.GetKeyCode() > 255 || !isdigit( event.GetKeyCode() ) ) return;
-//			EmulateKeyPress(event); // causes infinite recursion on win32
-			event.Skip();
-			wxString newval = wxTextCtrl::GetValue();
-			if( !newval.ToLong(&tmp) || tmp<min || tmp>max ) {
-				wxTextCtrl::SetValue(backup);
-				wxBell();
-			} else {
-				num = tmp;
-			}
-#else
-			event.Skip();
+#ifdef _WIN32
+# include "excel16.xpm"
 #endif
-		}
-		void OnSetFocus( wxFocusEvent & event )
-		{
-			wxTextCtrl::SetSelection(-1, -1);
-		}
-		void SetRange(int r1, int r2)
-		{
-			min = r1;
-			max = r2;
-		}
-		void SetValue(int i)
-		{
-			num = i;
-			wxTextCtrl::SetValue(wxString::Format(_T("%d"), i));
-		}
-		int GetValue()
-		{
-			long tmp;
-			wxString newval = wxTextCtrl::GetValue();
-			if( newval.ToLong(&tmp) || tmp<min || tmp>max ) {
-				num = tmp;
-			}
-			return num;
-		}
-    DECLARE_EVENT_TABLE()
-};
-BEGIN_EVENT_TABLE(PageNumCtrl, wxTextCtrl)
-	EVT_CHAR      (PageNumCtrl::OnChar)
-	EVT_SET_FOCUS (PageNumCtrl::OnSetFocus)
-END_EVENT_TABLE()
+#include "book16.xpm"
+
 
 enum {
 	File_Open = wxID_OPEN,
@@ -92,6 +39,7 @@ enum {
 	MenuExport_First,
 	Export_CSV = MenuExport_First, Export_HTML, Export_EXCEL,
 	MenuExport_Last = Export_EXCEL,
+	Export_Batch,
 };
 
 const int ID_TOOLBAR = 500;
@@ -106,6 +54,7 @@ BEGIN_EVENT_TABLE(WxTabFrame, wxFrame)
 	EVT_MENU_RANGE(MenuGo_First,  MenuGo_Last,   WxTabFrame::OnMenuGo)
 	EVT_MENU_RANGE(MenuRotate_First,   MenuRotate_Last,   WxTabFrame::OnRotate)
 	EVT_MENU_RANGE(MenuExport_First,   MenuExport_Last,   WxTabFrame::OnMenuExport)
+	EVT_MENU      (Export_Batch,  WxTabFrame::OnBatchExport)
 #if 0
 	EVT_SPINCTRL  (ID_SPIN_OPLIMIT, WxTabFrame::OnOplimitSpinCtrl)
 #endif
@@ -155,6 +104,8 @@ WxTabFrame::WxTabFrame(const wxString& title, const wxPoint& pos, const wxSize& 
 #ifdef _WIN32
 	menuExport->Append(Export_EXCEL, _T("Export to MS Excel"));
 #endif
+	menuExport->AppendSeparator();
+	menuExport->Append(Export_Batch, _T("Batch export..."));
 
 	wxMenuBar *menuBar = new wxMenuBar;
 	menuBar->Append(menuDocument, _T("&Document"));
@@ -209,6 +160,8 @@ WxTabFrame::WxTabFrame(const wxString& title, const wxPoint& pos, const wxSize& 
 #ifdef _WIN32
 	toolBar->AddTool(Export_EXCEL, _T("Excel"), wxBitmap(excel16_xpm), _T("Export current table to Microsoft Excel (Open empty sheet if already running!!!)"));
 #endif
+	toolBar->AddSeparator();
+	toolBar->AddTool(Export_Batch, _T("Batch"), wxBitmap(book16_xpm), _T("Open batch export dialog"));
 
 	toolBar->Realize();
 	m_mgr.AddPane(toolBar, wxAuiPaneInfo().
@@ -367,6 +320,15 @@ void WxTabFrame::OnMenuExport(wxCommandEvent &event)
 		exporter->page_end();
 	}
 	delete exporter;
+}
+
+void WxTabFrame::OnBatchExport(wxCommandEvent &event)
+{
+	if(theDocument) {
+		WxTabBatchExportDialog dlg(this, theDocument);
+		dlg.SetCurPage(theDocument->GetPageNum());
+		dlg.ShowModal();
+	}
 }
 
 

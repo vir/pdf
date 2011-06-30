@@ -22,6 +22,7 @@ class WxTabFrame : public wxFrame
 		void OnRotate(wxCommandEvent &event);
 		void OnMenuGo(wxCommandEvent &event);
 		void OnMenuExport(wxCommandEvent &event);
+		void OnBatchExport(wxCommandEvent &event);
 		void OnOplimitSpinCtrl(wxSpinEvent & event);
 		void OnPageNumChanged(wxCommandEvent &event);
 	private:

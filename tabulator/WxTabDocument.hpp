@@ -14,12 +14,15 @@ class WxTabDocument
 		int m_rotation;
 		double m_scale;
 		int m_cur_page_num;
+		wxString filename;
 	public:
 		WxTabDocument():doc(NULL),page(NULL),m_rotation(0),m_scale(1.0),m_cur_page_num(0) {}
 		bool LoadFile(const wxString & fname);
 		bool LoadPage(int num);
 		void Draw(PDF::Media * mf);
 		void Draw(wxDC * dc);
+		void ExportPage(int pagenum, Tabulator::Table::Exporter * exporter);
+		wxString GetName() const { return filename; }
 		int GetPagesNum() const { return doc?doc->get_pages_count():0; }
 		int GetPageNum() const { return m_cur_page_num; }
 		PDF::Page * GetPageObject() { return page; }
