@@ -32,6 +32,14 @@ enum {
 	Rotate_270,
 	MenuRotate_Last = Rotate_270,
 
+	MenuZoom_First,
+	Zoom_100 = MenuZoom_First,
+	Zoom_200,
+	Zoom_300,
+	Zoom_400,
+	Zoom_500,
+	MenuZoom_Last = Zoom_500,
+
 	MenuGo_First,
 	Go_First = MenuGo_First, Go_Prev, Go_Next, Go_Last,
 	MenuGo_Last = Go_Last,
@@ -53,6 +61,7 @@ BEGIN_EVENT_TABLE(WxTabFrame, wxFrame)
 	EVT_MENU      (File_ShowTabulatorOptions,    WxTabFrame::OnShowTabulatorOptions)
 	EVT_MENU_RANGE(MenuGo_First,  MenuGo_Last,   WxTabFrame::OnMenuGo)
 	EVT_MENU_RANGE(MenuRotate_First,   MenuRotate_Last,   WxTabFrame::OnRotate)
+	EVT_MENU_RANGE(MenuZoom_First,     MenuZoom_Last,     WxTabFrame::OnZoom)
 	EVT_MENU_RANGE(MenuExport_First,   MenuExport_Last,   WxTabFrame::OnMenuExport)
 	EVT_MENU      (Export_Batch,  WxTabFrame::OnBatchExport)
 #if 0
@@ -86,11 +95,17 @@ WxTabFrame::WxTabFrame(const wxString& title, const wxPoint& pos, const wxSize& 
 	menuDocument->Append(File_About, _T("&About...\tCtrl-A"), _T("Show about dialog"));
 	menuDocument->Append(File_Quit, _T("E&xit\tAlt-X"), _T("Quit this program"));
 
-	wxMenu * menuRotate = new wxMenu;
-	menuRotate->AppendRadioItem(Rotate_0, _T("No rotation\tF1"));
-	menuRotate->AppendRadioItem(Rotate_90, _T("Rotate &90 degree\tF2"));
-	menuRotate->AppendRadioItem(Rotate_180, _T("Rotate &180 degree\tF3"));
-	menuRotate->AppendRadioItem(Rotate_270, _T("Rotate &270 degrees\tF4"));
+	wxMenu * menuView = new wxMenu;
+	menuView->AppendRadioItem(Rotate_0, _T("No rotation\tF1"));
+	menuView->AppendRadioItem(Rotate_90, _T("Rotate &90 degree\tF2"));
+	menuView->AppendRadioItem(Rotate_180, _T("Rotate &180 degree\tF3"));
+	menuView->AppendRadioItem(Rotate_270, _T("Rotate &270 degrees\tF4"));
+
+	menuView->AppendRadioItem(Zoom_100, _T("Scale &100%\tz"));
+	menuView->AppendRadioItem(Zoom_200, _T("Scale &200%\tx"));
+	menuView->AppendRadioItem(Zoom_300, _T("Scale &300%\tc"));
+	menuView->AppendRadioItem(Zoom_400, _T("Scale &400%\tv"));
+	menuView->AppendRadioItem(Zoom_500, _T("Scale &500%\tb"));
 
 	wxMenu * menuGo = new wxMenu;
 	menuGo->Append(Go_First, _T("First page\tHome"));
@@ -109,7 +124,7 @@ WxTabFrame::WxTabFrame(const wxString& title, const wxPoint& pos, const wxSize& 
 
 	wxMenuBar *menuBar = new wxMenuBar;
 	menuBar->Append(menuDocument, _T("&Document"));
-	menuBar->Append(menuRotate, _T("&Rotate"));
+	menuBar->Append(menuView, _T("&View"));
 	menuBar->Append(menuGo, _T("&Go"));
 	menuBar->Append(menuExport, _T("&Export"));
 
@@ -223,6 +238,13 @@ void WxTabFrame::OnRotate(wxCommandEvent& event)
 {
 	int rot = event.GetId() - MenuRotate_First;
 	theDocument->Rotate(rot);
+	m_canvas->Refresh();
+}
+
+void WxTabFrame::OnZoom(wxCommandEvent& event)
+{
+	int scale = 1 + event.GetId() - MenuZoom_First;
+	theDocument->Scale(100 * scale);
 	m_canvas->Refresh();
 }
 

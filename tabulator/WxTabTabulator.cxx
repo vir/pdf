@@ -23,7 +23,7 @@ class WxTabOptionsDialog:public wxDialog
 
 /*============================ WxTabTabulator ===================*/
 
-void WxTabTabulator::Draw(wxDC * dc)
+void WxTabTabulator::Draw(wxDC * dc, double scale)
 {
 	wxSize cs = dc->GetSize();
 
@@ -31,14 +31,14 @@ void WxTabTabulator::Draw(wxDC * dc)
 	dc->SetPen(wxPen(*wxRED, 0, wxSOLID));
 	Grid::KnotsIterator kit;
 	for(kit = grid.h_knots.begin(); kit != grid.h_knots.end(); kit++) {
-		dc->DrawLine(kit->first, 0, kit->first, cs.GetHeight());
+		dc->DrawLine(kit->first * scale, 0, kit->first * scale, cs.GetHeight() * scale);
 	}
 	for(kit = grid.v_knots.begin(); kit != grid.v_knots.end(); kit++) {
-		dc->DrawLine(0, kit->first, cs.GetWidth(), kit->first);
+		dc->DrawLine(0, kit->first * scale, cs.GetWidth() * scale, kit->first * scale);
 	}
 	if(grid.headers_end >= 0) {
 		dc->SetPen(wxPen(*wxGREEN, 3, wxSHORT_DASH));
-		dc->DrawLine(0, wxCoord(grid.headers_end), cs.GetWidth(), wxCoord(grid.headers_end));
+		dc->DrawLine(0, wxCoord(grid.headers_end) * scale, cs.GetWidth() * scale, wxCoord(grid.headers_end) * scale);
 	}
 
 	// Draw cells

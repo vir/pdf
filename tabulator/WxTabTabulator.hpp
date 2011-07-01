@@ -8,7 +8,7 @@ class wxDC;
 class WxTabTabulator:public Tabulator
 {
 	public:
-		void Draw(wxDC * dc);
+		void Draw(wxDC * dc, double sc=1.0);
 		void ShowOptionsDialog(wxWindow * parent);
 		bool ok() const { return (table.ncols() && table.nrows()); }
 };

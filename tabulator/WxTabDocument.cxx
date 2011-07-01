@@ -53,7 +53,7 @@ void Metafile::SetFont(const PDF::Font * font, double size)
 {
 	if(size < 4) size = 4;
 	m_font_size = size;
-	wxFont* f = wxTheFontList->FindOrCreateFont(int(size), wxSWISS, wxNORMAL /*wxITALIC*/, wxNORMAL/*wxBOLD*/);
+	wxFont* f = wxTheFontList->FindOrCreateFont(int(size/2.0), wxSWISS, wxNORMAL /*wxITALIC*/, wxNORMAL/*wxBOLD*/);
 	dc.SetFont(*f);
 }
 
@@ -188,7 +188,7 @@ void WxTabDocument::Draw(wxDC * dc)
 {
 	Metafile mf(*dc, m_rotation, m_scale);
 	page->draw(&mf);
-	tabulator.Draw(dc);
+	tabulator.Draw(dc, m_scale);
 }
 
 bool WxTabDocument::Open(const wxString & fn, unsigned int page)

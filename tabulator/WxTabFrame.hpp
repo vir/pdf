@@ -20,6 +20,7 @@ class WxTabFrame : public wxFrame
 		void OnDocumentOpen(wxCommandEvent& event);
 		void OnShowTabulatorOptions(wxCommandEvent& event);
 		void OnRotate(wxCommandEvent &event);
+		void OnZoom(wxCommandEvent &event);
 		void OnMenuGo(wxCommandEvent &event);
 		void OnMenuExport(wxCommandEvent &event);
 		void OnBatchExport(wxCommandEvent &event);
