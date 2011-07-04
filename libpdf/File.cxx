@@ -18,7 +18,6 @@
 
 namespace PDF {
 
-
 void XRefTable::dump( std::ostream & strm /*= std::clog*/ ) const
 {
 	for(std::map<ObjId, Entry>::const_iterator it = m_table.begin(); it != m_table.end(); ++it) {
@@ -40,12 +39,30 @@ void XRefTable::dump( std::ostream & strm /*= std::clog*/ ) const
 
 // PDF::File class members ==========================================================
 // ============================================================================
+
+/** Constructs PDF::File object for existing PDF file access */
 File::File(std::string fn)
-	:strm(file)
+	:istrm(NULL), ostrm(NULL)
 	,m_debug(0)
 	,m_security(NULL)
 	,m_streams(*this)
+	,open_mode(MODE_READ)
 {
+	istrm = new ObjIStream(file);
+	if(!fn.empty())
+		open(fn);
+}
+
+/** Constructs PDF::File object for new PDF file creation */
+File::File(double pdf_version, std::string fn)
+	:istrm(NULL), ostrm(NULL)
+	, pdf_version(pdf_version)
+	, m_debug(0)
+	, m_security(NULL)
+	, m_streams(*this)
+	, open_mode(MODE_WRITE)
+{
+	ostrm = new ObjOStream(file);
 	if(!fn.empty())
 		open(fn);
 }
@@ -53,6 +70,8 @@ File::File(std::string fn)
 File::~File()
 {
 	delete m_security;
+	delete istrm;
+	delete ostrm;
 }
 
 bool File::open(std::string fn)
@@ -61,12 +80,32 @@ bool File::open(std::string fn)
 		filename = fn;
 	if(filename.empty())
 		throw std::exception("No filename to open");
-	file.open(filename.c_str(), std::ios::in|std::ios::binary);
+	switch(open_mode) {
+		case MODE_READ:
+			file.open(filename.c_str(), std::ios::in|std::ios::binary);
+			break;
+		case MODE_WRITE:
+			file.open(filename.c_str(), std::ios::out|std::ios::trunc|std::ios::binary);
+			write_header();
+			break;
+		case MODE_UPDATE:
+		default:
+			throw UnimplementedException("Unimplemented open mode");
+	}
 	return file.good();
 }
 
 bool File::close()
 {
+	if(open_mode == MODE_WRITE || open_mode == MODE_UPDATE) {
+		file.seekg(0, std::ios_base::end);
+		long offs = write_xref_table();
+		Dictionary * d = new Dictionary();
+		long generation = 0;
+		d->set("Root", new ObjRef(root_refs[generation]));
+		write_trailer(d, offs);
+		delete d;
+	}
 	file.close();
 	return true;
 }
@@ -114,7 +153,7 @@ Object * File::load_object(const ObjId & oi, bool decrypt)
 	Object * r;
 	if(offset) {
 		file.seekg(offset);
-		r = strm.read_indirect_object(decrypt);
+		r = istrm->read_indirect_object(decrypt);
 
 		Stream * str;
 		if((str = dynamic_cast<Stream *>(r)))
@@ -124,6 +163,14 @@ Object * File::load_object(const ObjId & oi, bool decrypt)
 	if(m_debug > 2)
 		std::clog << "Loaded object: " << r->dump() << std::endl;
 	return r;
+}
+
+void File::save_object( Object * o, const ObjId & oi, bool encrypt /*= true*/ )
+{
+	if(m_debug>1) std::clog << "Saving object " << oi.dump() << std::endl;
+	long pos = file.tellg();
+	ostrm->write_indirect_object(o, encrypt);
+	xref_table.insert_normal(oi, pos);
 }
 
 
@@ -147,6 +194,11 @@ std::string File::check_header()
 		getline(line);
 	} while(line[0] == '%');
 	return version;
+}
+
+void File::write_header()
+{
+	file << "%PDF-" << std::setw(3) << pdf_version << "\r\n%\xE2\xE3\xCF\xD3\r\n";
 }
 
 // Returns first (last in file) xref table offset
@@ -232,6 +284,21 @@ bool File::read_xref_table_part(bool try_recover)
 	return true;
 }
 
+long File::write_xref_table()
+{
+	long r = file.tellg();
+	//std::pair<ObjId, XRefTable::Entry>* iter = xref_table.get_next(true);
+	std::map<ObjId, XRefTable::Entry>::value_type* iter = xref_table.get_next(true);
+	file << "xref\r\n0 " << 1 + xref_table.count() << "\r\n";
+	file << "0000000000 65535 f\r\n";
+	while(iter) {
+		char ot = iter->second.free() ? 'f' : 'n';
+		file << std::setw(10) << std::setfill('0') << iter->second.offset << " " << std::setw(5) << std::setfill('0') << iter->first.gen << " " << ot << "\r\n";
+		iter = xref_table.get_next(false);
+	}
+	return r;
+}
+
 Dictionary * File::read_trailer()
 {
 	std::string s;
@@ -241,13 +308,20 @@ Dictionary * File::read_trailer()
 	if(s.substr(0,7) != "trailer")
 		throw FormatException("No trailer", pos);
 
-	Object * r = strm.read_direct_object();
+	Object * r = istrm->read_direct_object();
 	Dictionary * dic = dynamic_cast<Dictionary *>(r);
 	if(!dic) {
 		delete r;
 		throw FormatException("Error in trailer dictionary", pos);
 	}
 	return dic;
+}
+
+void File::write_trailer(Dictionary * trailerdict, long xrefoffs)
+{
+	file << "trailer\r\n";
+	ostrm->write_direct_object(trailerdict);
+	file << "\r\nstartxref\r\n" << xrefoffs << "\r\n%%EOF\r\n";
 }
 
 void File::read_xref_stream(Stream * s)
@@ -385,7 +459,7 @@ long File::LoadXRefTable( long xref_off, bool try_recover )
 					throw;
 			}
 		} else {
-			o = strm.read_indirect_object(false);
+			o = istrm->read_indirect_object(false);
 			Stream * s = dynamic_cast<Stream *>(o);
 			if(!s)
 				throw FormatException("Error reading xref stream", xref_off);
@@ -428,7 +502,7 @@ long File::LoadXRefTable( long xref_off, bool try_recover )
 
 			delete m_security;
 			m_security = SecHandler::create(d, this);
-			strm.set_security_handler(m_security);
+			istrm->set_security_handler(m_security);
 			if(need_destroy)
 				delete d;
 		}
@@ -451,7 +525,7 @@ void File::ReconstructXRefTable()
 	std::cerr << "Trying to reconstruct missing XRef table" << std::endl;
 	file.seekg(objstart);
 	// Here should be linearization dictionary
-	Object * o = strm.read_indirect_object(false);
+	Object * o = istrm->read_indirect_object(false);
 	Dictionary * lindict = dynamic_cast<Dictionary *>(o);
 	if(lindict && lindict->find("Linearized")) {
 		std::clog << "Found Linearization dictionary, good" << std::clog;
@@ -484,7 +558,7 @@ void File::ReconstructXRefTable()
 			delete o;
 			++count;
 			objstart = file.tellg();
-			o = strm.read_indirect_object(true);
+			o = istrm->read_indirect_object(true);
 		}
 	}
 	catch(...) { }

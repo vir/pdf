@@ -396,6 +396,70 @@ ObjectStream::ObjectStream(Stream * s): m_sis(new StreamBuffer(s, true)), m_ois(
 
 
 
+/*====== ObjOStream ================================*/
+
+
+void ObjOStream::write_direct_object(Object * o)
+{
+	Dictionary * d = dynamic_cast<Dictionary *>(o);
+#define OBJECT_TYPE_ID_TRY(t) t * p_##t = dynamic_cast<t *>(o);
+	OBJECT_TYPE_ID_TRY(Null);
+	OBJECT_TYPE_ID_TRY(Real);
+	OBJECT_TYPE_ID_TRY(Integer);
+	OBJECT_TYPE_ID_TRY(Boolean);
+	OBJECT_TYPE_ID_TRY(String);
+	OBJECT_TYPE_ID_TRY(Name);
+	OBJECT_TYPE_ID_TRY(Array);
+	OBJECT_TYPE_ID_TRY(Dictionary);
+	OBJECT_TYPE_ID_TRY(Stream);
+	OBJECT_TYPE_ID_TRY(ObjRef);
+	OBJECT_TYPE_ID_TRY(Keyword);
+#undef OBJECT_TYPE_ID_TRY
+	if(p_Null) {
+		*f << "null";
+	} else if(p_Boolean) {
+		*f << p_Boolean->value() ? "true" : "false";
+	} else if(p_Real) {
+		*f << p_Real->value();
+	} else if(p_Integer) {
+		*f << p_Integer->value();
+	} else if(p_String) {
+		*f << p_String->str();
+	} else if(p_Name) {
+		*f << "/" << p_Name->value();
+	} else if(p_Array) {
+		*f << "[";
+		for(Array::ConstIterator it = p_Array->get_const_iterator(); p_Array->check_iterator(it); ++it) {
+			write_direct_object(*it);
+		}
+		*f << "]";
+	} else if(p_Dictionary) {
+		*f << "<<";
+		for(Dictionary::Iterator it = p_Dictionary->get_iterator(); p_Dictionary->check_iterator(it); ++it) {
+			*f << "/" << it->first << " ";
+			write_direct_object(it->second);
+		}
+		*f << ">>";
+	} else if(p_Stream) {
+		throw UnimplementedException("Can not save Stream object");
+	} else if(p_ObjRef) {
+		*f << p_ObjRef->ref().num << " " << p_ObjRef->ref().gen << " R";
+	} else if(p_Keyword) {
+		*f << p_Keyword->value();
+	} else
+		throw UnimplementedException("Can not save that object type");
+}
+
+void ObjOStream::write_indirect_object(Object * o, bool need_encrypt /*= true*/)
+{
+	if(o->indirect) {
+		*f << o->m_id.num << " " << o->m_id.gen << " obj";
+	}
+	write_direct_object(o);
+	if(o->indirect)
+		*f << "\rendobj\r\n";
+}
+
 } /* namespace PDF */
 
 

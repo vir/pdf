@@ -284,6 +284,7 @@ class ObjRef:public Object
     ObjId m_ref;
   public:
     ObjRef(long n, long g) { m_ref.num=n; m_ref.gen=g; }
+    ObjRef(ObjId id) { m_ref = id; }
     const ObjId & ref() const { return m_ref; }
 		virtual void dump(std::ostream & ss, int level=0) const
     {

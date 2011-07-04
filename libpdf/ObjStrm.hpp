@@ -98,6 +98,16 @@ public:
 	}
 };
 
+class ObjOStream
+{
+	private:
+		std::ostream * f;
+	public:
+		ObjOStream(std::ostream & sref):f(&sref) { }
+		void write_direct_object(Object * o);
+		void write_indirect_object(Object * o, bool need_encrypt = true);
+};
+
 } /* namespace PDF */
 
 #endif /* OBJSTRM_HPP_INCLUDED */

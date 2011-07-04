@@ -39,7 +39,18 @@ public: // types
 	};
 private:
 	std::map<ObjId, Entry> m_table;
+	std::map<ObjId, Entry>::iterator m_table_it;
 public:
+	XRefTable():m_table_it(m_table.begin()) { }
+	std::map<ObjId, Entry>::value_type* get_next(bool reset = false)
+	{
+		if(reset)
+			m_table_it = m_table.begin();
+		if(m_table_it == m_table.end())
+			return NULL;
+		return &(*m_table_it++);
+	}
+	size_t count() const { return m_table.size(); }
 	Entry * find(const ObjId & oid)
 	{
 		std::map<ObjId, Entry>::iterator it = m_table.find(oid);
@@ -99,11 +110,13 @@ class ObjectStreamsCache
  */
 class File
 {
-  private:
-    std::string filename;
-    std::fstream file;
-		ObjIStream strm;
-    float pdf_version;
+	private:
+		enum { MODE_READ, MODE_WRITE, MODE_UPDATE } open_mode;
+		std::string filename;
+		std::fstream file;
+		ObjIStream * istrm;
+		ObjOStream * ostrm;
+		double pdf_version;
     /// references to all root node generations, starting with last one
     std::vector<ObjId> root_refs;
     /// full xref table
@@ -117,33 +130,40 @@ class File
 		std::fstream::pos_type m_header_end_offset;
 	protected:
 		void getline(std::string & s);
-    long offset_lookup(const ObjId & oi) const;
-    std::string check_header();
-    long get_first_xreftable_offset();
-    bool read_xref_table_part(bool try_recover = false);
+		long offset_lookup(const ObjId & oi) const;
+
+		std::string check_header();
+		void write_header();
+
+		long get_first_xreftable_offset();
+		bool read_xref_table_part(bool try_recover = false);
 		void read_xref_stream(Stream * s);
-    Dictionary * read_trailer();
-    void load_xref_table();
+		void load_xref_table();
+		long write_xref_table();
+
+		Dictionary * read_trailer();
+		void write_trailer(Dictionary * trailerdict, long xrefoffs);
+
 		void load_crypto_dict(const Dictionary * d);
 		void load_file_ids(const Array * a);
-  public:
-    File(std::string fn="");
-    ~File();
+	public:
+		File(std::string fn="");
+		File(double pdf_version, std::string fn="");
+		~File();
 		std::string id(unsigned int n = 0) const { return (n >= m_file_ids.size())?"":m_file_ids[0]; }
     /// sets debug level, returns previous debug level
     int debug(int d) { int t=m_debug; m_debug=d; return t; }
     /// returns pdf file version
-    float version() const { return pdf_version; }
+    double version() const { return pdf_version; }
     bool open(std::string fname="");
     bool close();
     bool load();
 
-	long LoadXRefTable( long xref_off, bool try_recover = false );
-
 	void dump(std::ostream & s) const;
 		SecHandler * security() { return m_security; };
     
-    Object * load_object(const ObjId & oi, bool decrypt = true);
+		Object * load_object(const ObjId & oi, bool decrypt = true);
+		void save_object(Object * o, const ObjId & oi, bool encrypt = true);
 
     /// returns number of root element references found in file
     long generations_num() const { return root_refs.size(); }
@@ -154,6 +174,13 @@ class File
 			throw FormatException("No root references");
 		return root_refs[generation];
 	}
+	void set_root(ObjId id, long generation = 0)
+	{
+		if(root_refs.size() < (unsigned long)generation + 1)
+			root_refs.resize(generation + 1);
+		root_refs[generation] = id;
+	}
+	long LoadXRefTable( long xref_off, bool try_recover = false );
 	void ReconstructXRefTable();
 };
 
