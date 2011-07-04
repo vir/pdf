@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="windows-1251"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9,00"
+	Version="9.00"
 	Name="libpdf"
 	ProjectGUID="{7E7F2C83-C66E-4556-818A-DB2547988688}"
 	TargetFrameworkVersion="0"
@@ -481,6 +481,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\Page_TextObject.cxx"
+				>
+			</File>
+			<File
 				RelativePath="SecHandler.cxx"
 				>
 				<FileConfiguration
@@ -569,6 +573,10 @@
 			</File>
 			<File
 				RelativePath="Page.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Page_TextObject.h"
 				>
 			</File>
 			<File
