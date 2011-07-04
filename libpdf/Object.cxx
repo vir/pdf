@@ -26,6 +26,7 @@ std::string Object::type() const
   OBJECT_TYPE_ID_TRY(Null);
   OBJECT_TYPE_ID_TRY(Real);
   OBJECT_TYPE_ID_TRY(Integer);
+  OBJECT_TYPE_ID_TRY(Boolean);
   OBJECT_TYPE_ID_TRY(String);
   OBJECT_TYPE_ID_TRY(Name);
   OBJECT_TYPE_ID_TRY(Array);
