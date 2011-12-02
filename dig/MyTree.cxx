@@ -84,10 +84,10 @@ class MyTreeItemData:public wxTreeItemData
 		std::string dump() const { return h->dump(); }
 };
 
-MyTree::MyTree(wxView * view, wxWindow *parent)
+MyTree::MyTree(wxView * view, wxWindow *parent, MyTreeEventsHandler *handler)
 	: wxTreeCtrl(parent, MyTree_Ctrl/*id*/, wxDefaultPosition, wxDefaultSize, wxTR_HAS_BUTTONS)
 	, m_view(view)
-	, m_details(NULL)
+	, m_handler(handler)
 {
 	CreateImageList();
 
@@ -250,6 +250,7 @@ void MyTree::OnSelChanged(wxTreeEvent& event)
 {
 	wxTreeItemId id = event.GetItem();
 	MyTreeItemData * d = static_cast<MyTreeItemData*>(GetItemData(id));
+#if 0
 	if(!d) {
 		if(m_details) {
 			PdfDoc * doc = static_cast<PdfDoc *>(m_view->GetDocument());
@@ -260,6 +261,13 @@ void MyTree::OnSelChanged(wxTreeEvent& event)
 	wxString s(d->h->dump().c_str(), wxConvUTF8);
 	if(m_details)
 		m_details->SetValue(s);
+	static_cast<MyApp*>(wxTheApp)->GetMainFrame()->ViewStreamEnable(d->h->type() == "Stream");
+#else
+	if(d)
+		m_handler->SelectedObject(d->h);
+	else
+		m_handler->SelectedNothing();
+#endif
 }
 
 

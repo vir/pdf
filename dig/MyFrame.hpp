@@ -13,7 +13,11 @@ class MyFrame:public wxDocMDIParentFrame
 		~MyFrame();
 		void OnQuit(wxCommandEvent& event);
 		void OnAbout(wxCommandEvent& event);
+		void OnViewStream(wxCommandEvent& event);
+		void ViewStreamEnable(bool enable);
 	private:
+		wxMenu *menuView;
+		wxToolBarBase *toolBar;
 		//wxAuiManager m_mgr;
 		DECLARE_EVENT_TABLE()
 };

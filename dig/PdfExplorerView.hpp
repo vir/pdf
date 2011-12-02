@@ -7,7 +7,7 @@
 #include "MyTree.hpp"
 #include "MyFrame.hpp"
 
-class PdfExplorerView:public wxView
+class PdfExplorerView:public wxView, public MyTreeEventsHandler
 {
 	DECLARE_DYNAMIC_CLASS(PdfExplorerView)
 	private:
@@ -15,7 +15,13 @@ class PdfExplorerView:public wxView
 		MyTree * m_tree;
 		wxTextCtrl * m_right;
 		wxFrame * m_frame;
-		wxMDIParentFrame * m_mainframe;
+		MyFrame * m_mainframe;
+		PDF::OH * m_stream_handle;
+	public: // MyTreeEventHandler
+		virtual void SelectedNothing();
+		virtual void SelectedObject(PDF::OH h);
+	public:
+		void ViewStreamData();
 	public:
 		PdfExplorerView();
 		~PdfExplorerView();

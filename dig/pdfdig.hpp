@@ -13,6 +13,7 @@ class MyApp : public wxApp
 		wxDocManager* m_docManager;
 		MyFrame * frame;
 	public:
+		wxDocManager * GetDocManager() { return m_docManager; }
 		MyFrame * GetMainFrame() const { return frame; }
 		MyApp():m_docManager(NULL),frame(NULL) {}
 		virtual bool OnInit();
