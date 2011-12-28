@@ -69,6 +69,19 @@ class OH
     /// returns Object pointer
     Object * obj() { return m_ptr; }
     const Object * obj() const { return m_ptr; }
+
+		// Sets modified status
+		OH set_modified() {
+			if(obj()->indirect) {
+				ObjectsCache::CacheIterator it=m_cache->cache.find(obj()->m_id);
+				if(it != m_cache->cache.end())
+					it->second.set_modified();
+				else
+					throw std::exception("Object is not in cache?!?!!");
+			}
+			return *this;
+		}
+
     
     //-------- high-level objects access
     /// Returns size of array/dictionary
@@ -79,7 +92,7 @@ class OH
       // XXX check streams?
       if(a) return a->size();
       else if(d) return d->size();
-      else throw std::string("Not a container --- no size()");
+      else throw std::exception("Not a container --- no size()");
     }
     /// Find object in dictionary
     OH find(const std::string & s, bool autoexpand=true) const
@@ -166,7 +179,7 @@ class OH
 			if(!put(d)) {
 				Stream * s;
 				put(s, "Can't iterate - not a dictionatry or stream");
-				d = s->get_dict();
+				d = s->dict();
 			}
 			return DictIterator(d, m_cache);
 		}
