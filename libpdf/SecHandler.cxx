@@ -65,9 +65,9 @@ SecHandler * SecHandler::create(const Dictionary * cryptodict, const File * file
 	// first, check for standard security handler
 	if(cryptodict->find("Filter", n)) {
 		if(n->value() != "Standard")
-			throw std::string("Unknown security handler, only 'Standard' is supported");
+			throw UnimplementedException("Unknown security handler") << n->value() << ", only 'Standard' is supported";
 	} else
-		throw std::string("Invalid or missing 'Filter' entry in crypto dictionary");
+		throw DocumentStructureException("Invalid or missing 'Filter' entry in crypto dictionary");
 	// TODO: support SubFilter one day?
 
 	StdSecHandler * h = new StdSecHandler(file);
@@ -84,16 +84,16 @@ void StdSecHandler::init(const Dictionary * cryptodict)
 	Integer * ii;
 	String * ss;
 	if(! cryptodict->find("R", ii))
-		throw std::string("Bad crypto dict: no R integer");
+		throw DocumentStructureException("Bad crypto dict: no R integer");
 	R = ii->value();
 	if(! cryptodict->find("O", ss))
-		throw std::string("Bad crypto dict: no O string");
+		throw DocumentStructureException("Bad crypto dict: no O string");
 	O = ss->str();
 	if(! cryptodict->find("U", ss))
-		throw std::string("Bad crypto dict: no U string");
+		throw DocumentStructureException("Bad crypto dict: no U string");
 	U = ss->str();
 	if(! cryptodict->find("P", ii))
-		throw std::string("Bad crypto dict: no P integer");
+		throw DocumentStructureException("Bad crypto dict: no P integer");
 	P = ii->value();
 	if(cryptodict->find("Length", ii))
 		Length = ii->value()/8; // in bytes
