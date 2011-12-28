@@ -481,6 +481,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\Page_Path.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\Page_TextObject.cxx"
 				>
 			</File>
@@ -573,6 +577,14 @@
 			</File>
 			<File
 				RelativePath="Page.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Page_GraphicsState.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Page_Path.hpp"
 				>
 			</File>
 			<File
