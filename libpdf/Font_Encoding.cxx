@@ -111,11 +111,11 @@ void Font::Encoding::load(OH encnode)
 	Name * s = dynamic_cast<Name *>(encnode.obj());
 	Dictionary * d = dynamic_cast<Dictionary *>(encnode.obj());
 	if(!s && !d)
-		throw std::string("Font encoding is not a name nor dictionary but is a ") + encnode.obj()->type();
+		DocumentStructureException("Font encoding is not a name nor dictionary but is a ") << encnode.obj()->type();
 
 	if(s) { // just encoding name
 		if(! set_encoding(s->value()))
-			throw std::string("Unknown or unhandled font encoding: ") + s->value();
+			throw UnimplementedException("Unknown or unhandled font encoding: ") << s->value();
 	} else { // dictionary with differences
 		/* Todo: set BaseEncoding, load Differences array */
 		Name * be;
@@ -159,7 +159,7 @@ wchar_t Font::Encoding::map(unsigned long c) const
 		case StandardEncoding: return encoding_standard[c];
 		default:
 			std::cerr << "Unsupported font encoding" << std::endl;
-			return c;
+			return (wchar_t)c;
 	}
 }
 
