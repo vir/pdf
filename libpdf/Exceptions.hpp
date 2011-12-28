@@ -12,10 +12,30 @@
 #include <sstream>
 
 #define NOT_IMPLEMENTED(a) \
- throw std::string(__FILE__ ": Not implemented: "a);
+	throw UnimplementedException((std::string(__FILE__) + a).c_str());
 
 namespace PDF {
 
+class Exception:public std::exception
+{
+protected:
+	std::string prefix;
+	std::string msg;
+public:
+	Exception(const char * prefix = "", const char * msg = "") throw() :prefix(prefix), msg(msg) { }
+	virtual ~Exception() throw() {}
+	virtual const char * what() throw()
+	{
+		std::string r = prefix;
+		if(r.length())
+			r += ": ";
+		r += msg;
+		return r.c_str();
+	}
+	Exception& operator << (const std::string& s) { msg += s; return *this; }
+	Exception& operator << (const char * s) { msg += s; return *this; }
+	Exception& operator << (long num) { std::stringstream ss; ss << num; msg += ss.str(); return *this; }
+};
 /// PDF File format exception class
 class FormatException:public std::exception
 {
@@ -56,6 +76,12 @@ class DocumentStructureException:public std::exception
     DocumentStructureException& operator << (const char * s) { msg += s; return *this; }
 };
 
+class WrongPageException:public Exception
+{
+public:
+	WrongPageException(const char * s):Exception("Page drawing error", s) { }
+};
+
 class InvalidNodeTypeException: public DocumentStructureException
 {
 public:
@@ -63,14 +89,10 @@ public:
 	virtual const char * what() throw() { return (std::string("NodeTypeErr: ")+msg).c_str(); }
 };
 
-class UnimplementedException:public std::exception
+class UnimplementedException:public Exception
 {
 public:
-	UnimplementedException(const char * s):std::exception(s) { }
-    virtual const char * what() throw()
-    {
-		return (std::string("Unimplemented: ") + std::exception::what()).c_str();
-    }
+	UnimplementedException(const char * s):Exception("Unimplemented", s) { }
 };
 
 class FreeObjectUsageException:public std::exception
@@ -80,6 +102,14 @@ public:
 	virtual const char * what() throw()
 	{
 		return (std::string("Usage of free object: ") + std::exception::what()).c_str();
+	}
+};
+
+class WrongPasswordException:public std::exception
+{
+	virtual const char * what() throw()
+	{
+		return "Wrong password";
 	}
 };
 
