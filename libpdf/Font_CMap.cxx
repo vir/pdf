@@ -159,6 +159,7 @@ bool Font::CMap::load( std::string & s )
 		charranges.clear();
 		charbytes = 2;
 		m_identity = true;
+		return true;
 	} else
 		throw UnimplementedException("Named CMaps (other than Identity)");
 }
