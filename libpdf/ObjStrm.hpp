@@ -58,7 +58,6 @@ class ObjIStream
 	protected:
 		// elemental operations
 		inline void skip_whitespace();
-		std::string read_token();
 		// some very-low-level helper functions
 		std::vector<char> read_o_string();
 		Object * read_o_digits();
@@ -78,6 +77,7 @@ class ObjIStream
 		Object * read_direct_object() { return read_direct_object(NULL); }
 		Object * read_indirect_object(bool need_decrypt = true);
 		void read_chunk(unsigned long offset, char * buf, unsigned int len, long obj_id_num = 0, long obj_id_gen = 0);
+		std::string read_token();
 };
 
 class ObjectStream
@@ -102,10 +102,12 @@ class ObjOStream
 {
 	private:
 		std::ostream * f;
+	protected:
+		void write_direct_object(Object * o);
 	public:
 		ObjOStream(std::ostream & sref):f(&sref) { }
-		void write_direct_object(Object * o);
-		void write_indirect_object(Object * o, bool need_encrypt = true);
+		void write_object(Object * o);
+		void write_chunk(const char * buf, unsigned int len, long obj_id_num = 0, long obj_id_gen = 0);
 };
 
 } /* namespace PDF */

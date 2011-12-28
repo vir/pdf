@@ -376,7 +376,7 @@ std::streambuf::int_type StreamBuffer::underflow()
 
 ObjectStream::ObjectStream(Stream * s): m_sis(new StreamBuffer(s, true)), m_ois(m_sis, false)
 {
-	Dictionary * d = s->get_dict();
+	Dictionary * d = s->dict();
 	if(d->find("Extends"))
 		throw UnimplementedException("ObjectStream 'Extends' feature");
 	d->find("N")->to_number(m_objsnum);
@@ -429,7 +429,12 @@ void ObjOStream::write_direct_object(Object * o)
 		*f << "/" << p_Name->value();
 	} else if(p_Array) {
 		*f << "[";
+		bool first = true;
 		for(Array::ConstIterator it = p_Array->get_const_iterator(); p_Array->check_iterator(it); ++it) {
+			if(! first)
+				*f << " ";
+			else
+				first = false;
 			write_direct_object(*it);
 		}
 		*f << "]";
@@ -441,7 +446,10 @@ void ObjOStream::write_direct_object(Object * o)
 		}
 		*f << ">>";
 	} else if(p_Stream) {
-		throw UnimplementedException("Can not save Stream object");
+		write_direct_object(p_Stream->dict());
+		*f << "stream\r\n";
+		p_Stream->save_data(this);
+		*f << "\r\nendstream";
 	} else if(p_ObjRef) {
 		*f << p_ObjRef->ref().num << " " << p_ObjRef->ref().gen << " R";
 	} else if(p_Keyword) {
@@ -450,14 +458,20 @@ void ObjOStream::write_direct_object(Object * o)
 		throw UnimplementedException("Can not save that object type");
 }
 
-void ObjOStream::write_indirect_object(Object * o, bool need_encrypt /*= true*/)
+void ObjOStream::write_object(Object * o)
 {
 	if(o->indirect) {
 		*f << o->m_id.num << " " << o->m_id.gen << " obj";
 	}
 	write_direct_object(o);
 	if(o->indirect)
-		*f << "\rendobj\r\n";
+		*f << " endobj\r\n";
+}
+
+void ObjOStream::write_chunk( const char * buf, unsigned int len, long obj_id_num /*= 0*/, long obj_id_gen /*= 0*/ )
+{
+	// XXX No encryption support!!
+	f->write(buf, len);
 }
 
 } /* namespace PDF */
