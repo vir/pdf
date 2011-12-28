@@ -81,15 +81,7 @@ class Page::Operator
 		bool operator == (const char * cmp) { return m_name == cmp; }
     const Object * arg(unsigned int i) const { return i>=m_args->size()?NULL:m_args->at(i); }
 		const Object * operator[](unsigned int i) const { return arg(i); }
-    double number(unsigned int i) const
-    {
-      const Object * o=arg(i);
-      if(!o) throw std::string("No such argument");
-      const Real * real=dynamic_cast<const Real *>(o);
-      const Integer * integer=dynamic_cast<const Integer *>(o);
-      if(!real && !integer) throw std::string("Argument is not a number");
-      return real?real->value():integer->value();
-    }
+    double number(unsigned int i) const;
     Point point(unsigned int i) const
     {
       return Point(number(i), number(i+1));
@@ -98,84 +90,10 @@ class Page::Operator
 		{
 			return CTM(number(0), number(1), number(2), number(3), number(4), number(5));
 		}
-    std::string dump() const
-    {
-      std::stringstream ss; bool flag=false;
-      ss << name() << "(";
-      if(m_args)
-      {
-        for(std::vector<Object *>::const_iterator it=m_args->begin(); it!=m_args->end(); it++)
-        {
-          if(flag) ss << ", ";
-          ss << (*it)->dump();
-          flag=true;
-        }
-      }
-      ss << ")";
-      return ss.str();
-    }
+    std::string dump() const;
 };
 
 
-/*class Page::Path:public std::vector<Point>
-{
-};*/
-
-class Page::GraphicsState {
-  public:
-    GraphicsState() {}
-    /*=== device-independent: ===*/
-    CTM ctm;
-    // clipping_path
-    // color_space
-    // color
-    struct TextState {
-      double Tc; // char spacing (Tc)=0
-      double Tw; // word spacing (Tw)=0
-      double Th; // horizontal scaling (Tz)=100
-      double Tl; // leading (TL)=0
-      Font * Tf; // text font (Tf)
-      double Tfs; // font size (Tf)
-      // Tmode // rendering mode (Tr)=0
-      double Trise; // text rise (Ts)=0
-      // Tk // text knockout
-			TextState():Tc(0),Tw(0),Th(100),Tl(0),Tf(NULL),Tfs(1),Trise(0) {}
-			void dump(std::ostream & s) const;
-    } text_state;
-    // line_width // set with 'w'
-    // line_cap // set with 'J'
-    // line_join // set with 'j'
-    // miter_limit // set with 'M'
-    // dash_pattern set with 'd'
-    // rendering_intent // set with 'ri'
-    // stroke_adjustment
-    // blend_mode
-    // soft_mask
-    // alpha_constant
-    // alpha_source
-    /*=== device-dependent: ===*/
-    // overprint
-    // overprint_mode
-    // black_generation
-    // undercolor_removal
-    // transfer
-    // halftone
-    // flatness // set with 'i'
-    // smothness
-};
-
-class Page::Path: public std::vector<Point>
-{
-	public:
-		std::string dump()
-		{
-      std::stringstream ss;
-			for(unsigned int i=0; i<size()-1; i++)
-				ss << at(i).dump();
-			return ss.str();
-		}
-};
-  
 }; // namespace PDF
 
 

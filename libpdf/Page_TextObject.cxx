@@ -1,6 +1,7 @@
 #include "Page_TextObject.h"
 #include "Font.hpp"
 #include "Media.hpp"
+#include <assert.h>
 
 #define DRAW_CHAR_BY_CHAR 0
 
@@ -15,6 +16,8 @@ void PDF::Page::TextObject::Append( const String * str )
 			Kerning(-(gs->text_state.Tc / gs->text_state.Tfs));
 		accumulated_text += nextchar;
 		total_width += charwidth;
+		if(nextchar == L' ')
+			total_width += gs->text_state.Tw / gs->text_state.Tfs;
 		Flush();
 #else
 		if(nextchar == L' ') {
@@ -24,9 +27,11 @@ void PDF::Page::TextObject::Append( const String * str )
 				Flush();
 				double offset = (charwidth * gs->text_state.Tfs) * gs->text_state.Th/100.0;
 				offset += (gs->text_state.Tw / gs->text_state.Tfs) * gs->text_state.Tfs * gs->text_state.Th/100.0;
+				offset += gs->text_state.Tc / gs->text_state.Tfs * gs->text_state.Th/100.0;
 				tm.offset_unscaled(offset, 0);
 				//if(false && spaces == 2) // XXX compensate first space displacement assuming that first space width is equal to second
 				//	tm.offset_unscaled(offset, 0);
+
 			}
 			continue;
 		} else {
@@ -39,10 +44,10 @@ void PDF::Page::TextObject::Append( const String * str )
 				}
 				spaces = 0;
 			}
-			if(gs->text_state.Tc)
-				Kerning(-(gs->text_state.Tc / gs->text_state.Tfs));
 			accumulated_text += nextchar;
 			total_width += charwidth;
+			if(gs->text_state.Tc)
+				Kerning(-(gs->text_state.Tc / gs->text_state.Tfs));
 		}
 #endif
 	}
@@ -51,7 +56,7 @@ void PDF::Page::TextObject::Append( const String * str )
 void PDF::Page::TextObject::Kerning( double k )
 {
 	// offset next char back by k glyph space units
-	if(k > kerning_too_big || k < -kerning_too_big) { // XXX TODO caompare with avg charwidth or so
+	if(k > kerning_too_big || k < -kerning_too_big || accumulated_text.empty()) { // XXX TODO caompare with avg charwidth or so
 		Flush();
 		double offset = -k * gs->text_state.Tfs * gs->text_state.Th/100.0;
 		tm.offset_unscaled(offset, 0);
@@ -69,50 +74,35 @@ void PDF::Page::TextObject::Flush()
 		media->SetFont(gs->text_state.Tf, Trm.get_scale_v());
 		update_font = false;
 	}
-#if TC_IS_KERNING
-	double offset = (total_width*gs->text_state.Tfs) * gs->text_state.Th/100.0;
-#else
-	double offset = (total_width*gs->text_state.Tfs + gs->text_state.Tc*accumulated_text.length()) * gs->text_state.Th/100.0;
-#endif
 
-
-#if 0 // deal with "text1          text2              text3"
-	double pos_x = 0;
-	while(!accumulated_text.empty()) {
-		int spaces_begin = accumulated_text.find(L"  ");
-		std::wstring part = accumulated_text.substr(0, spaces_begin);
-		media->Text(
-			Trm_tmp.translate(Point(pos_x, 0)),
-			Trm_tmp.get_rotation_angle(),
-			part,
-			w * Trm_tmp.get_scale_h(),
-			Trm.get_scale_v()
-			);
-		if(spaces_begin != std::wstring::npos) {
-			if(spaces) {
-
-				media->Text(
-					Trm_tmp.translate(Point(0,0)),
-					Trm_tmp.get_rotation_angle(),
-					accumulated_text.substr(0, spaces),
-					w * Trm_tmp.get_scale_h(),
-					Trm.get_scale_v()
-					);
-				Trm_tmp.offset_unscaled((total_width*gs->text_state.Tfs) * gs->text_state.Th/100.0, 0);
-			}
-		}
-		int end_of_spaces = accumulated_text.find_first_not_of(L" \t", spaces);
-		accumulated_text.erase(0, end_of_spaces);
+	// build translated clipping path
+	Path result_clip;
+	Point tmp_point;
+	for(Path::const_iterator it = gs->clipping_path.begin(); it != gs->clipping_path.end(); ++it)
+	{
+		tmp_point = gs->ctm.translate(*it);
+		result_clip.push_back(tmp_point);
 	}
-	if(accumulated_text.empty()) return;
-#endif
+
+	Rect result_rect(Trm.translate(Point(0,0)), total_width*Trm.get_scale_h(), Trm.get_scale_v());
+	bool is_visible = result_clip.clip(result_rect);
+	//assert(is_visible);
+
 	media->Text(
-		Trm.translate(Point(0,0)),
+		result_rect.offset(),
 		Trm.get_rotation_angle(),
 		accumulated_text,
-		total_width*Trm.get_scale_h(),
-		Trm.get_scale_v()
-		);
+		result_rect.size().x,
+		result_rect.size().y
+	);
+#if 0 // draw clipping path
+	for(Path::const_iterator it = result_clip.begin(); it != result_clip.end(); ++it)
+	{
+		media->Line(tmp_point, *it);
+		tmp_point = *it;
+	}
+#endif
+	double offset = total_width * gs->text_state.Tfs * gs->text_state.Th/100.0;
 	tm.offset_unscaled(offset, 0);
 	accumulated_text.resize(0);
 	total_width = 0;

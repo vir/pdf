@@ -2,6 +2,7 @@
 #define PAGE_TEXTOBJECT_HPP_INCLUDED
 
 #include "Page.hpp"
+#include "Page_GraphicsState.hpp"
 
 namespace PDF {
 

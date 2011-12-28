@@ -38,17 +38,18 @@ static Rect get_box(OH boxnode)
 	Array * a;
 	boxnode.put(a, "*Box is not an array ?!?");
 	if(a->size()!=4)
-		throw std::string("Rect. array must contin 4 elements");
+		throw WrongPageException("Rect. array must contin 4 elements");
 	double da[4];
 	for(int i=0; i<4; i++) {
-		Real * rn=dynamic_cast<Real *>(a->at(i));
-		if(rn) {
-			da[i]=rn->value();
-		} else {
-			Integer * in=dynamic_cast<Integer *>(a->at(i));
-			if(!in) throw std::string("Not a number in rectangle array?!?");
-			da[i]=in->value();
-		}
+		Real * realn=dynamic_cast<Real *>(a->at(i));
+		Integer * intgr=dynamic_cast<Integer *>(a->at(i));
+		if(realn) {
+			da[i]=realn->value();
+		} else if(intgr) {
+			da[i]=intgr->value();
+		} else
+			throw WrongPageException("Not a number in rectangle array?!?");
+
 	}
 	return Rect(da);
 }
@@ -87,7 +88,7 @@ bool Page::load(OH pagenode)
 				stream->get_data(pagedata);
 			} else {
 				if(!dynamic_cast<Array *>(contents_h.obj()))
-					throw std::string("Page content is not a Stream and not an Array. That is wrong. I give up.");
+					throw WrongPageException("Page content is not a Stream and not an Array. That is wrong. I give up.");
 				std::vector<char> data;
 				for(unsigned int i=0; i<contents_h.size(); i++) {
 					OH s = contents_h[i];
@@ -247,7 +248,19 @@ void Page::draw(Media * m)
 						gs->ctm = m->Matrix();
 					}
           break;
-        }
+        } else if(op->name() == "Tf") // set current font (HACK!!! It should be done in text mode!!!)
+		{
+			std::clog << "Bad PDF: Tf outside text object!" << std::endl;
+			const Name * n=dynamic_cast<const Name *>(op->arg(0));
+			if(n) {
+				std::map<std::string,Font *>::const_iterator it = fonts.find(n->value());
+				if(it == fonts.end())
+					throw DocumentStructureException(std::string("Font not found: ") + n->value());
+				gs->text_state.Tf = it->second;
+			}
+			gs->text_state.Tfs=op->number(1);
+			break;
+		}
         else
 				{
 					m->Debug(std::string("Ignoring operator ") + op->dump() + " in page mode");
@@ -280,6 +293,10 @@ void Page::draw(Media * m)
 					curpath->push_back(Point(b.x + op->number(2), b.y + op->number(3)));
 					curpath->push_back(Point(b.x, b.y + op->number(3)));
 					curpath->push_back(b);
+				}
+				else if(op->name() == "W") // modify clipping path
+				{
+					gs->modify_clipping_path(curpath);
 				}
         else if(op->name() == "h") // home
         {
@@ -326,7 +343,8 @@ void Page::draw(Media * m)
         /* Check text showing operators first */
 				if(op->name() == "Tj") // output text
 				{
-					if(!gs->text_state.Tf) throw std::string("No font set");
+					if(!gs->text_state.Tf)
+						throw WrongPageException("No font set");
 					const String * str=dynamic_cast<const String *>(op->arg(0));
 					if(str)
 						tobj->Append(str);
@@ -336,7 +354,7 @@ void Page::draw(Media * m)
 				{
 					const Array * a=dynamic_cast<const Array *>(op->arg(0));
 					if(!a)
-						throw std::string("TJ with no array");
+						throw WrongPageException("TJ with no array");
 					for(Array::ConstIterator it=a->get_const_iterator(); a->check_iterator(it); it++) {
 						const String * str=dynamic_cast<const String *>(*it);
 						if(str) tobj->Append(str);
@@ -421,7 +439,7 @@ void Page::draw(Media * m)
         else /* skip everything about inline image */;
         break;
       default:
-        throw std::string("Default reached in switch(mode){...} while drawing page");
+        throw WrongPageException("Default reached in switch(mode){...} while drawing page");
         break;
     } // switch(mode)
   }
@@ -447,6 +465,37 @@ void Page::draw(Media * m)
 	}
 	if(tobj) delete tobj;
 	if(curpath) delete curpath;
+}
+
+/*============== Page::Operator ========================*/
+
+double Page::Operator::number( unsigned int i ) const
+{
+	const Object * o=arg(i);
+	if(!o)
+		throw WrongPageException("Can not find numeric argument number ") << i;
+	const Real * real=dynamic_cast<const Real *>(o);
+	const Integer * integer=dynamic_cast<const Integer *>(o);
+	if(!real && !integer)
+		throw WrongPageException("Argument ") << i << " (" << o->dump() << ") is not a number";
+	return real?real->value():integer->value();
+}
+
+std::string Page::Operator::dump() const
+{
+	std::stringstream ss; bool flag=false;
+	ss << name() << "(";
+	if(m_args)
+	{
+		for(std::vector<Object *>::const_iterator it=m_args->begin(); it!=m_args->end(); it++)
+		{
+			if(flag) ss << ", ";
+			ss << (*it)->dump();
+			flag=true;
+		}
+	}
+	ss << ")";
+	return ss.str();
 }
 
 }; // namespace PDF
