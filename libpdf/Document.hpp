@@ -29,7 +29,7 @@ class Document
   private:
     int m_debug;
 
-    /// pointer to the object cache
+    /// object cache
     ObjectsCache cache;
     
     /// Document Catalog dictionary
@@ -38,20 +38,29 @@ class Document
     /// identifiers of all page nodes
     std::vector<ObjId> all_pages;
 
-  protected:
-    void parse_pages_tree(OH pagenode_h);
+		/// next free object id
+		ObjId next_free_object_id;
+	protected:
+		void initialise_new();
+		void parse_pages_tree(OH pagenode_h);
+		OH build_pages_tree();
+		ObjId new_object_id();
 
   public:
-//    Document(ObjectsCache * c, ObjId root_element, int debug=0);
     Document(File & f, int debug=0);
     ~Document();
+		void save();
     /// sets debug level, returns previous debug level
     int debug(int d) { int t=m_debug; m_debug=d; return t; }
+
 		const ObjId & get_page_objid(long pagenum) { return all_pages[pagenum]; }
-    OH get_page_node(long pagenum) { return get_object(get_page_objid(pagenum)); }
-    unsigned int get_pages_count() const { return all_pages.size(); }
+		OH get_page_node(long pagenum) { return get_object(get_page_objid(pagenum)); }
+		unsigned int get_pages_count() const { return all_pages.size(); }
+		OH add_page();
+
     void dump();
     OH get_object(const ObjId & id);
+		OH new_indirect_object(Object * o);
     std::string dump_pages_directory() const
     {
       std::stringstream ss;
