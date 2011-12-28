@@ -1,6 +1,33 @@
 #include "Tabulator.hpp"
+#include <assert.h>
 
 bool Tabulator::TextBlock::debug = true;
+
+Tabulator::TextBlock::TextBlock()
+	: width(0)
+	, height(0)
+	, angle(0)
+{
+}
+
+Tabulator::TextBlock::TextBlock(const PDF::Point & p, std::wstring s)
+	: pos(p)
+	, text(s)
+	, width(0)
+	, height(0)
+	, angle(0)
+{
+}
+
+Tabulator::TextBlock::TextBlock(const PDF::Point & p, double a, std::wstring s, double w, double h)
+	: pos(p)
+	, text(s)
+	, width(w)
+	, height(h)
+	, angle(a)
+{
+	assert(width >= 0);
+}
 
 std::string Tabulator::TextBlock::dump() const
 {
@@ -46,7 +73,7 @@ bool Tabulator::TextBlock::merge_ok(const TextBlock & oth) const
 	}
 	double avgcw = width / double(text.length());
 	double distance = oth.pos.x - (pos.x + width);
-	bool result = distance < 0.25 * height;
+	bool result = distance < 0.3 * avgcw;
 	if(debug)
 		std::clog << "Average charwidth: " << avgcw << ", distance: " << distance << ", result: " << result << std::endl;
 //	return (abs(distance) < 2*avgcw);

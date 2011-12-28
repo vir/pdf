@@ -56,9 +56,9 @@ class Tabulator
 				//bool operator == (const TextBlock & oth) const { return pos < oth.pos; }
 				bool operator == (const TextBlock & oth) const { return Coord::compare(pos.y, oth.pos.y) == 0 && Coord::compare(pos.x, oth.pos.x) == 0 && text == oth.text; }
 				TextBlock & operator = (const TextBlock & oth) { pos = oth.pos; text = oth.text; width = oth.width; height = oth.height; angle = oth.angle; return *this; }
-				TextBlock():width(0),height(0),angle(0) {}
-				TextBlock(const PDF::Point & p, std::wstring s):pos(p),text(s),width(0),height(0),angle(0) {}
-				TextBlock(const PDF::Point & p, double a, std::wstring s, double w, double h):pos(p),text(s),width(w),height(h),angle(a) {}
+				TextBlock();
+				TextBlock(const PDF::Point & p, std::wstring s);
+				TextBlock(const PDF::Point & p, double a, std::wstring s, double w, double h);
 				std::string dump() const;
 		};
 		/** Abstract surface on which PDF page will be drawn */
