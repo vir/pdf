@@ -163,7 +163,7 @@ class File
 		SecHandler * security() { return m_security; };
     
 		Object * load_object(const ObjId & oi, bool decrypt = true);
-		void save_object(Object * o, const ObjId & oi, bool encrypt = true);
+		void save_object(Object * o);
 
     /// returns number of root element references found in file
     long generations_num() const { return root_refs.size(); }
@@ -182,8 +182,9 @@ class File
 	}
 	long LoadXRefTable( long xref_off, bool try_recover = false );
 	void ReconstructXRefTable();
+	bool can_load() const { return open_mode != MODE_WRITE; }
+	bool can_save() const { return open_mode != MODE_READ; }
 };
-
 
 }; // namespace PDF
 

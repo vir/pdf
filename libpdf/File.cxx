@@ -10,6 +10,7 @@
 //#include <cstring>
 #include <map>
 #include <list>
+#include <ctype.h>
 
 #include <stdlib.h> // for atof
 #include <string.h> // for strstr, strspn
@@ -113,6 +114,9 @@ bool File::close()
 // load all indeexes and document directory
 bool File::load()
 {
+	if(!file.good())
+		return false;
+
 	std::string ver=check_header();
 	if(ver.length()) {
 		pdf_version = (float)::atof(ver.c_str());
@@ -165,11 +169,15 @@ Object * File::load_object(const ObjId & oi, bool decrypt)
 	return r;
 }
 
-void File::save_object( Object * o, const ObjId & oi, bool encrypt /*= true*/ )
+void File::save_object(Object * o)
 {
-	if(m_debug>1) std::clog << "Saving object " << oi.dump() << std::endl;
+	if(! o->indirect)
+		throw std::exception("File::save_object called with direct object");
 	long pos = file.tellg();
-	ostrm->write_indirect_object(o, encrypt);
+	const ObjId & oi = o->m_id;;
+	if(m_debug>1)
+		std::clog << "Saving object " << oi.dump() << std::endl;
+	ostrm->write_object(o);
 	xref_table.insert_normal(oi, pos);
 }
 
@@ -179,8 +187,6 @@ void File::save_object( Object * o, const ObjId & oi, bool encrypt /*= true*/ )
 // Returns version or empty string if not a PDF
 std::string File::check_header()
 {
-	if(!file.good())
-		throw std::string("Bad file");
 	std::string line, version;
 	file.seekg(0, std::ios::beg);
 	getline(line);
@@ -235,13 +241,10 @@ void File::dump(std::ostream & s) const
 /// Read segment of "xref table"
 bool File::read_xref_table_part(bool try_recover)
 {
-	std::string s;
-	getline(s); // get 'xref' header
-	//  std::clog << "Read first xref header: " << s << std::endl;
-	if(s.substr(0, 4) != "xref") {
-		std::cerr << "Error in xref table" << std::endl;
+	if(! isdigit(file.peek()))
 		return false;
-	}
+
+	std::string s;
 	getline(s); // get numbers
 	//  std::clog << "Read first line of xref: " << s << std::endl;
 	int sep=s.find_first_of(" \t");
@@ -301,11 +304,9 @@ long File::write_xref_table()
 
 Dictionary * File::read_trailer()
 {
-	std::string s;
 	size_t pos = file.tellg();
-	getline(s);
-	s.erase(0, s.find_first_not_of("\r\n\t "));
-	if(s.substr(0,7) != "trailer")
+	std::string s(istrm->read_token());
+	if(s != "trailer")
 		throw FormatException("No trailer", pos);
 
 	Object * r = istrm->read_direct_object();
@@ -320,7 +321,8 @@ Dictionary * File::read_trailer()
 void File::write_trailer(Dictionary * trailerdict, long xrefoffs)
 {
 	file << "trailer\r\n";
-	ostrm->write_direct_object(trailerdict);
+	trailerdict->indirect = false;
+	ostrm->write_object(trailerdict);
 	file << "\r\nstartxref\r\n" << xrefoffs << "\r\n%%EOF\r\n";
 }
 
@@ -329,7 +331,7 @@ void File::read_xref_stream(Stream * s)
 	// Determine table fields number and byte widths
 	std::vector<int> widths;
 	Array * a;
-	if(!s->get_dict()->find("W", a))
+	if(!s->dict()->find("W", a))
 		throw FormatException("No 'W' array in xref stream");
 	unsigned long rowsize = 0;
 	for(Array::ConstIterator it = a->get_const_iterator(); a->check_iterator(it); ++it) {
@@ -342,7 +344,7 @@ void File::read_xref_stream(Stream * s)
 
 	// Get object numbers
 	std::list< std::pair<unsigned long, unsigned int> > indexes;
-	if(s->get_dict()->find("Index", a)) {
+	if(s->dict()->find("Index", a)) {
 		for(unsigned int i = 0; i < a->size(); i += 2) {
 			unsigned long start;
 			unsigned int num;
@@ -359,7 +361,8 @@ void File::read_xref_stream(Stream * s)
 
 	// Load xref table
 	std::vector<char> buf;
-	s->get_data(buf, false);
+	s->encryption(false);
+	s->get_data(buf);
 
 	for(unsigned int pos = 0; pos < buf.size(); pos += rowsize) {
 		std::vector<unsigned long> row;
@@ -445,10 +448,17 @@ long File::LoadXRefTable( long xref_off, bool try_recover )
 		if(file.peek() == 'x') { // Normal xref table
 			if(m_debug)
 				std::clog << "Xref table is at " << xref_off << "\n";
-			read_xref_table_part(try_recover);
-			if(m_debug)
-				std::clog << "Reading trailer at " << file.tellg() << "\n";
+
+			std::string s;
+			getline(s); // get 'xref' header
+			if(s.substr(0, 4) == "xref") {
+				while( read_xref_table_part(try_recover) ) ;
+			} else
+				std::clog << "Somthing wrong with xref table" << std::endl;
+
 			try {
+				if(m_debug)
+					std::clog << "Reading trailer at " << file.tellg() << "\n";
 				victim = trailer = read_trailer();
 			}
 			catch(...) {
@@ -457,14 +467,14 @@ long File::LoadXRefTable( long xref_off, bool try_recover )
 					victim = trailer = NULL;
 				} else
 					throw;
-			}
+ 			}
 		} else {
 			o = istrm->read_indirect_object(false);
 			Stream * s = dynamic_cast<Stream *>(o);
 			if(!s)
 				throw FormatException("Error reading xref stream", xref_off);
 			read_xref_stream(s);
-			trailer = s->get_dict();
+			trailer = s->dict();
 			victim = s;
 		}
 		if(!trailer) // may occur in recover mode
@@ -502,6 +512,8 @@ long File::LoadXRefTable( long xref_off, bool try_recover )
 
 			delete m_security;
 			m_security = SecHandler::create(d, this);
+			if(! m_security->set_password("")) // default empty password
+				throw WrongPasswordException();
 			istrm->set_security_handler(m_security);
 			if(need_destroy)
 				delete d;
