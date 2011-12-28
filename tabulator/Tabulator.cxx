@@ -102,6 +102,7 @@ void Tabulator::build_grid()
 
 		Tabulator::Metafile::TextMap::const_iterator tit; // text iterator
 		Coord cur_y = -1E10;
+		double prev_y = -1E10;
 		double table_bottom = lowest_v_line;
 		if(lowest_h_line > table_bottom)
 			table_bottom = lowest_h_line;
@@ -111,8 +112,10 @@ void Tabulator::build_grid()
 			if(tit->pos.x >= x1 && tit->pos.x < x2 && tit->pos.y != cur_y) {
 				if(debug)
 					std::clog << "Adding line above text string @" << tit->pos.dump() << std::endl;
+				prev_y = cur_y;
 				cur_y = tit->pos.y;
-				grid.add_horizontal_line(cur_y - tit->height);
+				double half_interval = (prev_y < 0) ? tit->height/10.0 : (cur_y - tit->height - prev_y)/2.0;
+				grid.add_horizontal_line(cur_y - tit->height - half_interval);
 			}
 		}
 	} // option.find_more_rows
@@ -282,3 +285,4 @@ unsigned int Tabulator::Table::ncols() const
 {
 	return cells.size()?cells[0].size():0;
 }
+
