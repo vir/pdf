@@ -4,6 +4,7 @@
 
 #include "Filter.hpp"
 #include <string.h> // XXX for strchr
+#include "Exceptions.hpp"
 
 namespace PDF {
 
@@ -30,7 +31,7 @@ class b85dh
 		bool add(char c)
 		{
 			if(c == 'z') {
-				if(ql) throw std::string("Base85 decode failed: found 'z' inside group");
+				if(ql) throw FormatException("Base85 decode failed: found 'z' inside group");
 				q = 0;
 				ql = 5;
 				return true;
