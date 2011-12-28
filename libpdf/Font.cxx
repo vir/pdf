@@ -114,6 +114,13 @@ bool Font::load(OH fontnode)
 	if(encoding || to_unicode_map)
 		return true;
 
+	if(fonttype == "Type1")
+	{
+		encoding = new Font::Encoding;
+		encoding->set_encoding("StandardEncoding");
+		return true;
+	}
+
 	std::cerr << "Problems with font encoding: No 'ToUnicode' and unknown/unsupported font encoding." << std::endl;
 	return false;
 }
@@ -148,7 +155,7 @@ bool Font::extract_text(const String * so, std::wstring & ws, double & twid, uns
 {
 	std::vector<char> s=so->value(); /// \todo: eliminate copy?
 	if(s.size() % charbytes)
-		throw std::string("String length is not a multiple of charbytes: ") + dump();
+		throw WrongPageException("String length is not a multiple of charbytes: ") << dump();
 	twid = 0.0;
 	while( pos < s.size() )
 	{
@@ -272,21 +279,24 @@ bool Font::load_type0_font_dic(OH fdic)
 		while(index < w.size()) {
 			h1 = w[index++];
 			h1.put(i1, "First group element must be an integer, not a ");
-			if(index >= w.size()) throw std::string("Not enough data");
+			if(index >= w.size())
+				throw std::exception("Not enough data in Type0 font dictionary");
 
 			h2 = w[index++];
 			if(h2.put(a)) {
 				for(unsigned int i = 0; i < a->size(); i++) {
 					const Object * oo = a->at(i);
 					const Integer * cw = dynamic_cast<const Integer *>(oo);
-					if(!cw) throw std::string("Char width must be an integer");
+					if(!cw)
+						throw std::exception("Type0 font: char width must be an integer");
 					charwidths[i1->value() + i] = cw->value();
 				}
 //				std::clog << "Charwidths of chars from " << i1->value() << " shuld be read from " << a->dump() << std::endl;
 				continue;
 			}
 			h2.put(i2, "Second element must be an array or integer, not a ");
-			if(index >= w.size()) throw std::string("Not enough data");
+			if(index >= w.size())
+				throw std::exception("Not enough data in Type0 font dictionary");
 
 			h3 = w[index++];
 			h3.put(i3, "Third element must be an integer, not a ");
