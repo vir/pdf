@@ -240,6 +240,7 @@ class Dictionary:public Object
 class ObjRef;
 class File;
 class ObjIStream;
+class ObjOStream;
 
 /// PDF Object: Stream --- large/binary data container.
 class Stream:public Object // All streams must be indirect objects
@@ -247,31 +248,41 @@ class Stream:public Object // All streams must be indirect objects
 /// \todo Make "more valid" stream (see http://www.cplusplus.com/ref/iostream/streambuf/)
 	private:
 		File * source;
-		Dictionary * dict;
+		Dictionary * m_dict;
 		ObjIStream * ostrm;
 		unsigned long soffset;
 		mutable ObjRef * m_slength_ref;
 		mutable unsigned long m_slength;
 		std::vector<char> m_data;
+		bool m_encryption;
 	public:
-		Stream(Dictionary * d, std::vector<char> & b):source(NULL),dict(d),ostrm(NULL),m_slength_ref(NULL),m_data(b) { }
-		Stream(Dictionary * d, ObjIStream * s, unsigned int offs, unsigned long length):source(NULL),dict(d),ostrm(s),soffset(offs),m_slength_ref(NULL),m_slength(length) { }
-		Stream(Dictionary * d, ObjIStream * s, unsigned int offs, ObjRef * length):source(NULL),dict(d),ostrm(s),soffset(offs),m_slength_ref(length),m_slength(0) { }
-		virtual ~Stream() { if(dict) delete dict; }
+		Stream(Dictionary * d, std::vector<char> & b):source(NULL),m_dict(d),ostrm(NULL),m_slength_ref(NULL),m_data(b),m_encryption(true) { }
+		Stream(Dictionary * d, ObjIStream * s, unsigned int offs, unsigned long length):source(NULL),m_dict(d),ostrm(s),soffset(offs),m_slength_ref(NULL),m_slength(length),m_encryption(true) { }
+		Stream(Dictionary * d, ObjIStream * s, unsigned int offs, ObjRef * length):source(NULL),m_dict(d),ostrm(s),soffset(offs),m_slength_ref(length),m_slength(0),m_encryption(true) { }
+		Stream(bool encrypt = true):source(NULL), m_dict(new Dictionary), ostrm(NULL), soffset(0), m_slength(0), m_slength_ref(NULL), m_encryption(encrypt) { }
+		virtual ~Stream() { if(m_dict) delete m_dict; }
 		virtual void dump(std::ostream & ss, int level=0) const
-    {
+		{
 			ss << "Stream: " << slength() << " bytes at offset " << soffset << " ";
-			dict->dump(ss);
-    }
-		const Dictionary * get_dict() const { return dict; }
-		Dictionary * get_dict() { return dict; }
-    bool get_data(std::vector<char> & buf, bool decrypt = true);
-    std::string value()
-    {
-      std::vector<char> v;
-      get_data(v);
-      return std::string(v.begin(),v.end());
-    }
+			m_dict->dump(ss);
+		}
+
+		const Dictionary * dict() const { return m_dict; }
+		Dictionary * dict() { return m_dict; }
+
+		bool encryption() const { return m_encryption; }
+		void encryption(bool enable) { m_encryption = enable; }
+
+		bool get_data(std::vector<char> & buf);
+
+		void put_data(const std::vector<char> & buf);
+		void save_data(ObjOStream * ostrm);
+		std::string value()
+		{
+			std::vector<char> v;
+			get_data(v);
+			return std::string(v.begin(),v.end());
+		}
 		void set_source(File * f) { source = f; }
 		unsigned int slength() const;
 		bool delayed_load() const { return m_slength_ref != NULL; }

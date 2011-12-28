@@ -59,52 +59,47 @@ unsigned int Stream::slength() const
 	return m_slength;
 }
 
-/// Fetches unencoded stream data
-bool Stream::get_data(std::vector<char> & buf, bool decrypt)
+static Filter *  CreateStreamFilter(Object * name, Object * params)
 {
-	Object * o;
+	Name * n=dynamic_cast<Name *>(name);
+	if(!n)
+		throw UnimplementedException("Stream filter type ") << name->dump();
 
+	Filter * filter = Filter::Create(n->value(), dynamic_cast<Dictionary *>(params));
+	if(!filter) {
+		std::string err("Stream filter ");
+		err += n->value();
+		throw UnimplementedException(err.c_str());
+	}
+	return filter;
+}
+
+/// Fetches unencoded stream data
+bool Stream::get_data(std::vector<char> & buf)
+{
 	m_data.resize(slength());
-	ostrm->read_chunk(soffset, &m_data[0], m_data.size(), decrypt?m_id.num:0, decrypt?m_id.gen:0);
+	ostrm->read_chunk(soffset, &m_data[0], m_data.size(), encryption()?m_id.num:0, encryption()?m_id.gen:0);
 
-	if(!(o = dict->find("Filter"))) {
-		std::cerr << "no filter in stream object" << std::endl;
+	Object * filternode;
+	if(!(filternode = m_dict->find("Filter"))) {
+		std::clog << "No filter in stream object, strange" << std::endl;
 		buf = m_data;
 		return true;
 	}
 
-	Object * po = dict->find("DecodeParms");
 	std::vector<Filter *> filters;
 
-	Array * a;
-	if(( a = dynamic_cast<Array *>(o) )) { // filter chain
-		Array * pa = dynamic_cast<Array *>(po);
-		for(unsigned int index = 0; index < a->size(); ++index) {
-			o = a->at(index);
-			Dictionary * params = dynamic_cast<Dictionary *>(pa?pa->at(index):NULL);
-
-			Name * n=dynamic_cast<Name *>(o);
-			if(!n) throw std::string("Stream filter " + o->dump() + " is not implemented");
-
-			Filter * filter = Filter::Create(n->value(), params);
-			if(!filter) throw std::string("Unimplemented stream filter ")+n->value();
-
-			filters.push_back(filter);
-		}
+	Object * filterparams = m_dict->find("DecodeParms");
+	Array * filterarray = dynamic_cast<Array *>(filternode);
+	if(filterarray) { // filter chain
+		Array * paramsarray = dynamic_cast<Array *>(filterparams);
+		for(unsigned int index = 0; index < filterarray->size(); ++index)
+			filters.push_back(CreateStreamFilter(filterarray->at(index), paramsarray ? paramsarray->at(index) : NULL));
 	} else { // single filter
-		Name * n=dynamic_cast<Name *>(o);
-		if(!n) throw std::string("Stream filter " + o->dump() + " is not implemented");
-
-		Dictionary * params = dynamic_cast<Dictionary *>(po);
-
-		Filter * filter = Filter::Create(n->value(), params);
-		if(!filter) throw std::string("Unimplemented stream filter ")+n->value();
-
-		filters.push_back(filter);
+		filters.push_back(CreateStreamFilter(filternode, filterparams));
 	}
 
-	// pass data thrugh all filters
-	
+	// pass data through all filters
 	try {
 		std::vector<char> *s, *d;
 		s = NULL;
@@ -115,7 +110,11 @@ bool Stream::get_data(std::vector<char> & buf, bool decrypt)
 			else d = new std::vector<char>;
 
 			bool r = filters[i]->Decode(i?*s:m_data, *d);
-			if(!r) throw std::string("Stream filter error: ") + filters[i]->Name();
+			if(!r) {
+				std::string err("Stream filter failed: ");
+				err += filters[i]->Name();
+				throw std::exception(err.c_str());
+			}
 
 			delete s;
 			s = d;
@@ -133,6 +132,18 @@ bool Stream::get_data(std::vector<char> & buf, bool decrypt)
 			delete filters[i]; 
 		throw FormatException(s, soffset);
 	}
+}
+
+void Stream::put_data(const std::vector<char> & buf)
+{
+	m_data = buf; // XXX No filters
+	dict()->set("Length", new Integer(m_data.size()));
+}
+
+void Stream::save_data(ObjOStream * ostrm)
+{
+	if(! m_data.empty())
+		ostrm->write_chunk(&m_data[0], m_data.size(), encryption()?m_id.num:0, encryption()?m_id.gen:0);
 }
 
 } // namespace PDF
