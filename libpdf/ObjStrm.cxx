@@ -7,6 +7,14 @@
 
 namespace PDF {
 
+Object * ObjectStream::load_object(unsigned int index)
+{
+	if(index > m_objsnum)
+		throw FormatException("Object Stream: requested object's index greater than objects number");
+	m_sis.seekg(m_offsets[index]);
+	return m_ois.read_direct_object();
+}
+
 /// convert one hex digit to integer 0..15
 inline int hex_to_int(char c) { return ((c>=0 && c<='9')?c-'0':(c&0xCF)-'A'+10)&0x0F; }
 inline bool is_a_whitespace(char c) { return ::strchr("\x09\x0A\x0C\x0D\x20", c) != NULL; /* plus '0x00' char */ }
@@ -225,7 +233,7 @@ Object * ObjIStream::read_delimited(const ObjId * decrypt_info)
 //====================== helper functions =====================
 
 /** \brief Read String from a given stream
- * 
+ *
  * \todo add all valid escape sequences
  */
 std::vector<char> ObjIStream::read_o_string()
@@ -387,7 +395,7 @@ ObjectStream::ObjectStream(Stream * s): m_sis(new StreamBuffer(s, true)), m_ois(
 		Object * o;
 		o = m_ois.read_direct_object(); // object number - ignore it
 		delete o;
-		o = m_ois.read_direct_object(); // 
+		o = m_ois.read_direct_object(); //
 		o->to_number(offset);
 		delete o;
 		m_offsets.push_back(first_offset + offset);

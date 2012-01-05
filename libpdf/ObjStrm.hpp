@@ -19,7 +19,7 @@ class StreamBuffer:public std::streambuf // See http://www.mr-edd.co.uk/blog/beg
 		std::vector<char> m_data;
 	private: // std::streambuf overrides
 		std::streambuf::int_type underflow();
-		virtual std::ios::pos_type __CLR_OR_THIS_CALL seekoff(std::ios::off_type off, std::ios::seekdir dir, std::ios::openmode  mode = std::ios::in | std::ios::out)
+		virtual std::ios::pos_type seekoff(std::ios::off_type off, std::ios::seekdir dir, std::ios::openmode  mode = std::ios::in | std::ios::out)
 		//virtual std::ios::streampos seekoff(std::ios::streamoff off, std::ios::seek_dir dir, int mode = std::ios::in | std::ios::out)
 		{
 			char * pos = NULL;
@@ -32,7 +32,7 @@ class StreamBuffer:public std::streambuf // See http://www.mr-edd.co.uk/blog/beg
 			setg(&*m_data.begin(), pos, &*m_data.begin() + m_data.size());
 			return pos - &*m_data.begin();
 		}
-		virtual std::ios::pos_type __CLR_OR_THIS_CALL seekpos(std::ios::pos_type off, std::ios::openmode mode = std::ios::in | std::ios::out)
+		virtual std::ios::pos_type seekpos(std::ios::pos_type off, std::ios::openmode mode = std::ios::in | std::ios::out)
 		//virtual std::ios::streampos seekpos(std::ios::streamoff off, int mode = std::ios::in | std::ios::out)
 		{
 			return seekoff(off, std::ios::beg, mode);
@@ -89,13 +89,7 @@ private:
 	std::vector<unsigned long> m_offsets;
 public:
 	ObjectStream(Stream * s);
-	Object * load_object(unsigned int index)
-	{
-		if(index > m_objsnum)
-			throw std::exception("Object Stream: requested object's index greater than objects number");
-		m_sis.seekg(m_offsets[index]);
-		return m_ois.read_direct_object();
-	}
+	Object * load_object(unsigned int index);
 };
 
 class ObjOStream
