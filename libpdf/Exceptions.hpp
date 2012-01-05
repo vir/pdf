@@ -95,14 +95,10 @@ public:
 	UnimplementedException(const char * s):Exception("Unimplemented", s) { }
 };
 
-class FreeObjectUsageException:public std::exception
+class FreeObjectUsageException:public Exception
 {
 public:
-	FreeObjectUsageException(const char * s):std::exception(s) { }
-	virtual const char * what() throw()
-	{
-		return (std::string("Usage of free object: ") + std::exception::what()).c_str();
-	}
+	FreeObjectUsageException(const char * s): Exception("Usage of free object", s) { }
 };
 
 class WrongPasswordException:public std::exception
