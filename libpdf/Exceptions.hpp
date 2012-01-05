@@ -36,6 +36,13 @@ public:
 	Exception& operator << (const char * s) { msg += s; return *this; }
 	Exception& operator << (long num) { std::stringstream ss; ss << num; msg += ss.str(); return *this; }
 };
+
+class LogicException:public Exception
+{
+public:
+	LogicException(const char * msg): Exception("Logic error", msg) { }
+};
+
 /// PDF File format exception class
 class FormatException:public std::exception
 {
