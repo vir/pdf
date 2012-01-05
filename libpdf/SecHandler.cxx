@@ -51,6 +51,7 @@ class StdSecHandler:public SecHandler
 		std::string compute_U_r3(const std::string & pw);
 	public:
 		StdSecHandler(const File * file):f(file),R(0),P(0),Length(0) { }
+		virtual ~StdSecHandler() { }
 		virtual bool set_password(const std::string & pw, int which = 0);
 		void init(const Dictionary * cryptodict);
 		bool set_user_password(const std::string & pw);
