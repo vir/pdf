@@ -31,24 +31,11 @@ class Font::CMap
 		CMap():charbytes(1),m_identity(false) {}
 		~CMap() {}
 		bool load(ObjIStream & s);
-		bool load(std::string & s);
+		bool load(const std::string & s);
 		bool load(OH cmapnode);
 		unsigned int cbytes() const { return charbytes; }
 		wchar_t map(unsigned long c, bool no_fallback = false) const;
-		std::string dump() const
-		{
-			if(m_identity)
-				return "Identity";
-			std::stringstream ss; 
-			for(std::map<long,wchar_t>::const_iterator it=charmap.begin(); it!=charmap.end(); it++)
-			{
-//            ss << "Map " << it->first << " to " << it->second << std::endl;
-				char buf[1024];
-				sprintf(buf, "Map %04lX to %04X\n", it->first, it->second);
-				ss << buf;
-			}
-			return ss.str();
-		}
+		std::string dump() const;
 };
 
 } // namespace PDF

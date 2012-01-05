@@ -1,5 +1,6 @@
 #include "Font_CMap.hpp"
 #include "ObjStrm.hpp"
+#include <stdio.h> // for sprintf in dump()
 
 namespace PDF {
 
@@ -152,7 +153,7 @@ bool Font::CMap::load(OH cmapnode)
 }
 
 /// Load named CMap
-bool Font::CMap::load( std::string & s )
+bool Font::CMap::load(const std::string & s)
 {
 	if(s == "Identity-H" || s == "Identity-V") {
 		charmap.clear();
@@ -175,6 +176,20 @@ wchar_t Font::CMap::map(unsigned long c, bool no_fallback) const
 	return no_fallback?L'\0':(wchar_t)c; /* unmapped */
 }
 
+std::string Font::CMap::dump() const
+{
+	if(m_identity)
+		return "Identity";
+	std::stringstream ss;
+	for(std::map<long,wchar_t>::const_iterator it=charmap.begin(); it!=charmap.end(); it++)
+	{
+//            ss << "Map " << it->first << " to " << it->second << std::endl;
+		char buf[1024];
+		sprintf(buf, "Map %04lX to %04X\n", it->first, it->second);
+		ss << buf;
+	}
+	return ss.str();
+}
 
 } // namespace PDF
 

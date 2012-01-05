@@ -46,7 +46,7 @@ class OH
       if(m_ptr && m_cache && m_ptr->indirect) m_cache->inc_counter(m_ptr->m_id);
       return *this;
     }
-    
+
     /// check for error
     bool operator!() { return !m_ptr; }
     /// check for ok
@@ -77,12 +77,12 @@ class OH
 				if(it != m_cache->cache.end())
 					it->second.set_modified();
 				else
-					throw std::exception("Object is not in cache?!?!!");
+					throw LogicException("Object is not in cache?!?!!");
 			}
 			return *this;
 		}
 
-    
+
     //-------- high-level objects access
     /// Returns size of array/dictionary
     unsigned long size() const
@@ -92,7 +92,7 @@ class OH
       // XXX check streams?
       if(a) return a->size();
       else if(d) return d->size();
-      else throw std::exception("Not a container --- no size()");
+      else throw LogicException("Not a container --- no size()");
     }
     /// Find object in dictionary
     OH find(const std::string & s, bool autoexpand=true) const

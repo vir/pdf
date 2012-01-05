@@ -6,7 +6,19 @@
 namespace PDF {
 
 
+void ObjectsCache::inc_counter(const ObjId & id)
+{
+  CacheIterator it=cache.find(id);
+  if(it==cache.end()) throw LogicException("Object not in cache");
+  else inc_counter(it);
+}
 
+void ObjectsCache::dec_counter(const ObjId & id)
+{
+  CacheIterator it=cache.find(id);
+  if(it==cache.end()) throw LogicException("Object not in cache");
+  else dec_counter(it);
+}
 
 OH ObjectsCache::get_object(const ObjId & id)
 {

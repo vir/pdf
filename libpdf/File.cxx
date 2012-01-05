@@ -80,7 +80,7 @@ bool File::open(std::string fn)
 	if(!fn.empty())
 		filename = fn;
 	if(filename.empty())
-		throw std::exception("No filename to open");
+		throw LogicException("No filename to open");
 	switch(open_mode) {
 		case MODE_READ:
 			file.open(filename.c_str(), std::ios::in|std::ios::binary);
@@ -172,7 +172,7 @@ Object * File::load_object(const ObjId & oi, bool decrypt)
 void File::save_object(Object * o)
 {
 	if(! o->indirect)
-		throw std::exception("File::save_object called with direct object");
+		throw LogicException("File::save_object called with direct object");
 	long pos = file.tellg();
 	const ObjId & oi = o->m_id;;
 	if(m_debug>1)
@@ -395,7 +395,7 @@ void File::read_xref_stream(Stream * s)
 				break;
 		}
 
-		
+
 		if(--subsection_entries)
 			objid.num++;
 		else {
@@ -606,7 +606,7 @@ Object * ObjectStreamsCache::load_object(long obj_stream_num, unsigned int obj_s
 		Object * o = m_file.load_object(oid);
 		Stream * s = dynamic_cast<Stream *>(o);
 		if(!s)
-			throw std::exception("Can not load object stream");
+			throw FormatException("Object Stream is not a Stream");
 		ObjectStream * os = new ObjectStream(s);
 		delete s;
 		it = m_stash.insert(std::make_pair(obj_stream_num, Entry(os))).first;

@@ -5,6 +5,7 @@
 #include "Font_StdFonts.hpp"
 
 #include <sstream>
+#include <stdio.h> // for fprintf
 
 
 namespace PDF {
@@ -280,7 +281,7 @@ bool Font::load_type0_font_dic(OH fdic)
 			h1 = w[index++];
 			h1.put(i1, "First group element must be an integer, not a ");
 			if(index >= w.size())
-				throw std::exception("Not enough data in Type0 font dictionary");
+				throw DocumentStructureException("Not enough data in Type0 font dictionary");
 
 			h2 = w[index++];
 			if(h2.put(a)) {
@@ -288,7 +289,7 @@ bool Font::load_type0_font_dic(OH fdic)
 					const Object * oo = a->at(i);
 					const Integer * cw = dynamic_cast<const Integer *>(oo);
 					if(!cw)
-						throw std::exception("Type0 font: char width must be an integer");
+						throw DocumentStructureException("Type0 font: char width must be an integer");
 					charwidths[i1->value() + i] = cw->value();
 				}
 //				std::clog << "Charwidths of chars from " << i1->value() << " shuld be read from " << a->dump() << std::endl;
@@ -296,7 +297,7 @@ bool Font::load_type0_font_dic(OH fdic)
 			}
 			h2.put(i2, "Second element must be an array or integer, not a ");
 			if(index >= w.size())
-				throw std::exception("Not enough data in Type0 font dictionary");
+				throw DocumentStructureException("Not enough data in Type0 font dictionary");
 
 			h3 = w[index++];
 			h3.put(i3, "Third element must be an integer, not a ");

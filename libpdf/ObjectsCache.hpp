@@ -61,18 +61,8 @@ class ObjectsCache
         cache.erase(it);
       }
     }
-    void inc_counter(const ObjId & id)
-    {
-      CacheIterator it=cache.find(id);
-      if(it==cache.end()) throw std::exception("Object not in cache");
-      else inc_counter(it);
-    }
-    void dec_counter(const ObjId & id)
-    {
-      CacheIterator it=cache.find(id);
-      if(it==cache.end()) throw std::exception("Object not in cache");
-      else dec_counter(it);
-    }
+    void inc_counter(const ObjId & id);
+    void dec_counter(const ObjId & id);
   public:
     ObjectsCache(File & f):m_file(f)  { }
     ~ObjectsCache()
