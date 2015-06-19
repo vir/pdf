@@ -4,6 +4,17 @@
 
 WxTabDocument * theDocument = NULL;
 
+class WxErrorReporter:public ErrorReporter
+{
+public:
+	virtual void ReportError(const char * prefix, const char * msg)
+	{
+		wxMessageBox(wxString(msg, wxConvUTF8), wxString(prefix, wxConvUTF8));
+	}
+};
+
+WxErrorReporter * theReporter = NULL;
+
 /* Private class */
 class Metafile:public PDF::Media
 {
@@ -53,7 +64,7 @@ void Metafile::SetFont(const PDF::Font * font, double size)
 {
 	if(size < 4) size = 4;
 	m_font_size = size;
-	wxFont* f = wxTheFontList->FindOrCreateFont(int(size/2.0), wxSWISS, wxNORMAL /*wxITALIC*/, wxNORMAL/*wxBOLD*/);
+	wxFont* f = wxTheFontList->FindOrCreateFont(int(size/1.8 /* empirical constant to get wxWidgets font of needed size */), wxSWISS, wxNORMAL /*wxITALIC*/, wxNORMAL/*wxBOLD*/);
 	dc.SetFont(*f);
 }
 
@@ -87,49 +98,61 @@ void Metafile::Line(const Point & p1, const Point & p2)
 
 
 //===========================================================
+
+WxTabDocument::WxTabDocument()
+	:doc(NULL),page(NULL),m_rotation(0),m_scale(1.0),m_cur_page_num(0),m_error_handler(NULL)
+{
+	theReporter = new WxErrorReporter;
+}
+
+WxTabDocument::~WxTabDocument()
+{
+	delete page;
+	delete theReporter;
+}
+
 bool WxTabDocument::LoadFile(const wxString & fn)
 {
-	filename = fn;
-	std::string fname = std::string(fn.mb_str());
-	if(doc) {
-		delete page;
-		delete doc;
-		file.close();
-	}
-
-	file.debug(0);
-  file.open(fname);
-  if(! file.load()) {
-		file.close();
-		return false;
-	}
-
-	std::clog << "+ File loaded" << std::endl;
-
-//  f.dump();
-
 	try {
-    doc = new PDF::Document(file, 5/*debug level*/);
+		filename = fn;
+		std::string fname = std::string(fn.mb_str());
+		if(doc) {
+			delete page;
+			delete doc;
+			file.close();
+		}
+
+		file.debug(0);
+		file.open(fname);
+		if(! file.load()) {
+			file.close();
+			return false;
+		}
+
+		std::clog << "+ File loaded" << std::endl;
+//		f.dump();
+
+		doc = new PDF::Document(file, 5/*debug level*/);
 		std::clog << "+ Document loaded" << std::endl;
-//    PDF::Object::m_debug=true;
-//    doc.dump();
+		// PDF::Object::m_debug=true;
+		// doc.dump();
 		return true;
 	}
-  catch(std::string s) {
-    std::cerr << "!Exception: " << s << std::endl;
-  }
-  catch(PDF::DocumentStructureException e) {
-    std::cerr << "DocumentStructureException:\n  " << e.what() << std::endl;
-  }
-  catch(PDF::FormatException e) {
-    std::cerr << "Format excertion:\n  " << e.what() << std::endl;
-  }
-  catch(std::exception e) {
-    std::cerr << "Unknown exception:\n  " << e.what() << std::endl;
-  }
-  catch(...) {
-    std::cerr << "Unknown exception!" << std::endl;
-  }
+	catch(std::string s) {
+		std::cerr << "Some strange exception: " << s << std::endl;
+		if(m_error_handler)
+			m_error_handler->ReportError("Some strange exception", s.c_str());
+	}
+	catch(std::exception & e) {
+		std::cerr << "Unknown exception:\n  " << e.what() << std::endl;
+		if(m_error_handler)
+			m_error_handler->ReportError("Unknown exception", e.what());
+	}
+	catch(...) {
+		std::cerr << "Unknown exception!" << std::endl;
+		if(m_error_handler)
+			m_error_handler->ReportError("Unknown error", "Catched unknown exception");
+	}
 	/* reached only after exception */
 	file.close();
 	return false;
@@ -138,6 +161,7 @@ bool WxTabDocument::LoadFile(const wxString & fn)
 bool WxTabDocument::LoadPage(int num)
 {
 	if(page) delete page;
+	page = NULL;
 	try {
 		if(num <= 0)
 			num = 1;
@@ -149,32 +173,24 @@ bool WxTabDocument::LoadPage(int num)
 		page->load(doc->get_page_node(num-1));
 		std::clog << page->dump() << std::endl;
 		m_cur_page_num = num;
-		try {
-			tabulator.full_process(page);
-		}
-		catch(std::exception & e) {
-			wxMessageBox(wxString(e.what(), wxConvUTF8), wxT("Exception"));
-		}
-		catch(...) {
-			wxMessageBox(wxT("Unknown exception"), wxT("Exception"));
-		}
+		tabulator.full_process(page);
 		return true;
 	}
-  catch(std::string s) {
-    std::cerr << "!Exception: " << s << std::endl;
-  }
-  catch(PDF::DocumentStructureException e) {
-    std::cerr << "DocumentStructureException:\n  " << e.what() << std::endl;
-  }
-  catch(PDF::FormatException e) {
-    std::cerr << "Format excertion:\n  " << e.what() << std::endl;
-  }
-  catch(std::exception e) {
-    std::cerr << "Unknown exception:\n  " << e.what() << std::endl;
-  }
-  catch(...) {
-    std::cerr << "Unknown exception!" << std::endl;
-  }
+	catch(std::string s) {
+		std::cerr << "Some strange exception: " << s << std::endl;
+		if(m_error_handler)
+			m_error_handler->ReportError("Some strange exception", s.c_str());
+	}
+	catch(std::exception & e) {
+		std::cerr << "Unknown exception:\n  " << e.what() << std::endl;
+		if(m_error_handler)
+			m_error_handler->ReportError("Unknown exception", e.what());
+	}
+	catch(...) {
+		std::cerr << "Unknown exception!" << std::endl;
+		if(m_error_handler)
+			m_error_handler->ReportError("Unknown error", "Catched unknown exception");
+	}
 	/* reached only after exception */
 	return false;
 }

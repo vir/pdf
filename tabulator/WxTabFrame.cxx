@@ -198,7 +198,9 @@ WxTabFrame::WxTabFrame(const wxString& title, const wxPoint& pos, const wxSize& 
 
 WxTabFrame::~WxTabFrame()
 {
-    m_mgr.UnInit();
+	delete theDocument;
+	theDocument = NULL;
+	m_mgr.UnInit();
 }
 
 void WxTabFrame::OnQuit(wxCommandEvent& WXUNUSED(event))
@@ -227,10 +229,17 @@ void WxTabFrame::OnDocumentOpen(wxCommandEvent& WXUNUSED(event))
 		wxString path = of.GetPath();
 		if(!theDocument)
 			theDocument = new WxTabDocument();
- 		theDocument->Open(path);
-		SetTitle(of.GetFilename());
-		m_pagenum->SetValue(theDocument->GetPageNum());
-		m_canvas->Refresh();
+		theDocument->SetErrorHandler(this);
+		if(theDocument->Open(path)) {
+			SetTitle(of.GetFilename());
+			m_pagenum->SetValue(theDocument->GetPageNum());
+			m_canvas->Refresh();
+		}
+		else
+		{
+			delete theDocument;
+			theDocument = NULL;
+		}
 	}
 }
 
@@ -353,5 +362,9 @@ void WxTabFrame::OnBatchExport(wxCommandEvent &event)
 	}
 }
 
+void WxTabFrame::ReportError(const char * prefix, const char * msg)
+{
+	wxMessageBox(wxString(msg, wxConvUTF8), wxString(prefix, wxConvUTF8), wxOK|wxCENTRE, this);
+}
 
 

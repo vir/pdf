@@ -3,6 +3,7 @@
 #include <libpdf/PDF.hpp>
 #include <string>
 #include "WxTabTabulator.hpp"
+#include "ErrorReporterInterface.hpp"
 
 class wxDC;
 class WxTabDocument
@@ -15,8 +16,11 @@ class WxTabDocument
 		double m_scale;
 		int m_cur_page_num;
 		wxString filename;
+		ErrorReporter * m_error_handler;
 	public:
-		WxTabDocument():doc(NULL),page(NULL),m_rotation(0),m_scale(1.0),m_cur_page_num(0) {}
+		WxTabDocument();
+		~WxTabDocument();
+		void SetErrorHandler(ErrorReporter * e) { m_error_handler = e; }
 		bool LoadFile(const wxString & fname);
 		bool LoadPage(int num);
 		void Draw(PDF::Media * mf);

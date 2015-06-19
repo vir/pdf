@@ -3,10 +3,11 @@
 #include <wx/wx.h>
 #include <wx/spinctrl.h>
 #include "wx/aui/aui.h"
+#include "ErrorReporterInterface.hpp"
 
 class WxTabCanvas;
 class PageNumCtrl;
-class WxTabFrame : public wxFrame
+class WxTabFrame : public wxFrame, public ErrorReporter
 {
 	public:
 		WxTabFrame(const wxString& title, const wxPoint& pos, const wxSize& size);
@@ -26,6 +27,8 @@ class WxTabFrame : public wxFrame
 		void OnBatchExport(wxCommandEvent &event);
 		void OnOplimitSpinCtrl(wxSpinEvent & event);
 		void OnPageNumChanged(wxCommandEvent &event);
+	public: // ErrorReporter
+		virtual void ReportError(const char * prefix, const char * msg);
 	private:
 		wxAuiManager m_mgr;
 //		wxSpinCtrl * m_oplimitspin;

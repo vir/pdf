@@ -338,6 +338,10 @@
 			Filter="h;hpp;hxx;hm;inl"
 			>
 			<File
+				RelativePath=".\ErrorReporterInterface.hpp"
+				>
+			</File>
+			<File
 				RelativePath=".\PageNumCtrl.hpp"
 				>
 			</File>
