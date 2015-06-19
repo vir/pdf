@@ -14,6 +14,7 @@ class MyFrame:public wxDocMDIParentFrame
 		void OnQuit(wxCommandEvent& event);
 		void OnAbout(wxCommandEvent& event);
 		void OnViewStream(wxCommandEvent& event);
+		void OnSaveStream(wxCommandEvent& event);
 		void ViewStreamEnable(bool enable);
 	private:
 		wxMenu *menuView;

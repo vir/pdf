@@ -4,6 +4,20 @@
 #include <PDF.hpp>
 #include "PdfDoc.hpp"
 
+class MyTextWidget: public wxTextCtrl
+{
+	public:
+		MyTextWidget(wxWindow * parent)
+			: wxTextCtrl(parent, wxID_ANY, _T(""), wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE|wxTE_READONLY|wxTE_DONTWRAP)
+		{
+		}
+		// Some ideas stolen from http://wxwidgets.info/find_and_replace_for_wxwidgets_ru/
+		bool Find(wxString substring, bool backwards = false)
+		{
+			return false;
+		}
+};
+
 class MyStreamViewer: public wxFrame
 {
 	public:
@@ -134,7 +148,7 @@ void PdfExplorerView::SelectedObject(PDF::OH h)
 	m_right->SetValue(s);
 	bool is_a_stream = h->type() == "Stream";
 	if(is_a_stream)
-		m_right->AppendText(_T("\n\n*** Hit F3 to view stream data! ***\n"));
+		m_right->AppendText(_T("\n\n*** Hit F3 to view stream data or F2 to save it! ***\n"));
 	m_mainframe->ViewStreamEnable(is_a_stream);
 	delete m_stream_handle;
 	m_stream_handle = new PDF::OH(h);
@@ -145,6 +159,18 @@ void PdfExplorerView::ViewStreamData()
 	wxASSERT(m_stream_handle);
 	wxFrame * f = new MyStreamViewer(*m_stream_handle);
 	f->Show();
+}
+
+void PdfExplorerView::SaveStreamData(std::ostream& ostr)
+{
+	if(! m_stream_handle)
+		return;
+	PDF::Stream * s = NULL;
+	m_stream_handle->put(s);
+	wxASSERT(s);
+	std::vector<char> buf;
+	s->get_data(buf);
+	ostr.write(&*buf.begin(), buf.size());
 }
 
 

@@ -22,6 +22,7 @@ class PdfExplorerView:public wxView, public MyTreeEventsHandler
 		virtual void SelectedObject(PDF::OH h);
 	public:
 		void ViewStreamData();
+		void SaveStreamData(std::ostream& ostr);
 	public:
 		PdfExplorerView();
 		~PdfExplorerView();
