@@ -113,7 +113,7 @@ void ExporterHTML::cell(const Tabulator::Table::Cell * cptr, bool hidden, unsign
 		s << " rowspan=\"" << rs << "\"";
 	s << ">";
 	s << quote_html( ws2utf8( cptr->celltext() ) );
-	s << '<' << tag << '>';
+	s << "</" << tag << '>';
 }
 
 void ExporterHTML::row_end()
