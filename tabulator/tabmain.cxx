@@ -21,6 +21,7 @@ int main(int argc, char * argv[])
 	int page_last = 0;
 	char format = 'c';
 	int tmp;
+	int debug = 0;
 
 	Tabulator t;
 	const char * expparams = NULL;
@@ -39,13 +40,16 @@ int main(int argc, char * argv[])
 	while(1)
 	{
 		int c;
-		c = getopt(argc, argv, "hp:r:c:R:S:f:PE:J");
+		c = getopt(argc, argv, "hd:p:r:c:R:S:f:PE:J");
 		if(c == -1) break;
 		switch(c)
 		{
 			case 'h':
 				help(std::cout);
 				exit(0);
+				break;
+			case 'd':
+				debug = atoi(optarg);
 				break;
 			case 'p':
 				if(2==sscanf(optarg, "%d-%d", &page_first, &page_last)) break;
@@ -99,9 +103,10 @@ int main(int argc, char * argv[])
   std::set_terminate (__gnu_cxx::__verbose_terminate_handler);
 #endif
   try {
-	PDF::Object::m_debug=false;
+	PDF::Object::m_debug = debug & 0x04 ? true : false;
+//	PDF::Tabulator::TextBlock::debug = debug & 0x08 ? true : false;
 	PDF::File f;
-	f.debug(0);
+	f.debug(debug & 0x03);
 	f.open(fname);
 	if(!f.load()) { f.close(); return -1; }
 	
@@ -191,6 +196,7 @@ void help(std::ostream & s)
 	s << "Usage: rot [options] file.pdf" << std::endl
 		<< "Options:" << std::endl
 		<< "\t-h or --help --- this help" << std::endl
+		<< "\t-d N --- set debug level, 1--3 for File, +4 for Object" << std::endl
 		<< "\t-pN-M or -p NNN or --page NN-MM --- pages to process" << std::endl
 		<< "\t-rR --- rotate page R*90degree CCW before processing" << std::endl
 		<< "\t-cXXXX --- UNIMPLEMENTED crop rectangle" << std::endl

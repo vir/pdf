@@ -1,7 +1,7 @@
 #include "Tabulator.hpp"
 #include <assert.h>
 
-bool Tabulator::TextBlock::debug = true;
+bool Tabulator::TextBlock::debug = false;
 
 Tabulator::TextBlock::TextBlock()
 	: width(0)
