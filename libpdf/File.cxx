@@ -43,11 +43,11 @@ void XRefTable::dump( std::ostream & strm /*= std::clog*/ ) const
 
 /** Constructs PDF::File object for existing PDF file access */
 File::File(std::string fn)
-	:istrm(NULL), ostrm(NULL)
-	,m_debug(0)
-	,m_security(NULL)
-	,m_streams(*this)
-	,open_mode(MODE_READ)
+	: open_mode(MODE_READ)
+	, istrm(NULL), ostrm(NULL)
+	, m_debug(0)
+	, m_security(NULL)
+	, m_streams(*this)
 {
 	istrm = new ObjIStream(file);
 	if(!fn.empty())
@@ -56,12 +56,12 @@ File::File(std::string fn)
 
 /** Constructs PDF::File object for new PDF file creation */
 File::File(double pdf_version, std::string fn)
-	:istrm(NULL), ostrm(NULL)
+	: open_mode(MODE_WRITE)
+	, istrm(NULL), ostrm(NULL)
 	, pdf_version(pdf_version)
 	, m_debug(0)
 	, m_security(NULL)
 	, m_streams(*this)
-	, open_mode(MODE_WRITE)
 {
 	ostrm = new ObjOStream(file);
 	if(!fn.empty())

@@ -29,6 +29,7 @@ class Filter
 class PredictorBase
 {
 	public:
+		virtual ~PredictorBase() { }
 		virtual void Insert(std::vector<char> & data) = 0;
 		virtual void Remove(std::vector<char> & data) = 0;
 };

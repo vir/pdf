@@ -22,8 +22,8 @@ class Font::CMap
 		};
 		std::map<long,wchar_t> charmap;
 		std::vector<Range> charranges;
-		bool m_identity;
 		unsigned int charbytes;
+		bool m_identity;
 		unsigned int load_codespacerange(ObjIStream & s);
 		bool load_bfchar(ObjIStream & s);
 		bool load_bfrange(ObjIStream & s);

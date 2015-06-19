@@ -52,6 +52,8 @@ glyphlist.txt:
 
 Core14_AFMs.tar:
 	wget http://www.adobe.com/devnet/font/pdfs/Core14_AFMs.tar
-include $(SOURCES:.cxx=.d)
 
+ifneq "$(wildcard *.d)" ""
+include $(SOURCES:.cxx=.d)
+endif
 

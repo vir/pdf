@@ -147,7 +147,7 @@ std::cerr << "Computed encr. key: " << hexstr(encrkey) << std::endl;
 std::string StdSecHandler::compute_O(const std::string & pw)
 {
 	std::cerr << "Unimplemented StdSecHandler::compute_O() called" << std::endl;
-	return false;
+	return "";
 }
 
 std::string StdSecHandler::compute_U_r2(const std::string & pw) // Algorithm 3.4
