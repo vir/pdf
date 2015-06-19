@@ -110,7 +110,8 @@ void MyFrame::OnSaveStream(wxCommandEvent& event)
 		if (OpenDialog->ShowModal() == wxID_OK) // if the user click "Open" instead of "Cancel"
 		{
 			wxString SavePath = OpenDialog->GetPath();
-			std::ofstream s(SavePath);
+			std::ofstream s;
+			s.open(SavePath.mb_str());
 			static_cast<PdfExplorerView*>(curview)->SaveStreamData(s);
 		}
 		OpenDialog->Destroy();

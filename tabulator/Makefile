@@ -10,10 +10,11 @@ SOURCES_TABULATOR = tabmain.cxx
 OBJS_TABULATOR = $(SOURCES_TABULATOR:.cxx=.o)
 
 SOURCES_WXTAB = \
-	wxtab.cxx WxTabCanvas.cxx WxTabDocument.cxx WxTabFrame.cxx WxTabTabulator.cxx
+	wxtab.cxx WxTabCanvas.cxx WxTabDocument.cxx WxTabFrame.cxx WxTabTabulator.cxx \
+	WxTabBatchExportDlg.cxx PageNumCtrl.cxx
 OBJS_WXTAB = $(SOURCES_WXTAB:.cxx=.o)
 
-CXXFLAGS = -Wall -pipe -g -I.. `wx-config --cxxflags`
+CXXFLAGS = -Wall -Wno-write-strings -pipe -g -I.. `wx-config --cxxflags`
 #	$(CXX) -Wall -pipe -g -c -I${LIBPDFDIR}  -o $*.o $<
 
 all: libtab.a tabulator wxtab

@@ -10,6 +10,7 @@
 //#include <fstream>
 #include <string>
 #include <sstream>
+#include <stdexcept>
 
 #define NOT_IMPLEMENTED(a) \
 	throw UnimplementedException((std::string(__FILE__) + a).c_str());

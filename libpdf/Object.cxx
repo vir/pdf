@@ -113,7 +113,7 @@ bool Stream::get_data(std::vector<char> & buf)
 			if(!r) {
 				std::string err("Stream filter failed: ");
 				err += filters[i]->Name();
-				throw std::exception(err.c_str());
+				throw std::runtime_error(err.c_str());
 			}
 
 			delete s;

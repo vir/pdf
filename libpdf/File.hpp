@@ -28,9 +28,9 @@ class XRefTable
 public: // types
 	struct Entry
 	{
-		enum { Normal, Compressed, Free } type;
 		unsigned long offset;
 		unsigned int obj_stream_index;
+		enum { Normal, Compressed, Free } type;
 		bool compressed() const { return type == Compressed; };
 		bool free() const { return type == Free; };
 		explicit Entry(): offset(0), obj_stream_index(0), type(Free) { }

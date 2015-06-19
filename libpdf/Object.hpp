@@ -256,10 +256,10 @@ class Stream:public Object // All streams must be indirect objects
 		std::vector<char> m_data;
 		bool m_encryption;
 	public:
-		Stream(Dictionary * d, std::vector<char> & b):source(NULL),m_dict(d),ostrm(NULL),m_slength_ref(NULL),m_data(b),m_encryption(true) { }
-		Stream(Dictionary * d, ObjIStream * s, unsigned int offs, unsigned long length):source(NULL),m_dict(d),ostrm(s),soffset(offs),m_slength_ref(NULL),m_slength(length),m_encryption(true) { }
-		Stream(Dictionary * d, ObjIStream * s, unsigned int offs, ObjRef * length):source(NULL),m_dict(d),ostrm(s),soffset(offs),m_slength_ref(length),m_slength(0),m_encryption(true) { }
-		Stream(bool encrypt = true):source(NULL), m_dict(new Dictionary), ostrm(NULL), soffset(0), m_slength(0), m_slength_ref(NULL), m_encryption(encrypt) { }
+		Stream(Dictionary * d, std::vector<char> & b): source(NULL),m_dict(d), ostrm(NULL), soffset(0), m_slength_ref(NULL), m_slength(0), m_data(b), m_encryption(true) { }
+		Stream(Dictionary * d, ObjIStream * s, unsigned int offs, unsigned long length): source(NULL),m_dict(d), ostrm(s), soffset(offs), m_slength_ref(NULL), m_slength(length), m_encryption(true) { }
+		Stream(Dictionary * d, ObjIStream * s, unsigned int offs, ObjRef * length): source(NULL),m_dict(d), ostrm(s), soffset(offs), m_slength_ref(length),m_slength(0), m_encryption(true) { }
+		Stream(bool encrypt = true): source(NULL),m_dict(new Dictionary),ostrm(NULL), soffset(0), m_slength_ref(NULL), m_slength(0), m_encryption(encrypt) { }
 		virtual ~Stream() { if(m_dict) delete m_dict; }
 		virtual void dump(std::ostream & ss, int level=0) const
 		{

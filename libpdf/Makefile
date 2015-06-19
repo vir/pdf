@@ -4,7 +4,8 @@
 SOURCES = \
 	File.cxx Object.cxx Document.cxx ObjectsCache.cxx \
 	Filter.cxx Filter_Flate.cxx Filter_Base85.cxx \
-	Page.cxx Font.cxx Font_Encoding.cxx Font_CMap.cxx \
+	Page.cxx Page_Path.cxx Page_TextObject.cxx \
+	Font.cxx Font_Encoding.cxx Font_CMap.cxx \
 	Font_StdFonts.cxx SecHandler.cxx Crypto.cxx \
 	ObjStrm.cxx
 OBJS = $(SOURCES:.cxx=.o)

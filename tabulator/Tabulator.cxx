@@ -114,7 +114,7 @@ void Tabulator::build_grid()
 					std::clog << "Adding line above text string @" << tit->pos.dump() << std::endl;
 				prev_y = cur_y;
 				cur_y = tit->pos.y;
-				double half_interval = (prev_y < 0) ? tit->height/10.0 : (cur_y - tit->height - prev_y)/2.0;
+				double half_interval = (prev_y < 0) ? Coord(tit->height)/10.0 : (cur_y - tit->height - prev_y)/2.0;
 				grid.add_horizontal_line(cur_y - tit->height - half_interval);
 			}
 		}

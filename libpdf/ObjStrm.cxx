@@ -4,6 +4,7 @@
 #include "Object.hpp"
 #include "Exceptions.hpp"
 #include "SecHandler.hpp"
+#include <cstdio> // for EOF
 
 namespace PDF {
 
@@ -409,7 +410,6 @@ ObjectStream::ObjectStream(Stream * s): m_sis(new StreamBuffer(s, true)), m_ois(
 
 void ObjOStream::write_direct_object(Object * o)
 {
-	Dictionary * d = dynamic_cast<Dictionary *>(o);
 #define OBJECT_TYPE_ID_TRY(t) t * p_##t = dynamic_cast<t *>(o);
 	OBJECT_TYPE_ID_TRY(Null);
 	OBJECT_TYPE_ID_TRY(Real);
@@ -426,7 +426,7 @@ void ObjOStream::write_direct_object(Object * o)
 	if(p_Null) {
 		*f << "null";
 	} else if(p_Boolean) {
-		*f << p_Boolean->value() ? "true" : "false";
+		*f << (p_Boolean->value() ? "true" : "false");
 	} else if(p_Real) {
 		*f << p_Real->value();
 	} else if(p_Integer) {
