@@ -6,7 +6,9 @@
 #include "libpdf/Object.hpp"
 #include "libpdf/Document.hpp"
 #include "libpdf/OH.hpp"
+#include "libpdf/Exceptions.hpp"
 #include <iostream>
+#include <stdlib.h> // for atol
 
 using namespace std;
 
@@ -36,6 +38,12 @@ int main(int argc, char * argv[])
 			cerr << "Can't load " << fname << endl;
 			pf.close();
 			return 10;
+    }
+
+		if(pf.security()) {
+			clog << "Found security handler, trying empty password... ";
+			bool ok = pf.security()->set_password("");
+			clog << (ok?"OK":"FAILED") << endl;
 		}
 
 		switch(*argv[2]) {
@@ -53,6 +61,9 @@ int main(int argc, char * argv[])
 				dump_generic_object(pf, objnum);
 				break;
 		}
+  }
+	catch(PDF::FormatException & e) {
+		cerr << "FormatException: " << e.what() << endl;
 	}
 	catch(std::exception & e) {
 		cerr << "Exception: " << e.what() << endl;
