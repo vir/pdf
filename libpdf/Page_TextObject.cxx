@@ -21,29 +21,13 @@ void PDF::Page::TextObject::Append( const String * str )
 		Flush();
 #else
 		if(nextchar == L' ') {
-			spaces++;
-			space_width = charwidth;
-			if(spaces > 0) {
-				Flush();
-				double offset = (charwidth * gs->text_state.Tfs) * gs->text_state.Th/100.0;
-				offset += (gs->text_state.Tw / gs->text_state.Tfs) * gs->text_state.Tfs * gs->text_state.Th/100.0;
-				offset += gs->text_state.Tc / gs->text_state.Tfs * gs->text_state.Th/100.0;
-				tm.offset_unscaled(offset, 0);
-				//if(false && spaces == 2) // XXX compensate first space displacement assuming that first space width is equal to second
-				//	tm.offset_unscaled(offset, 0);
-
-			}
+			Flush();
+			double offset = (charwidth * gs->text_state.Tfs) * gs->text_state.Th/100.0;
+			offset += (gs->text_state.Tw / gs->text_state.Tfs) * gs->text_state.Tfs * gs->text_state.Th/100.0;
+			offset += gs->text_state.Tc / gs->text_state.Tfs * gs->text_state.Th/100.0;
+			tm.offset_unscaled(offset, 0);
 			continue;
 		} else {
-			if(spaces) {
-				if(false && spaces == 1 && !accumulated_text.empty()) {
-					accumulated_text += L' ';
-					total_width += space_width;
-					Kerning(-(gs->text_state.Tw / gs->text_state.Tfs));
-					Kerning(-(gs->text_state.Tc / gs->text_state.Tfs));
-				}
-				spaces = 0;
-			}
 			accumulated_text += nextchar;
 			total_width += charwidth;
 			if(gs->text_state.Tc)

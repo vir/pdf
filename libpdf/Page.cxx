@@ -219,6 +219,8 @@ void Page::draw(Media * m)
 
 		/* Check for any-mode-operators */
 		if(op->name() == "cm") {
+			if(tobj)
+				tobj->Flush();
 			gs->ctm *= op->matrix();
 			if(tobj)
 				tobj->FontChanged();
@@ -402,6 +404,7 @@ void Page::draw(Media * m)
 				else if(op->name() == "Tw") { gs->text_state.Tw    = op->number(0); } // word spacing - useful if text begins with space(s)
 				else if(op->name() == "Tf") // set current font
 				{
+					tobj->Flush();
 					const Name * n=dynamic_cast<const Name *>(op->arg(0));
 					if(n) {
 						std::map<std::string,Font *>::const_iterator it = fonts.find(n->value());

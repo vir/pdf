@@ -16,8 +16,6 @@ class Page::TextObject
 		const Page::GraphicsState * gs;
 		Media * media;
 		double kerning_too_big;
-		unsigned int spaces;
-		double space_width; // width of last space
 	public:
 		CTM tm;
 		CTM lm;
@@ -28,7 +26,6 @@ class Page::TextObject
 		TextObject(const Page::GraphicsState * g, Media * m):gs(g),media(m),total_width(0),update_font(false)
 		{
 			kerning_too_big = 0.3; //0.4;
-			spaces = 0;
 		}
 		void SetMatrix(const CTM & m)
 		{
@@ -39,13 +36,11 @@ class Page::TextObject
 		void Kerning(double k);
 		void NewLine() {
 			Flush();
-			spaces = 0;
 			lm.offset_unscaled(0, -gs->text_state.Tl); // XXX +Tl in spec!!! BUG?
 			tm = lm;
 		}
 		void Offset(const Point & p) {
 			Flush();
-			spaces = 0;
 			lm.offset_unscaled(p);
 			tm = lm;
 		}
