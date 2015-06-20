@@ -58,6 +58,7 @@ bool MyDocument::LoadPage(int num)
 		std::clog << "Loading " << num << "th page" << std::endl;
 		page->load(doc->get_page_node(num-1));
 		std::clog << page->dump() << std::endl;
+		m_pagenum = num;
 		return true;
 	}
   catch(std::string s) {
