@@ -170,9 +170,13 @@ Object * ObjIStream::read_delimited(const ObjId * decrypt_info)
 						std::string s = read_token();
 						if(s == "stream") {
 							/* find stream data */
-							c = f->get(); if(c=='\x0D') c = f->get();
-							if(c != '\x0A')
-								throw FormatException("No newline after 'stream' keyword?", f->tellg());
+							c = f->get();
+							if(c=='\x0D') {
+								c = f->peek();
+								if(c == '\x0A')
+									f->get();
+							} else if(c != '\x0A')
+								throw FormatException("No newline after 'stream' keyword", f->tellg());
 							long stream_begin = f->tellg();
 
 							/* extract stream length */
