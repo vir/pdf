@@ -3,6 +3,7 @@
 #include <string>
 #include <PDF.hpp>
 #include "PdfDoc.hpp"
+#include <wx/wx.h>
 
 #ifdef HAVE_ICONS
 #include "icon1.xpm"
@@ -216,15 +217,24 @@ void MyTree::AppendChildren(wxTreeItemId id)
 
 void MyTree::OnItemExpanding(wxTreeEvent& event)
 {
-	wxString text;
-	wxTreeItemId id = event.GetItem();
-//	MyTreeItemData * d = static_cast<MyTreeItemData*>(GetItemData(id));
-//	if(d) std::cout << "OnItemExpanding" << d->dump() << std::endl;
-	wxTreeItemIdValue cookie;
-	wxTreeItemId child = GetFirstChild(id, cookie);
-	while(child.IsOk()) {
-		AppendChildren(child);
-		child = GetNextChild(id, cookie);
+	try {
+		wxString text;
+		wxTreeItemId id = event.GetItem();
+		wxTreeItemIdValue cookie;
+		wxTreeItemId child = GetFirstChild(id, cookie);
+		while(child.IsOk()) {
+			AppendChildren(child);
+			child = GetNextChild(id, cookie);
+		}
+	}
+	catch(PDF::FormatException & e) {
+		wxMessageBox(wxString(e.what(), wxConvUTF8), _T("PDF::FormatException"), wxOK | wxICON_INFORMATION, this);
+	}
+	catch(std::exception & e) {
+		wxMessageBox(wxString(e.what(), wxConvUTF8), _T("std::exception"), wxOK | wxICON_INFORMATION, this);
+	}
+	catch(...) {
+		wxMessageBox(_T("Unknown Exception"), _T("Exception!"), wxOK | wxICON_INFORMATION, this);
 	}
 }
 

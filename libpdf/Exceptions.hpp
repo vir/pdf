@@ -48,7 +48,7 @@ public:
 class FormatException:public std::exception
 {
   private:
-    std::string s;
+    std::string s, r;
     long off;
   public:
     /**
@@ -64,10 +64,11 @@ class FormatException:public std::exception
     virtual ~FormatException() throw() {}
     virtual const char * what() throw()
     {
-      std::stringstream r;
-      r << "PDF format error: " << s;
-      if(off>=0) r << " at offset " << off;
-      return r.str().c_str();
+      std::stringstream ss;
+      ss << "PDF format error: " << s;
+      if(off>=0) ss << " at offset " << off;
+      r = ss.str();
+      return r.c_str();
     }
 };
 
