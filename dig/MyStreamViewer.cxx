@@ -158,7 +158,8 @@ unsigned int MyStreamViewer::CountMissedCRChars(unsigned int lim)
 {
 	size_t crcnt = 0;
 	for(size_t i = 0; i < lim; ++i)
-		if(m_buf[i] == '\n' && (i == 0 || m_buf[i - 1] != '\r'))
+		if((m_buf[i] == '\n' && (i == 0 || m_buf[i - 1] != '\r'))
+			|| (m_buf[i] == '\r' && (i >= lim -1 || m_buf[i + 1] != '\n')))
 			++crcnt;
 	return crcnt;
 }
