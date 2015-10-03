@@ -112,7 +112,7 @@ void MyStreamViewer::OnOpLimit(wxSpinEvent& WXUNUSED(event))
 
 void MyStreamViewer::SelectOperator(unsigned int lim)
 {
-	/* The multiline text controls always uses CRLF as EndOfLine indidcator.
+	/* The multiline text controls always uses CRLF as internal EndOfLine indidcator.
 	 * So we counting LF without preceding CR to get proper char index.
 	 */
 	size_t begin = m_page->get_operator_offset(lim - 1);
