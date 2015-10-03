@@ -8,7 +8,7 @@
 struct MyTreeEventsHandler
 {
 	virtual void SelectedNothing()=0;
-	virtual void SelectedObject(PDF::OH h)=0;
+	virtual void SelectedObject(PDF::OH h, PDF::OH parent)=0;
 };
 
 class MyTree: public wxTreeCtrl

@@ -1,7 +1,7 @@
 #include "Page_Path.hpp"
 #include "Exceptions.hpp"
 
-std::string PDF::Page::Path::dump()
+std::string PDF::Page::Path::dump() const
 {
 	std::stringstream ss;
 	for(unsigned int i=0; i<size()-1; i++)

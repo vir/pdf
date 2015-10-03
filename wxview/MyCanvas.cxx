@@ -2,7 +2,6 @@
 #include "MyCanvas.hpp"
 #include <iomanip> /* for setiosflags and so */
 #include "../PDF.hpp"
-#include "MyDocument.hpp"
 
 //#include "utf8.hpp"
 
@@ -41,7 +40,7 @@ BEGIN_EVENT_TABLE(MyCanvas, wxScrolledWindow)
 	EVT_MOTION (MyCanvas::OnMouseMove)
 END_EVENT_TABLE()
 
-MyCanvas::MyCanvas(MyFrame *parent)
+MyCanvas::MyCanvas(wxWindow *parent)
 	: wxScrolledWindow(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxHSCROLL | wxVSCROLL | wxNO_FULL_REPAINT_ON_RESIZE)
 {
 	m_owner = parent;
@@ -59,7 +58,7 @@ void MyCanvas::OnPaint(wxPaintEvent &WXUNUSED(event))
 
 	Metafile m(dc, m_rotation);
 	m.debug(m_debug);
-	theDocument->GetPageObject()->draw(&m);
+	m_page->draw(&m);
 }
 
 void MyCanvas::OnMouseMove(wxMouseEvent &event)
@@ -67,13 +66,14 @@ void MyCanvas::OnMouseMove(wxMouseEvent &event)
 	wxClientDC dc(this);
 	PrepareDC(dc);
 	m_owner->PrepareDC(dc);
-
+#if 0 // XXX different owner in pdfdig!!!
 	wxPoint pos = event.GetPosition();
 	long x = dc.DeviceToLogicalX( pos.x );
 	long y = dc.DeviceToLogicalY( pos.y );
 	wxString str;
 	str.Printf( wxT("Current mouse position: %d,%d"), (int)x, (int)y );
-	m_owner->SetStatusText( str );
+	static_cast<MyFrame*>(m_owner)->SetStatusText( str );
+#endif
 }
 
 

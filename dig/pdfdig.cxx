@@ -29,12 +29,12 @@ bool MyApp::OnInit()
 
 	//// Create a document manager
 	m_docManager = new wxDocManager;
-	//XXX m_docManager->FileHistoryLoad(*wxConfigBase::Get());
+	m_docManager->FileHistoryLoad(*wxConfigBase::Get());
 
 	//// Create a template relating drawing documents to their views
 	(void) new wxDocTemplate(m_docManager, _T("PDF document"), _T("*.pdf"), _T(""), _T("pdf"), _T("PDF Document"), _T("PDF View"), CLASSINFO(PdfDoc), CLASSINFO(PdfExplorerView));
     
-	m_docManager->SetMaxDocsOpen(1);
+	//m_docManager->SetMaxDocsOpen(1);
 
 	frame = new MyFrame(m_docManager, (wxFrame *) NULL, wxID_ANY, _T("PDF Digger"), wxPoint(0, 0), wxSize(800, 600), wxDEFAULT_FRAME_STYLE);
 

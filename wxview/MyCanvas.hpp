@@ -9,18 +9,22 @@
 #include <wx/wx.h>
 
 class MyFrame;
+namespace PDF { class Page; }
+
 class MyCanvas: public wxScrolledWindow
 {
 	public:
-		MyCanvas( MyFrame *parent);
+		MyCanvas( wxWindow *parent);
+		void SetPage(PDF::Page* page) { m_page = page; }
 		void OnPaint(wxPaintEvent &event);
 		void OnMouseMove(wxMouseEvent &event);
 		void Rotate(int quas) { m_rotation = quas; Refresh(); }
 		void debug(bool d) { m_debug = d; }
 	private:
+		PDF::Page* m_page;
 		int m_rotation;
 		bool m_debug;
-		MyFrame *m_owner;
+		wxWindowBase *m_owner;
 		DECLARE_EVENT_TABLE()
 };
 

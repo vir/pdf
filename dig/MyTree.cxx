@@ -260,6 +260,18 @@ void MyTree::OnSelChanged(wxTreeEvent& event)
 {
 	wxTreeItemId id = event.GetItem();
 	MyTreeItemData * d = static_cast<MyTreeItemData*>(GetItemData(id));
+	PDF::OH parent;
+	for(;;) { // find non-ref parent
+		wxTreeItemId pid = GetItemParent(id);
+		MyTreeItemData * tid = static_cast<MyTreeItemData*>(GetItemData(id));
+		if(! tid)
+			break;
+		if(tid != d && dynamic_cast<PDF::ObjRef*>(tid->h.obj()) == NULL) {
+			parent = tid->h;
+			break;
+		}
+		id = pid;
+	}
 #if 0
 	if(!d) {
 		if(m_details) {
@@ -274,7 +286,7 @@ void MyTree::OnSelChanged(wxTreeEvent& event)
 	static_cast<MyApp*>(wxTheApp)->GetMainFrame()->ViewStreamEnable(d->h->type() == "Stream");
 #else
 	if(d)
-		m_handler->SelectedObject(d->h);
+		m_handler->SelectedObject(d->h, parent);
 	else
 		m_handler->SelectedNothing();
 #endif

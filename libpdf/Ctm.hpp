@@ -94,7 +94,7 @@ class CTM
 			*this = n;
 			return *this;
 		}
-		std::string dump()
+		std::string dump() const
 		{
       std::stringstream ss;
 			ss << std::setiosflags(std::ios::fixed) << std::setprecision(1) << std::setiosflags(std::ios::right);

@@ -8,7 +8,7 @@ namespace PDF {
 class Page::Path: public std::vector<Point>
 {
 public:
-	std::string dump();
+	std::string dump() const;
 	bool is_rectangular() const;
 	bool clip(Rect& r) const;
 };

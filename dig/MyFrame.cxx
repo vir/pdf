@@ -2,12 +2,15 @@
 #include "pdfdig.hpp"
 #include "PdfExplorerView.hpp" // need to pass event there
 #include "pdfglass.xpm"
+#include <wx/textctrl.h>
 
 enum {
 	File_Quit = wxID_EXIT,
 	File_About = wxID_ABOUT,
 	View_ViewStream = wxID_HIGHEST + 1,
 	View_SaveStream,
+	View_LogWindow,
+	View_SaveLog,
 };
 
 const int ID_TOOLBAR = 500;
@@ -19,11 +22,14 @@ BEGIN_EVENT_TABLE(MyFrame, wxDocMDIParentFrame)
 	EVT_MENU      (File_About,    MyFrame::OnAbout)
 	EVT_MENU      (View_ViewStream, MyFrame::OnViewStream)
 	EVT_MENU      (View_SaveStream, MyFrame::OnSaveStream)
+	EVT_MENU      (View_LogWindow, MyFrame::OnLogWindow)
+	EVT_MENU      (View_SaveLog, MyFrame::OnSaveLog)
 END_EVENT_TABLE()
 
 MyFrame::MyFrame(wxDocManager *manager, wxFrame *frame, wxWindowID id, const wxString& title,
                  const wxPoint& pos, const wxSize& size, const long type)
 	: wxDocMDIParentFrame(manager, frame, id, title, pos, size, type)
+	, logWindow(NULL)
 {
 	SetMinSize(wxSize(400,300));
 #if 0
@@ -51,6 +57,12 @@ MyFrame::MyFrame(wxDocManager *manager, wxFrame *frame, wxWindowID id, const wxS
 	menuView = new wxMenu;
 	menuView->Append(View_SaveStream, _T("Save Stream\tF2"), _T("Save stream object content into file"));
 	menuView->Append(View_ViewStream, _T("View Stream\tF3"), _T("View stream object content"));
+	menuView->AppendSeparator();
+#if wxHAS_TEXT_WINDOW_STREAM
+	menuView->AppendCheckItem(View_LogWindow, _T("View log window\tF9"), _T("Show or hide log window"));
+#else
+	menuView->AppendCheckItem(View_SaveLog, _T("Save log to file...\tF11"), _T("Save log to specified file"));
+#endif
 
 	wxMenuBar *menuBar = new wxMenuBar;
 	menuBar->Append(menuFile, _T("&File"));
@@ -61,6 +73,10 @@ MyFrame::MyFrame(wxDocManager *manager, wxFrame *frame, wxWindowID id, const wxS
 	toolBar->AddTool(wxID_EXIT, _T("Exit"), wxBitmap(), _T("Exit application"));
 	toolBar->AddTool(wxID_OPEN, _T("Open"), wxBitmap(), _T("Open file"));
 	toolBar->AddSeparator();
+#if wxHAS_TEXT_WINDOW_STREAM
+	toolBar->AddCheckTool(View_LogWindow, _T("Log window"), wxBitmap(), wxNullBitmap, _T("Save log window"));
+	toolBar->AddSeparator();
+#endif
 	toolBar->AddTool(View_SaveStream, _T("SaveStream"), wxBitmap(), _T("Save stream object content"));
 	toolBar->AddTool(View_ViewStream, _T("ViewStream"), wxBitmap(), _T("View stream object content"));
 	toolBar->Realize();
@@ -111,11 +127,42 @@ void MyFrame::OnSaveStream(wxCommandEvent& event)
 		{
 			wxString SavePath = OpenDialog->GetPath();
 			std::ofstream s;
-			s.open(SavePath.mb_str());
+			s.open(SavePath.mb_str(), std::ios_base::out|std::ios_base::binary);
 			static_cast<PdfExplorerView*>(curview)->SaveStreamData(s);
 		}
 		OpenDialog->Destroy();
 	}
+}
+
+#if wxHAS_TEXT_WINDOW_STREAM
+class LogWindow: public wxFrame
+{
+public:
+	LogWindow():wxFrame(NULL, wxID_ANY, _T("Log"))
+	{
+		text = new wxTextCtrl(this, wxID_ANY, _T(""), wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE|wxTE_READONLY|wxTE_DONTWRAP|wxTE_NOHIDESEL);
+		redir = new wxStreamToTextRedirector(text);
+	}
+	~LogWindow()
+	{
+		delete redir;
+		delete text;
+	}
+	wxTextCtrl* text;
+	wxStreamToTextRedirector* redir;
+};
+#endif
+
+void MyFrame::OnLogWindow(wxCommandEvent& event)
+{
+#if wxHAS_TEXT_WINDOW_STREAM
+	if(event.IsChecked()) {
+		logWindow = new LogWindow;
+	} else {
+		delete logWindow;
+		logWindow = NULL;
+	}
+#endif
 }
 
 void MyFrame::ViewStreamEnable(bool enable)
@@ -126,5 +173,19 @@ void MyFrame::ViewStreamEnable(bool enable)
 	toolBar->EnableTool(View_SaveStream, enable);
 }
 
+void MyFrame::OnSaveLog(wxCommandEvent& event)
+{
+	wxFileDialog* OpenDialog = new wxFileDialog(
+		this, _("Choose name for your file"), wxEmptyString, wxEmptyString, 
+		_("Text files (*.txt)|*.txt|C++ Source Files (*.cpp, *.cxx)|*.cpp;*.cxx|All files|*.*"),
+		wxFD_SAVE, wxDefaultPosition);
+	if (OpenDialog->ShowModal() == wxID_OK) // if the user click "Open" instead of "Cancel"
+	{
+		wxString SavePath = OpenDialog->GetPath();
+		std::ofstream * ofs = new std::ofstream(SavePath.mb_str()); // XXX LEAK!!!!
+		std::clog.rdbuf(ofs->rdbuf());
+		std::clog << "Goes to file." << std::endl;
+	}
+}
 
 

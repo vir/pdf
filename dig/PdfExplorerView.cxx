@@ -3,68 +3,7 @@
 #include "pdfdig.hpp"
 #include <PDF.hpp>
 #include "PdfDoc.hpp"
-
-class MyTextWidget: public wxTextCtrl
-{
-	public:
-		MyTextWidget(wxWindow * parent)
-			: wxTextCtrl(parent, wxID_ANY, _T(""), wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE|wxTE_READONLY|wxTE_DONTWRAP)
-		{
-		}
-		// Some ideas stolen from http://wxwidgets.info/find_and_replace_for_wxwidgets_ru/
-		bool Find(wxString substring, bool backwards = false)
-		{
-			return false;
-		}
-};
-
-class MyStreamViewer: public wxFrame
-{
-	public:
-		MyStreamViewer(PDF::OH& h)
-			: wxFrame(NULL, wxID_ANY, _T("Stream viewer"))
-		{
-			m_text = new wxTextCtrl(this, wxID_ANY, _T(""), wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE|wxTE_READONLY|wxTE_DONTWRAP);
-
-			PDF::Stream * s = NULL;
-			h.put(s);
-			wxASSERT(s);
-			std::vector<char> buf;
-			s->get_data(buf);
-			wxString str;
-			str.Alloc(buf.size());
-			for(size_t i = 0; i < buf.size(); ++i) {
-				char c = buf[i];
-				if(! is_ok(c))
-					c = '?';
-				str.Append(c);
-			}
-			m_text->SetValue(str);
-
-			wxString title(h.id().dump().c_str(), wxConvUTF8);
-			title.insert(0, _T("Stream "));
-			SetTitle(title);
-		}
-	private:
-		inline bool is_ok(char c)
-		{
-			switch(c) {
-				case 0x0D:
-				case 0x0A:
-					break;
-				default:
-					if(c < 0x20 || c >= 0x7F)
-						return false;
-					break;
-			}
-			return true;
-		}
-		wxTextCtrlBase* m_text;
-		DECLARE_EVENT_TABLE()
-};
-
-BEGIN_EVENT_TABLE(MyStreamViewer, wxFrame)
-END_EVENT_TABLE()
+#include "MyStreamViewer.hpp"
 
 IMPLEMENT_DYNAMIC_CLASS(PdfExplorerView, wxView)
 
@@ -74,7 +13,8 @@ END_EVENT_TABLE()
 
 
 PdfExplorerView::PdfExplorerView()
-	:m_splitter(NULL),m_tree(NULL),m_right(NULL), m_frame(NULL), m_stream_handle(NULL)
+	: m_splitter(NULL), m_tree(NULL), m_right(NULL), m_frame(NULL)
+	, m_stream_handle(NULL), m_stream_parent_handle(NULL)
 {
 	m_mainframe = static_cast<MyApp*>(wxTheApp)->GetMainFrame();
 	//// Make a child frame
@@ -100,6 +40,7 @@ PdfExplorerView::PdfExplorerView()
 PdfExplorerView::~PdfExplorerView()
 {
 	delete m_stream_handle;
+	delete m_stream_parent_handle;
 	delete m_right;
 	delete m_tree;
 	delete m_splitter;
@@ -140,24 +81,31 @@ void PdfExplorerView::SelectedNothing()
 	m_mainframe->ViewStreamEnable(false);
 	delete m_stream_handle;
 	m_stream_handle = NULL;
+	delete m_stream_parent_handle;
+	m_stream_parent_handle = NULL;
 }
 
-void PdfExplorerView::SelectedObject(PDF::OH h)
+void PdfExplorerView::SelectedObject(PDF::OH h, PDF::OH parent)
 {
 	wxString s(h->dump().c_str(), wxConvUTF8);
 	m_right->SetValue(s);
 	bool is_a_stream = h->type() == "Stream";
-	if(is_a_stream)
-		m_right->AppendText(_T("\n\n*** Hit F3 to view stream data or F2 to save it! ***\n"));
 	m_mainframe->ViewStreamEnable(is_a_stream);
 	delete m_stream_handle;
-	m_stream_handle = new PDF::OH(h);
+	m_stream_handle = NULL;
+	delete m_stream_parent_handle;
+	m_stream_parent_handle = NULL;
+	if(is_a_stream) {
+		m_right->AppendText(_T("\n\n*** Hit F3 to view stream data or F2 to save it! ***\n"));
+		m_stream_handle = new PDF::OH(h);
+		m_stream_parent_handle = new PDF::OH(parent);
+	}
 }
 
 void PdfExplorerView::ViewStreamData()
 {
 	wxASSERT(m_stream_handle);
-	wxFrame * f = new MyStreamViewer(*m_stream_handle);
+	wxFrame * f = new MyStreamViewer(this, *m_stream_handle, *m_stream_parent_handle);
 	f->Show();
 }
 

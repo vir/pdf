@@ -52,6 +52,13 @@ public:
 		// XXX just replace for now, sorry
 		clipping_path = *p;
 	}
+	void dump(std::ostream & s) const
+	{
+		s << "CTM: " << ctm.dump() << "\n";
+		s << "Clipping path: " << clipping_path.dump() << "\n";
+		s << "Text state: ";
+		text_state.dump(s);
+	}
 };
 
 }; // namespace PDF

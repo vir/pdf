@@ -154,7 +154,10 @@ bool Page::parse(const std::vector<char> & data)
     Keyword * kw=dynamic_cast<Keyword *>(o);
     if(kw)
     {
-      operators.push_back(new Operator(kw->value(), args));
+      size_t offs = kw->m_offset;
+      if(args)
+          offs = (*args->begin())->m_offset;
+      operators.push_back(new Operator(offs, kw->value(), args));
       args=NULL;
       delete kw; // name already copied
     }
@@ -185,6 +188,8 @@ std::string Page::dump() const
   {
     ss << "Font " << std::setw(5) << std::left << it->first << it->second->dump();
   }
+  ss << "Graphics state:" << std::endl;
+  
   return ss.str();
 }
 
@@ -261,6 +266,7 @@ void Page::draw(Media * m)
 				gs->text_state.Tf = it->second;
 			}
 			gs->text_state.Tfs=op->number(1);
+			//gs->text_state.Tfs=abs(op->number(1)); // XXX WTF? Negative font sizes? Really?!?
 			break;
 		}
         else
@@ -468,6 +474,15 @@ void Page::draw(Media * m)
 	}
 	if(tobj) delete tobj;
 	if(curpath) delete curpath;
+}
+
+size_t Page::get_operator_offset(unsigned int n) const
+{
+	if(n < operators.size()) {
+		Operator* o = operators.at(n);
+		return o->offset();
+	}
+	return 0;
 }
 
 /*============== Page::Operator ========================*/

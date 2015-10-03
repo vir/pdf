@@ -159,6 +159,8 @@ void MyFrame::OnPageSpinCtrl(wxSpinEvent& event)
 {
 	if(m_pagespin && m_canvas) {
 		theDocument->LoadPage(m_pagespin->GetValue());
+		PDF::Page * p = theDocument->GetPageObject();
+		m_canvas->SetPage(p);
 		std::clog << "Page switched to " << m_pagespin->GetValue() << std::endl;
 		m_canvas->Refresh();
 	}
@@ -170,6 +172,7 @@ void MyFrame::OnOplimitSpinCtrl(wxSpinEvent& event)
 		PDF::Page * p = theDocument->GetPageObject();
 		int lim = m_oplimitspin->GetValue();
 		p->set_operators_number_limit(lim);
+		m_canvas->SetPage(p);
 		m_canvas->debug(lim > 0);
 		m_canvas->Refresh();
 	}
