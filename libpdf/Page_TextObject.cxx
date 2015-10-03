@@ -52,7 +52,7 @@ void PDF::Page::TextObject::Kerning( double k )
 void PDF::Page::TextObject::Flush()
 {
 	if(accumulated_text.empty()) return;
-	CTM m(gs->text_state.Tfs * gs->text_state.Th/100.0, 0, 0, gs->text_state.Tfs, 0, gs->text_state.Trise);
+	CTM m(abs(gs->text_state.Tfs) * gs->text_state.Th/100.0, 0, 0, abs(gs->text_state.Tfs), 0, gs->text_state.Trise);
 	CTM Trm = m * tm * gs->ctm; // Construct text rendering matrix
 	if(update_font) {
 		media->SetFont(gs->text_state.Tf, Trm.get_scale_v());
@@ -86,7 +86,7 @@ void PDF::Page::TextObject::Flush()
 		tmp_point = *it;
 	}
 #endif
-	double offset = total_width * gs->text_state.Tfs * gs->text_state.Th/100.0;
+	double offset = total_width * abs(gs->text_state.Tfs) * gs->text_state.Th/100.0;
 	tm.offset_unscaled(offset, 0);
 	accumulated_text.resize(0);
 	total_width = 0;
