@@ -118,7 +118,9 @@ bool WxTabDocument::LoadFile(const wxString & fn)
 		std::string fname = std::string(fn.mb_str());
 		if(doc) {
 			delete page;
+			page = NULL;
 			delete doc;
+			doc = NULL;
 			file.close();
 		}
 
