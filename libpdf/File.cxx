@@ -96,6 +96,29 @@ bool File::open(std::string fn)
 	return file.good();
 }
 
+#ifdef _MSC_VER
+bool File::open(std::wstring fn)
+{
+	if(!fn.empty())
+		filename = std::string(fn.begin(), fn.end());
+	if(filename.empty())
+		throw LogicException("No filename to open");
+	switch(open_mode) {
+		case MODE_READ:
+			file.open(fn.c_str(), std::ios::in|std::ios::binary);
+			break;
+		case MODE_WRITE:
+			file.open(fn.c_str(), std::ios::out|std::ios::trunc|std::ios::binary);
+			write_header();
+			break;
+		case MODE_UPDATE:
+		default:
+			throw UnimplementedException("Unimplemented open mode");
+	}
+	return file.good();
+}
+#endif
+
 bool File::close()
 {
 	if(open_mode == MODE_WRITE || open_mode == MODE_UPDATE) {

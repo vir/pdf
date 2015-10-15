@@ -115,7 +115,6 @@ bool WxTabDocument::LoadFile(const wxString & fn)
 {
 	try {
 		filename = fn;
-		std::string fname = std::string(fn.mb_str());
 		if(doc) {
 			delete page;
 			page = NULL;
@@ -125,7 +124,11 @@ bool WxTabDocument::LoadFile(const wxString & fn)
 		}
 
 		file.debug(0);
-		file.open(fname);
+#ifdef _MSC_VER
+		file.open(fn.wc_str());
+#else
+		file.open(fn.utf8_str());
+#endif
 		if(! file.load()) {
 			file.close();
 			return false;

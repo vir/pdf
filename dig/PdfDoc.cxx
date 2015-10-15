@@ -11,7 +11,11 @@ std::cerr << "Created document" << std::endl;
 bool PdfDoc::OnOpenDocument(const wxString& filename)
 {
 	cache.flush();
-	if(! file.open(std::string(filename.mb_str())))
+#ifdef _MSC_VER
+	if(! file.open(filename.wc_str()))
+#else
+	if(! file.open(filename.utf8_str()))
+#endif
 		return false;
 	// XXX Causes a lot of disasters on win32
 	GetDocumentManager()->AddFileToHistory(filename);

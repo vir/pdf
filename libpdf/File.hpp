@@ -156,6 +156,9 @@ class File
     /// returns pdf file version
     double version() const { return pdf_version; }
     bool open(std::string fname="");
+#ifdef _MSC_VER /* microsoft has secret wide-char filename open function */
+	bool open(std::wstring fname);
+#endif
     bool close();
     bool load();
 
