@@ -12,8 +12,8 @@ bool MyDocument::LoadFile(std::string fname)
 	}
 
 	file.debug(0);
-  file.open(fname);
-  if(! file.load()) {
+	file.open(fname, PDF::File::MODE_READ);
+	if(! file.load()) {
 		file.close();
 		return false;
 	}

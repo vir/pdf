@@ -24,7 +24,8 @@ int main(int argc, char * argv[])
 {
 	try {
 		std::clog << "Constructing File" << std::endl;
-		PDF::File pf(1.3, "test.pdf");
+		PDF::File pf(1.3);
+		pf.open("test.pdf", PDF::File::MODE_CREATE);
 		pf.debug(3);
 
 #if 0

@@ -107,7 +107,7 @@ int main(int argc, char * argv[])
 //	PDF::Tabulator::TextBlock::debug = debug & 0x08 ? true : false;
 	PDF::File f;
 	f.debug(debug & 0x03);
-	f.open(fname);
+	f.open(fname, PDF::File::MODE_READ);
 	if(!f.load()) { f.close(); return -1; }
 	
 	std::clog << "+ File " << fname << " loaded" << std::endl;

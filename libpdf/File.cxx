@@ -38,34 +38,33 @@ void XRefTable::dump( std::ostream & strm /*= std::clog*/ ) const
 	}
 }
 
+void XRefTable::clear()
+{
+	m_table.clear();
+}
+
 // PDF::File class members ==========================================================
 // ============================================================================
 
-/** Constructs PDF::File object for existing PDF file access */
-File::File(std::string fn)
+/** Constructs PDF::File object */
+File::File(std::string fn, OpenMode mode)
 	: open_mode(MODE_READ)
 	, istrm(NULL), ostrm(NULL)
 	, m_debug(0)
-	, m_security(NULL)
-	, m_streams(*this)
+	, m_security(NULL), m_streams(NULL)
 {
-	istrm = new ObjIStream(file);
 	if(!fn.empty())
-		open(fn);
+		open(fn, mode);
 }
 
 /** Constructs PDF::File object for new PDF file creation */
-File::File(double pdf_version, std::string fn)
-	: open_mode(MODE_WRITE)
+File::File(double pdf_version)
+	: open_mode(MODE_CLOSED)
 	, istrm(NULL), ostrm(NULL)
 	, pdf_version(pdf_version)
 	, m_debug(0)
-	, m_security(NULL)
-	, m_streams(*this)
+	, m_security(NULL), m_streams(NULL)
 {
-	ostrm = new ObjOStream(file);
-	if(!fn.empty())
-		open(fn);
 }
 
 File::~File()
@@ -75,53 +74,54 @@ File::~File()
 	delete ostrm;
 }
 
-bool File::open(std::string fn)
+std::ios_base::open_mode File::open_prepare(std::string fname, OpenMode mode)
 {
-	if(!fn.empty())
-		filename = fn;
+	if(! filename.empty())
+		throw LogicException("File already opened");
+	filename = fname;
+	open_mode = mode;
 	if(filename.empty())
 		throw LogicException("No filename to open");
 	switch(open_mode) {
 		case MODE_READ:
-			file.open(filename.c_str(), std::ios::in|std::ios::binary);
-			break;
-		case MODE_WRITE:
-			file.open(filename.c_str(), std::ios::out|std::ios::trunc|std::ios::binary);
-			write_header();
-			break;
+			m_streams = new ObjectStreamsCache(*this);
+			istrm = new ObjIStream(file);
+			return std::ios::in|std::ios::binary;
+		case MODE_CREATE:
+			m_streams = new ObjectStreamsCache(*this);
+			ostrm = new ObjOStream(file);
+			return std::ios::out|std::ios::trunc|std::ios::binary;
 		case MODE_UPDATE:
 		default:
 			throw UnimplementedException("Unimplemented open mode");
 	}
+}
+
+bool File::open(std::string fn, OpenMode mode)
+{
+	std::ios_base::open_mode fom = open_prepare(fn, mode);
+	file.open(filename.c_str(), fom);
+
+	if(open_mode == MODE_CREATE && file.good())
+			write_header();
 	return file.good();
 }
 
 #ifdef _MSC_VER
-bool File::open(std::wstring fn)
+bool File::open(std::wstring fn, OpenMode mode)
 {
-	if(!fn.empty())
-		filename = std::string(fn.begin(), fn.end());
-	if(filename.empty())
-		throw LogicException("No filename to open");
-	switch(open_mode) {
-		case MODE_READ:
-			file.open(fn.c_str(), std::ios::in|std::ios::binary);
-			break;
-		case MODE_WRITE:
-			file.open(fn.c_str(), std::ios::out|std::ios::trunc|std::ios::binary);
-			write_header();
-			break;
-		case MODE_UPDATE:
-		default:
-			throw UnimplementedException("Unimplemented open mode");
-	}
+	std::ios_base::open_mode fom = open_prepare(std::string(fn.begin(), fn.end()), mode);
+	file.open(fn.c_str(), fom);
+	if(open_mode == MODE_CREATE && file.good())
+		write_header();
 	return file.good();
 }
 #endif
 
 bool File::close()
 {
-	if(open_mode == MODE_WRITE || open_mode == MODE_UPDATE) {
+	m_streams->flush();
+	if(open_mode == MODE_CREATE || open_mode == MODE_UPDATE) {
 		file.seekg(0, std::ios_base::end);
 		long offs = write_xref_table();
 		Dictionary * d = new Dictionary();
@@ -130,7 +130,18 @@ bool File::close()
 		write_trailer(d, offs);
 		delete d;
 	}
+	delete m_security;
+	m_security = NULL;
+	m_file_ids.clear();
+	delete istrm;
+	istrm = NULL;
+	delete ostrm;
+	ostrm = NULL;
+	root_refs.clear();
+	xref_table.clear();
 	file.close();
+	filename.clear();
+	pdf_version = 0;
 	return true;
 }
 
@@ -174,7 +185,7 @@ Object * File::load_object(const ObjId & oi, bool decrypt)
 		return new FreeObjectPlaceholder;
 
 	if(xe->compressed())
-		return m_streams.load_object(xe->offset, xe->obj_stream_index);
+		return m_streams->load_object(xe->offset, xe->obj_stream_index);
 
 	long offset = xe->offset;
 	Object * r;

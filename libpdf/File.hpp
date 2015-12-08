@@ -85,6 +85,7 @@ public:
 	{
 		m_table[objid] = Entry(stream_id, index);
 	}
+	void clear();
 };
 
 class ObjectStreamsCache
@@ -100,6 +101,7 @@ class ObjectStreamsCache
 	public:
 		ObjectStreamsCache(File & f):m_file(f) { }
 		Object * load_object(long obj_stream_num, unsigned int obj_stream_index);
+		void flush() { m_stash.clear(); }
 };
 
 /** \brief Represents pdf file
@@ -110,8 +112,11 @@ class ObjectStreamsCache
  */
 class File
 {
+public:
+	enum OpenMode { MODE_CLOSED, MODE_READ, MODE_CREATE, MODE_UPDATE };
+
 	private:
-		enum { MODE_READ, MODE_WRITE, MODE_UPDATE } open_mode;
+		OpenMode open_mode;
 		std::string filename;
 		std::fstream file;
 		ObjIStream * istrm;
@@ -126,7 +131,7 @@ class File
     int m_debug;
 		SecHandler * m_security;
 		std::vector< std::string > m_file_ids;
-		ObjectStreamsCache m_streams;
+		ObjectStreamsCache * m_streams;
 		std::fstream::pos_type m_header_end_offset;
 	protected:
 		void getline(std::string & s);
@@ -146,18 +151,19 @@ class File
 
 		void load_crypto_dict(const Dictionary * d);
 		void load_file_ids(const Array * a);
+		std::ios_base::open_mode open_prepare(std::string fname, OpenMode mode);
 	public:
-		File(std::string fn="");
-		File(double pdf_version, std::string fn="");
+		File(std::string fn = "", OpenMode mode = MODE_CLOSED);
+		File(double pdf_version);
 		~File();
 		std::string id(unsigned int n = 0) const { return (n >= m_file_ids.size())?"":m_file_ids[0]; }
     /// sets debug level, returns previous debug level
     int debug(int d) { int t=m_debug; m_debug=d; return t; }
     /// returns pdf file version
     double version() const { return pdf_version; }
-    bool open(std::string fname="");
+    bool open(std::string fname, OpenMode mode);
 #ifdef _MSC_VER /* microsoft has secret wide-char filename open function */
-	bool open(std::wstring fname);
+	bool open(std::wstring fname, OpenMode mode);
 #endif
     bool close();
     bool load();
@@ -185,7 +191,7 @@ class File
 	}
 	long LoadXRefTable( long xref_off, bool try_recover = false );
 	void ReconstructXRefTable();
-	bool can_load() const { return open_mode != MODE_WRITE; }
+	bool can_load() const { return open_mode != MODE_CREATE; }
 	bool can_save() const { return open_mode != MODE_READ; }
 };
 

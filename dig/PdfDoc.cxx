@@ -12,9 +12,9 @@ bool PdfDoc::OnOpenDocument(const wxString& filename)
 {
 	cache.flush();
 #ifdef _MSC_VER
-	if(! file.open(filename.wc_str()))
+	if(! file.open(filename.wc_str(), PDF::File::MODE_READ))
 #else
-	if(! file.open(filename.utf8_str()))
+	if(! file.open(filename.utf8_str(), PDF::File::MODE_READ))
 #endif
 		return false;
 	// XXX Causes a lot of disasters on win32
