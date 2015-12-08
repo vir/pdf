@@ -55,6 +55,7 @@ class ExporterExcel
 	public:
 		ExporterExcel():sheets_number(1),cur_sheet(0),cur_col(0),do_join_cells(false) {}
 		virtual bool set_params(std::string pstr);
+		virtual void set_sheets_number(unsigned int n) { sheets_number = n; }
 		virtual void table_begin(unsigned int ncols, unsigned int nrows);
 		virtual void cell(const Tabulator::Table::Cell * cptr, bool hidden, unsigned int c, unsigned int r, unsigned int cs, unsigned int rs);
 		virtual void table_end();

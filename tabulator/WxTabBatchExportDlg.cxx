@@ -3,25 +3,24 @@
 #include "Tabulator_Exporter.hpp"
 #include "WxTabDocument.hpp"
 #include <wx/progdlg.h>
+#include <wx/spinctrl.h>
 
 WxTabBatchExportDialog::WxTabBatchExportDialog( wxWindow * parent, WxTabDocument * document )
 : wxDialog(parent, wxID_ANY, _("Batch process"), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER)
 , document(document)
 {
-	wxBoxSizer * s = new wxBoxSizer( wxVERTICAL /* wxHORIZONTAL */ );
+	top_sizer = new wxBoxSizer( wxVERTICAL /* wxHORIZONTAL */ );
 
-	wxBoxSizer * s_pages = new wxBoxSizer( wxHORIZONTAL );
-	page_label1 = new wxStaticText(this, wxID_ANY, _T("Pages from "));
-	s_pages->Add(page_label1);
+	wxBoxSizer * row = new wxBoxSizer( wxHORIZONTAL );
+	row->Add(new wxStaticText(this, wxID_ANY, _T("Pages from ")));
 	page1 = new PageNumCtrl(this, wxID_ANY);
 	page1->SetRange(1, document->GetPagesNum());
-	s_pages->Add(page1);
-	page_label2 = new wxStaticText(this, wxID_ANY, _T(" to "));
-	s_pages->Add(page_label2);
+	row->Add(page1);
+	row->Add(new wxStaticText(this, wxID_ANY, _T(" to ")));
 	page2 = new PageNumCtrl(this, wxID_ANY);
 	page2->SetRange(1, document->GetPagesNum());
-	s_pages->Add(page2);
-	s->Add(s_pages);
+	row->Add(page2);
+	top_sizer->Add(row);
 
 #ifdef _WIN32
 	wxString exporterChoices[3];
@@ -33,41 +32,54 @@ WxTabBatchExportDialog::WxTabBatchExportDialog( wxWindow * parent, WxTabDocument
 #ifdef _WIN32
 	exporterChoices[2] = _("&Excel");
 #endif
-	exporterselect = new wxRadioBox(this, wxID_ANY, _("Export to:"), wxDefaultPosition, wxDefaultSize, sizeof(exporterChoices)/sizeof(exporterChoices[0]), exporterChoices);
+	exporterselect = new wxRadioBox(this, ID_ExportSwitch, _("Export to:"), wxDefaultPosition, wxDefaultSize, sizeof(exporterChoices)/sizeof(exporterChoices[0]), exporterChoices);
 	exporterselect->SetSelection(0);
-	s->Add(exporterselect/*, 0, wxGROW|wxALL, 5*/);
+	top_sizer->Add(exporterselect/*, 0, wxGROW|wxALL, 5*/);
 
-	wxBoxSizer * s_eopts = new wxBoxSizer( wxHORIZONTAL );
-	expopts_label = new wxStaticText(this, wxID_ANY, _T("Export options: "));
-	s_eopts->Add(expopts_label);
+	s_eopts_default = new wxBoxSizer( wxHORIZONTAL );
+	s_eopts_default->Add(new wxStaticText(this, wxID_ANY, _T("Export options: ")));
 	expopts = new wxTextCtrl(this, wxID_ANY);
-	s_eopts->Add(expopts);
-	s->Add(s_eopts);
+	s_eopts_default->Add(expopts);
+	top_sizer->Add(s_eopts_default);
 
-	wxBoxSizer * s_buttons = new wxBoxSizer( wxHORIZONTAL );
-	s_buttons->Add(new wxButton( this, wxID_OK, _("Close") ));
-	s_buttons->Add(new wxButton( this, ID_StartExport, _T("Start export") ));
-	s->Add(s_buttons);
+#ifdef _WIN32
+	{
+		s_eopts_excel = new wxBoxSizer( wxVERTICAL );
+		s_eopts_excel->Add(new wxStaticText(this, wxID_ANY, _T("Excel options: ")));
+		excel_background = new wxCheckBox(this, wxID_ANY, wxT("Background operation"));
+		s_eopts_excel->Add(excel_background);
+		excel_save = new wxCheckBox(this, wxID_ANY, wxString(wxT("Save file ")) + MakeExportedName());
+		s_eopts_excel->Add(excel_save);
+
+		row = new wxBoxSizer( wxHORIZONTAL );
+		row->Add(new wxStaticText(this, wxID_ANY, _T("Pages in row: ")));
+		excel_pages_in_row = new wxSpinCtrl(this, wxID_ANY);
+		row->Add(excel_pages_in_row);
+		s_eopts_excel->Add(row);
+
+		s_eopts_excel->Show(false);
+		top_sizer->Add(s_eopts_excel);
+	}
+#endif
+
+	row = new wxBoxSizer( wxHORIZONTAL );
+	row->Add(new wxButton( this, wxID_OK, _("Close") ));
+	row->Add(new wxButton( this, ID_StartExport, _T("Start export") ));
+	top_sizer->Add(row);
 
 	SetAutoLayout( TRUE );
-	SetSizer( s );
-	s->Fit( this );
-	s->SetSizeHints( this );
+	SetSizer( top_sizer );
+	top_sizer->Fit( this );
+	top_sizer->SetSizeHints( this );
 }
 
 WxTabBatchExportDialog::~WxTabBatchExportDialog()
 {
-	delete page1;
-	delete page2;
-	delete page_label1;
-	delete page_label2;
-	delete exporterselect;
-	delete expopts;
-	delete expopts_label;
 }
 
 BEGIN_EVENT_TABLE(WxTabBatchExportDialog, wxDialog)
 EVT_BUTTON(ID_StartExport, WxTabBatchExportDialog::OnStartExport)
+EVT_RADIOBOX(ID_ExportSwitch, WxTabBatchExportDialog::OnExportSwitchChanged)
 END_EVENT_TABLE()
 
 void WxTabBatchExportDialog::OnStartExport( wxCommandEvent &event )
@@ -82,17 +94,25 @@ void WxTabBatchExportDialog::OnStartExport( wxCommandEvent &event )
 			break;
 #ifdef _WIN32
 		case 2:
-			exporter = new ExporterExcel();
-			if(!static_cast<ExporterExcel*>(exporter)->get_active()) {
-				static_cast<ExporterExcel*>(exporter)->start_new();
-				static_cast<ExporterExcel*>(exporter)->add_workbook();
+			{
+				ExporterExcel* e = new ExporterExcel();
+				if(!e->get_active()) {
+					e->start_new();
+					e->add_workbook();
+
+					int pgs = excel_pages_in_row->GetValue();
+					if(pgs)
+						e->set_sheets_number(pgs);
+				}
+				e->set_visible(! excel_background->GetValue());
+				exporter = e;
 			}
-			static_cast<ExporterExcel*>(exporter)->set_visible(true);
 			break;
 #endif
 		default:
 			return;
 	}
+#if 0
 	wxString expparams = expopts->GetValue();
 	if(expparams.Len()) {
 		if(!exporter->set_params(static_cast<const char *>(expparams.utf8_str()))) {
@@ -100,7 +120,7 @@ void WxTabBatchExportDialog::OnStartExport( wxCommandEvent &event )
 			return;
 		}
 	}
-
+#endif
 	int page_first = page1->GetValue();
 	int page_last = page2->GetValue();
 
@@ -113,14 +133,48 @@ void WxTabBatchExportDialog::OnStartExport( wxCommandEvent &event )
 		document->ExportPage(pagenum, exporter);
 		exporter->page_end();
 	}
+	if(exporterselect->GetSelection() == 2)
+	{
+		ExporterExcel* e = static_cast<ExporterExcel*>(exporter);
+		e->set_visible(true);
+		if(excel_save->GetValue())
+			e->save_as(MakeExportedName().wc_str());
+	}
 	progr.Update(page_last - page_first + 1, _T("Finished"));
 	delete exporter;
+}
+
+void WxTabBatchExportDialog::OnExportSwitchChanged(wxCommandEvent &event)
+{
+#ifdef _WIN32
+	int someint = event.GetInt();
+	if(someint == 2)
+	{
+		s_eopts_excel->Show(true);
+		s_eopts_default->Show(false);
+	}
+	else
+	{
+		s_eopts_excel->Show(false);
+		s_eopts_default->Show(true);
+	}
+	top_sizer->Layout();
+	top_sizer->Fit( this );
+#endif
 }
 
 void WxTabBatchExportDialog::SetCurPage( int num )
 {
 	page1->SetValue(num);
 	page2->SetValue(num);
+}
+
+wxString WxTabBatchExportDialog::MakeExportedName()
+{
+	wxString n = theDocument->GetName();
+	if(n.Lower().EndsWith(wxT(".pdf")))
+		n.Truncate(n.Length() - 4);
+	return n + wxT(".xlsx");
 }
 
 
