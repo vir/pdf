@@ -84,11 +84,31 @@ void Tabulator::build_grid()
 		}
 	}
 
-	if(options.find_more_rows_column && grid.h_knots.size() >= 2) {
-	/* 
-	 * We have no horizontal lines, so let there be some invisible
-	 * lines above text blocks, that falls into specified column
-	 */
+	if(options.find_more_rows_column < 0) {
+		/* divide all text blocks into lines and place new knots between them */
+		double table_bottom = lowest_v_line;
+		if(lowest_h_line > table_bottom)
+			table_bottom = lowest_h_line;
+		Tabulator::Metafile::TextMap::const_iterator tit; // text iterator
+		for(tit = metafile.all_text.begin(); tit != metafile.all_text.end() && tit->pos.y < table_bottom && tit->pos.y < grid.headers_end; tit++); /* skip heades */
+		double text_bottom = tit->pos.y;
+		for(; tit != metafile.all_text.end() && tit->pos.y < table_bottom; tit++) { /* check all text */
+			if(tit->pos.y - tit->height <= text_bottom) { // same text line
+				double tbottom = tit->pos.y;
+				if(tbottom > text_bottom)
+					text_bottom = tbottom;
+				continue;
+			}
+			// fount new line
+			double newknot = (text_bottom + tit->pos.y - tit->height) / 2;
+			grid.add_horizontal_line(newknot);
+			text_bottom = tit->pos.y;
+		}
+	} else if(options.find_more_rows_column > 0 && grid.h_knots.size() >= 2) {
+		/* 
+		 * We have no horizontal lines, so let there be some invisible
+		 * lines above text blocks, that falls into specified column
+		 */
 		Grid::KnotsIterator kit;
 		double x1, x2;
 		kit = grid.h_knots.begin();
