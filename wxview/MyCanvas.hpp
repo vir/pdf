@@ -8,7 +8,6 @@
 
 #include <wx/wx.h>
 
-class MyFrame;
 namespace PDF { class Page; }
 
 class CanvasScrollState;

@@ -215,6 +215,10 @@
 			Filter="cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 			>
 			<File
+				RelativePath="..\wxview\MyCanvas.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\PageNumCtrl.cxx"
 				>
 			</File>
@@ -343,6 +347,10 @@
 			>
 			<File
 				RelativePath=".\ErrorReporterInterface.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\wxview\MyCanvas.hpp"
 				>
 			</File>
 			<File

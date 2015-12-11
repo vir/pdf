@@ -1,22 +1,19 @@
-#ifndef MYCANVAS_HPP_INCLUDED
-#define MYCANVAS_HPP_INCLUDED
-#include <wx/wx.h>
+#ifndef WXTABCANVAS_HPP_INCLUDED
+#define WXTABCANVAS_HPP_INCLUDED
+
+#include "../wxview/MyCanvas.hpp"
 
 class WxTabFrame;
-class CanvasScrollState;
-class WxTabCanvas: public wxScrolledWindow
+class WxTabCanvas: public MyCanvas
 {
 	public:
 		WxTabCanvas( WxTabFrame *parent);
-		void SetScrolledPageSize();
 		void OnPaint(wxPaintEvent &event);
-		void OnMouse(wxMouseEvent &event);
+		void SetScrolledPageSize();
 	private:
-		WxTabFrame *m_owner;
-		CanvasScrollState *m_scrolling;
+		WxTabFrame * m_my_frame;
 		DECLARE_EVENT_TABLE()
 };
 
-
-#endif /* MYCANVAS_HPP_INCLUDED */
+#endif /* WXTABCANVAS_HPP_INCLUDED */
 
