@@ -193,6 +193,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\wxview\PagePaintHelper.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\pdfdig.cxx"
 				>
 			</File>
@@ -224,6 +228,10 @@
 			</File>
 			<File
 				RelativePath=".\MyTree.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\wxview\PagePaintHelper.h"
 				>
 			</File>
 			<File
