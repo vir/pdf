@@ -83,6 +83,7 @@ void MyStreamViewer::OnDebug(wxCommandEvent& event)
 			m_canvas->SetPage(m_page);
 			m_splitter->SplitVertically(m_text, m_canvas, 300);
 			m_toolBar->EnableTool(ID_SPIN_OPLIMIT, true);
+			m_page->set_operators_number_limit(m_oplimitspin->GetValue());
 			m_canvas->Refresh();
 		} else
 			m_toolBar->ToggleTool(ID_DEBUG_ENABLE, false);
@@ -101,6 +102,7 @@ void MyStreamViewer::OnOpLimit(wxSpinEvent& WXUNUSED(event))
 	int lim = m_oplimitspin->GetValue();
 	if(m_page) {
 		m_page->set_operators_number_limit(lim);
+		m_oplimitspin->SetRange(0, m_page->get_operators_count());
 		if(lim)
 			SelectOperator(lim);
 	}
