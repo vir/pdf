@@ -228,7 +228,7 @@ std::string File::check_header()
 		version=line.substr(5,3);
 	else
 		throw FormatException("No PDF header", 0);
-	// Find headers end in case wi will read linearised pdfs one day
+	// Find headers end in case we will read linearized pdfs one day
 	do {
 		m_header_end_offset = file.tellg();
 		getline(line);

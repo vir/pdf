@@ -24,13 +24,7 @@ class PdfDoc:public wxDocument
 		const PDF::ObjId & get_root(long generation=0) const { return file.get_root(generation); }
 		PDF::OH get_object(const PDF::ObjId & id);
 		wxString get_file_brief() const;
-
-/*		bool open(std::string fname);
-		void close();
-		*/
 };
-
-extern PdfDoc * theDoc;
 
 #endif /* PDFDOC_HPP_INCLUDED */
 
