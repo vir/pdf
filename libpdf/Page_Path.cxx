@@ -21,6 +21,9 @@ bool PDF::Page::Path::is_rectangular() const
 	if(at(0).y == at(1).y && at(2).y == at(3).y
 		&& at(0).x == at(3).x && at(1).x == at(2).x)
 		return true;
+	if(at(0).x == at(1).x && at(2).x == at(3).x
+		&& at(0).y == at(3).y && at(1).y == at(2).y)
+		return true;
 	return false;
 }
 
