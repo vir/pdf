@@ -27,18 +27,31 @@ std::wstring Tabulator::Table::Cell::celltext() const
 {
 	std::wstring r;
 	std::set<Tabulator::TextBlock>::const_iterator tpit;
+	double x, y;
+	if(text.empty())
+		return L"";
+	x = text.begin()->pos.x + text.begin()->width;
+	y = text.begin()->pos.y;
 	for(tpit=text.begin(); tpit!=text.end(); tpit++)
 	{
-		if(!r.empty()) {
+		if(! r.empty()) {
 			/// remove hyphenation XXX \todo mess with unicode hypheation character (if any?)
-			if(!r.empty() && r[r.size()-1] == L'-') // remove hyphenation
-				r.resize(r.size()-1);
-			else
-				r+=L' ';
+			if(0 == Coord::compare(y, tpit->pos.y)) { // On same line
+				double diff = tpit->pos.x - x;
+				if(abs(diff) > tpit->height / 4)
+					r += L' ';
+			} else {
+				if(r[r.size()-1] == L'-') // remove hyphenation
+					r.resize(r.size()-1);
+				else
+					r+=L' ';
+			}
 		}
-		/// \todo Mwss with text block width and coordinate comparsition and catch newlines also
+		/// \todo Mess with text block width and coordinate comparison and catch newlines also
 
 		r+=tpit->text;
+		x = tpit->pos.x + tpit->width;
+		y = tpit->pos.y;
 	}
 	return r;
 }
