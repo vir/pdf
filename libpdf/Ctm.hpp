@@ -9,6 +9,9 @@
 #include "Point.hpp"
 #include "Rect.hpp"
 
+#include <assert.h>
+#include <stdexcept>
+
 #ifndef M_PI
 #define M_PI atan2(double(0), double(-1))
 #endif
@@ -106,6 +109,18 @@ class CTM
 		Point ef() const
 		{
 			return Point(e, f);
+		}
+		double det() const
+		{
+			return a*d - b*c;
+		}
+		CTM reverse() const
+		{
+			double D = det();
+			assert(D);
+			if(! D)
+				throw std::runtime_error("Can't reverse singular matrix");
+			return CTM(d/D, -b/D, -c/D, a/D, (c*f-e*d)/D, (b*e-a*f)/D);
 		}
 };
 
