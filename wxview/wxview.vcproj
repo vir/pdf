@@ -281,6 +281,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\PagePaintHelper.cxx"
+				>
+			</File>
+			<File
 				RelativePath="wxview.cxx"
 				>
 				<FileConfiguration
@@ -317,6 +321,10 @@
 			</File>
 			<File
 				RelativePath="MyFrame.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\PagePaintHelper.h"
 				>
 			</File>
 		</Filter>
