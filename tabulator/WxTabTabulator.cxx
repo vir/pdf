@@ -61,7 +61,7 @@ WxTabOptionsDialog::WxTabOptionsDialog( wxWindow * parent, struct Tabulator::Opt
 	s->Add(ui_find_table_header);
 	ui_find_more_rows_label = new wxStaticText(this, wxID_ANY, _T("Find more rows column"));
 	s->Add(ui_find_more_rows_label);
-	ui_find_more_rows_column = new wxSpinCtrl(this, wxID_ANY, _T("0"));
+	ui_find_more_rows_column = new wxSpinCtrl(this, wxID_ANY, _T("0"), wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, -1, 20);
 	s->Add(ui_find_more_rows_column);
 	ui_postprocess = new wxCheckBox(this, wxID_ANY, _T("Postprocess"));
 	s->Add(ui_postprocess);
