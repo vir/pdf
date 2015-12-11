@@ -203,7 +203,14 @@ class Tabulator
 			bool postprocess;
 			bool find_joined_cells;
 			std::vector<int> split_columns;
-			Options():find_table_header(true),find_more_rows_column(0),postprocess(false),find_joined_cells(true) { }
+			Options() { reset(); }
+			void reset()
+			{
+				find_table_header = true;
+				find_more_rows_column = 0;
+				postprocess = false;
+				find_joined_cells = true;
+			}
 		};
 	public:
 		Metafile metafile;

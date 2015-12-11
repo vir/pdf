@@ -184,12 +184,13 @@ WxTabFrame::WxTabFrame(const wxString& title, const wxPoint& pos, const wxSize& 
 		LeftDockable(false).RightDockable(false));
 
 	/* Add Status Bar */
-	CreateStatusBar(2);
+	CreateStatusBar(1);
 	SetStatusText(_T("Welcome to wxWidgets!"));
 
 	/* And finally owr main widget */
 	m_canvas = new WxTabCanvas( this );
 	m_canvas->SetScrollbars( 10, 10, 100, 240 );
+	//m_canvas->SetScrollRate(10, 10);
 	m_mgr.AddPane(m_canvas, wxAuiPaneInfo().Name(wxT("canvas")).CenterPane().PaneBorder(false));
 
 	// "commit" all changes made to wxAuiManager
@@ -233,6 +234,7 @@ void WxTabFrame::OnDocumentOpen(wxCommandEvent& WXUNUSED(event))
 		if(theDocument->Open(path)) {
 			SetTitle(of.GetFilename());
 			m_pagenum->SetValue(theDocument->GetPageNum());
+			m_canvas->SetScrolledPageSize();
 			m_canvas->Refresh();
 		}
 		else
@@ -247,6 +249,7 @@ void WxTabFrame::OnRotate(wxCommandEvent& event)
 {
 	int rot = event.GetId() - MenuRotate_First;
 	theDocument->Rotate(rot);
+	m_canvas->SetScrolledPageSize();
 	m_canvas->Refresh();
 }
 
@@ -254,6 +257,7 @@ void WxTabFrame::OnZoom(wxCommandEvent& event)
 {
 	int scale = 1 + event.GetId() - MenuZoom_First;
 	theDocument->Scale(100 * scale);
+	m_canvas->SetScrolledPageSize();
 	m_canvas->Refresh();
 }
 
@@ -287,11 +291,12 @@ void WxTabFrame::OnMenuGo(wxCommandEvent &event)
 		case Go_Prev: if(pn >1) pn--; break;
 		case Go_Next: if(pn < theDocument->GetPagesNum()) pn++; break;
 		default:
-			std::cerr << "Unhendled Go_* Event! " << event.GetId() << std::endl;
+			std::cerr << "Unhandled Go_* Event! " << event.GetId() << std::endl;
 			break;
 	}
 	theDocument->LoadPage(pn);
 	m_pagenum->SetValue(pn);
+	m_canvas->SetScrolledPageSize();
 	m_canvas->Refresh();
 }
 
@@ -306,6 +311,7 @@ void WxTabFrame::OnPageNumChanged(wxCommandEvent &event)
 	theDocument->LoadPage(v);
 	std::clog << "Page switched to " << v << std::endl;
 	m_pagenum->SetValue(v);
+	m_canvas->SetScrolledPageSize();
 	m_canvas->Refresh();
 }
 
@@ -345,8 +351,9 @@ void WxTabFrame::OnMenuExport(wxCommandEvent &event)
 			std::cerr << "Unimplemented export format" << std::endl;
 			break;
 	}
-	if(exporter && theDocument->export_ok()) {
-		exporter->page_begin("wxTab document", theDocument->GetPageNum());
+	if(exporter && theDocument && theDocument->export_ok()) {
+		std::string fn(theDocument->GetName().utf8_str());
+		exporter->page_begin(fn, theDocument->GetPageNum());
 		theDocument->tabulator.output(exporter); // XXX
 		exporter->page_end();
 	}

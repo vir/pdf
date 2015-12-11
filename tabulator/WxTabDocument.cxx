@@ -111,6 +111,15 @@ WxTabDocument::~WxTabDocument()
 	delete theReporter;
 }
 
+// doc/view support
+bool WxTabDocument::DoOpenDocument(const wxString& file)
+{
+	if(LoadFile(file))
+		return true;
+	wxLogError(_("Failed to load document from the file \"%s\"."), file);
+	return false;
+}
+
 bool WxTabDocument::LoadFile(const wxString & fn)
 {
 	try {
@@ -125,9 +134,9 @@ bool WxTabDocument::LoadFile(const wxString & fn)
 
 		file.debug(0);
 #ifdef _MSC_VER
-		file.open(fn.wc_str());
+		file.open(fn.wc_str(), PDF::File::MODE_READ);
 #else
-		file.open(fn.utf8_str());
+		file.open(fn.utf8_str(), PDF::File::MODE_READ);
 #endif
 		if(! file.load()) {
 			file.close();
@@ -141,6 +150,7 @@ bool WxTabDocument::LoadFile(const wxString & fn)
 		std::clog << "+ Document loaded" << std::endl;
 		// PDF::Object::m_debug=true;
 		// doc.dump();
+		tabulator.options.reset();
 		return true;
 	}
 	catch(std::string s) {
@@ -232,6 +242,19 @@ void WxTabDocument::ExportPage( int pagenum, Tabulator::Table::Exporter * export
 		tabulator.full_process(p); // do the final pretty structure construction!
 		tabulator.output(exporter);
 		delete p;
+	}
+}
+
+wxSize WxTabDocument::GetPageSize() const
+{
+	PDF::Rect mb = page->get_meadia_box();
+	wxSize s(mb.x2 + mb.x1, mb.y2 + mb.y1); // Add some margins
+	s *= m_scale;
+	switch(m_rotation)
+	{
+		case 1:
+		case 3: return wxSize(s.y, s.x);
+		default: return s;
 	}
 }
 

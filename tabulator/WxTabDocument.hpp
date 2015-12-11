@@ -2,11 +2,12 @@
 #define MYDOCUMENT_HPP_INCLUDED
 #include <libpdf/PDF.hpp>
 #include <string>
+#include <wx/docview.h>
 #include "WxTabTabulator.hpp"
 #include "ErrorReporterInterface.hpp"
 
 class wxDC;
-class WxTabDocument
+class WxTabDocument: public wxDocument
 {
 	private:
 		PDF::File file;
@@ -17,6 +18,8 @@ class WxTabDocument
 		int m_cur_page_num;
 		wxString filename;
 		ErrorReporter * m_error_handler;
+	public: // wxDocument
+		virtual bool DoOpenDocument(const wxString& file);
 	public:
 		WxTabDocument();
 		~WxTabDocument();
@@ -29,6 +32,7 @@ class WxTabDocument
 		wxString GetName() const { return filename; }
 		int GetPagesNum() const { return doc?doc->get_pages_count():0; }
 		int GetPageNum() const { return m_cur_page_num; }
+		wxSize GetPageSize() const;
 		PDF::Page * GetPageObject() { return page; }
 		void Refresh() { }
 		void Rotate(int r)

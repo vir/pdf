@@ -3,14 +3,17 @@
 #include <wx/wx.h>
 
 class WxTabFrame;
+class CanvasScrollState;
 class WxTabCanvas: public wxScrolledWindow
 {
 	public:
 		WxTabCanvas( WxTabFrame *parent);
+		void SetScrolledPageSize();
 		void OnPaint(wxPaintEvent &event);
-		void OnMouseMove(wxMouseEvent &event);
+		void OnMouse(wxMouseEvent &event);
 	private:
 		WxTabFrame *m_owner;
+		CanvasScrollState *m_scrolling;
 		DECLARE_EVENT_TABLE()
 };
 
