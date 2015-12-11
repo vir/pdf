@@ -58,11 +58,13 @@ class Page
     bool load(OH pagenode);
 //    bool load(std::istream & pagestream);
     bool parse(const std::vector<char> & data);
+	const Rect& get_meadia_box() const { return media_box; }
+	const Rect& get_crop_box() const { return crop_box; }
     void draw(Media * m);
 		/** Set limit on number of operators executed by draw() function (for
 		 * debugging purposes */
 		void set_operators_number_limit(unsigned int n) { m_operators_number_limit = n; }
-		size_t get_operators_count() const { operators.size(); }
+		size_t get_operators_count() const { return operators.size(); }
 		size_t get_operator_offset(unsigned int n) const;
 };
 
