@@ -32,7 +32,8 @@ bool MyApp::OnInit()
 	m_docManager->FileHistoryLoad(*wxConfigBase::Get());
 
 	//// Create a template relating drawing documents to their views
-	(void) new wxDocTemplate(m_docManager, _T("PDF document"), _T("*.pdf"), _T(""), _T("pdf"), _T("PDF Document"), _T("PDF View"), CLASSINFO(PdfDoc), CLASSINFO(PdfExplorerView));
+	(void) new wxDocTemplate(m_docManager, _T("PDF document"), _T("*.pdf"), _T(""), _T("pdf"),
+		_T("PDF Document"), _T("PDF View"), CLASSINFO(PdfDoc), CLASSINFO(PdfExplorerView));
     
 	//m_docManager->SetMaxDocsOpen(1);
 
@@ -46,6 +47,12 @@ bool MyApp::OnInit()
 	frame->Centre(wxBOTH);
 	frame->Show(true);
 	SetTopWindow(frame);
+
+	if(! fname.empty())
+	{
+		wxCommandEvent ev();
+//		m_docManager->OnFileOpen(ev);
+	}
 	return true;
 }
 
@@ -59,28 +66,28 @@ int MyApp::OnExit()
 static const wxCmdLineEntryDesc g_cmdLineDesc [] =
 {
 	{ wxCMD_LINE_SWITCH, wxT("h"), wxT("help"), wxT("displays help on the command line parameters"), wxCMD_LINE_VAL_NONE, wxCMD_LINE_OPTION_HELP },
-//	{ wxCMD_LINE_PARAM,  NULL, NULL, wxT("input file"), wxCMD_LINE_VAL_STRING, /*wxCMD_LINE_PARAM_MULTIPLE*/wxCMD_LINE_OPTION_MANDATORY },
+	{ wxCMD_LINE_PARAM,  NULL, NULL, wxT("input file"), wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_OPTIONAL },
 	{ wxCMD_LINE_NONE }
 };
 
 void MyApp::OnInitCmdLine(wxCmdLineParser& parser)
 {
 	parser.SetDesc(g_cmdLineDesc);
+#ifdef _MSC_VER
+	parser.SetSwitchChars(wxT("/-"));
+#else
 	parser.SetSwitchChars(wxT("-"));
+#endif
 }
 
 
 bool MyApp::OnCmdLineParsed(wxCmdLineParser& parser)
 {
-#if 0
 	if(parser.GetParamCount() == 1) {
 		fname = parser.GetParam(0);
-		if(! theDoc->open(std::string(fname.mb_str())) )
-			return false;
-	} else {
-		return false;
+//		if(! theDoc->open(std::string(fname.mb_str())) )
+//			return false;
 	}
-#endif
 	return true;
 }
 

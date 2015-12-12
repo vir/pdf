@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="windows-1251"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9.00"
+	Version="9,00"
 	Name="libpdf"
 	ProjectGUID="{7E7F2C83-C66E-4556-818A-DB2547988688}"
 	TargetFrameworkVersion="0"
@@ -172,6 +172,10 @@
 			Name="Source Files"
 			Filter="cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 			>
+			<File
+				RelativePath=".\AES.c"
+				>
+			</File>
 			<File
 				RelativePath="Crypto.cxx"
 				>
@@ -515,6 +519,10 @@
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl"
 			>
+			<File
+				RelativePath=".\AES.h"
+				>
+			</File>
 			<File
 				RelativePath="Crypto.hpp"
 				>

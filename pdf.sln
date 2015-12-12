@@ -43,6 +43,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "creator", "creator\creator.
 		{7E7F2C83-C66E-4556-818A-DB2547988688} = {7E7F2C83-C66E-4556-818A-DB2547988688}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "testCrypto", "libpdf\testCrypto.vcproj", "{634760DE-1A23-4842-9766-5F75AA9EECA5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -88,6 +90,9 @@ Global
 		{FE726B0A-99DD-4DD3-A6B1-D1A7DCC5B15D}.Debug|Win32.Build.0 = Debug|Win32
 		{FE726B0A-99DD-4DD3-A6B1-D1A7DCC5B15D}.Release|Win32.ActiveCfg = Release|Win32
 		{FE726B0A-99DD-4DD3-A6B1-D1A7DCC5B15D}.Release|Win32.Build.0 = Release|Win32
+		{634760DE-1A23-4842-9766-5F75AA9EECA5}.Debug|Win32.ActiveCfg = Debug|Win32
+		{634760DE-1A23-4842-9766-5F75AA9EECA5}.Debug|Win32.Build.0 = Debug|Win32
+		{634760DE-1A23-4842-9766-5F75AA9EECA5}.Release|Win32.ActiveCfg = Debug|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

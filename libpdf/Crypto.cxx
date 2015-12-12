@@ -249,8 +249,36 @@ static void Decode(uint32_t *output, const unsigned char *input, unsigned int le
 
 
 
+/* ============= AES ============= */
+#include "AES.h"
+#include <stdexcept>
+
+void AES::init(const std::string & key)
+{
+	rk = new unsigned long[RKLENGTH(keybits)];
+	if(key.length() != KEYLENGTH(keybits))
+		throw std::logic_error("Bad key length");
+	nrounds = encrypt
+		? rijndaelSetupEncrypt(rk, reinterpret_cast<const unsigned char*>(key.c_str()), keybits)
+		: rijndaelSetupDecrypt(rk, reinterpret_cast<const unsigned char*>(key.c_str()), keybits);
+}
+
+AES::~AES()
+{
+	delete[] rk;
+}
+
+void AES::transform(const unsigned char * source_16_bytes, unsigned char * result_16_bytes)
+{
+	if(encrypt)
+		rijndaelEncrypt(rk, nrounds, source_16_bytes, result_16_bytes);
+	else
+		rijndaelDecrypt(rk, nrounds, source_16_bytes, result_16_bytes);
+}
+
 #ifdef TEST_MAIN
 #include <iostream>
+#include <sstream>
 //#include <iomanip>
 
 using namespace std;
@@ -275,6 +303,26 @@ string hexstr(const unsigned char * b, unsigned int l)
 inline string hexstr(const string & s)
 {
 	return hexstr((const unsigned char *)s.c_str(), s.length());
+}
+
+string unhexstr(const char* hex)
+{
+	ostringstream ss;
+	while(*hex) {
+#define UNHEXB(c) ( \
+		((c) >= '0' && (c) <= '9') ? ((c) - '0') : \
+		((c) >= 'A' && (c) <= 'F') ? ((c) - 'A' + 10) : \
+		((c) >= 'a' && (c) <= 'f') ? ((c) - 'a' + 10) : \
+	0)
+		char c = UNHEXB(*hex) << 4;
+		++hex;
+		if(! *hex)
+			break;
+		c |= UNHEXB(*hex);
+		++hex;
+		ss << c;
+	}
+	return ss.str();
 }
 
 struct testdata
@@ -351,11 +399,59 @@ int test_rc4()
 	return r;
 }
 
+/*== test AES ==*/
+
+struct testdata_aes
+{
+	const bool encrypt;
+	const char * key;
+	const char * data;
+	const char * correct;
+};
+
+/* Test vectors from http://csrc.nist.gov/publications/fips/fips197/fips-197.pdf */
+static struct testdata_aes td_aes[] = {
+	// 128 bit key
+	{ true,  "000102030405060708090a0b0c0d0e0f", "00112233445566778899aabbccddeeff", "69c4e0d86a7b0430d8cdb78070b4c55a" },
+	{ false, "000102030405060708090a0b0c0d0e0f", "69c4e0d86a7b0430d8cdb78070b4c55a", "00112233445566778899aabbccddeeff" },
+	// 192 bit key
+	{ true,  "000102030405060708090a0b0c0d0e0f1011121314151617", "00112233445566778899aabbccddeeff", "dda97ca4864cdfe06eaf70a0ec0d7191" },
+	{ false, "000102030405060708090a0b0c0d0e0f1011121314151617", "dda97ca4864cdfe06eaf70a0ec0d7191", "00112233445566778899aabbccddeeff" },
+	// 256 bits
+	{ true,  "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f", "00112233445566778899aabbccddeeff", "8ea2b7ca516745bfeafc49904b496089" },
+	{ false, "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f", "8ea2b7ca516745bfeafc49904b496089", "00112233445566778899aabbccddeeff" },
+};
+
+int test_aes()
+{
+	unsigned int t, p;
+	int r = 0;
+	cout << endl << "Testing AES crypto function..." << endl;
+	for(t = 0; t < sizeof(td_aes)/sizeof(td_aes[0]); t++) {
+		struct testdata_aes * td = &td_aes[t];
+		string key = unhexstr(td->key);
+		AES aes(td->encrypt, key.length()*8);
+		aes.init(key);
+		string result = hexstr( aes.transform(unhexstr(td->data)) );
+		cout << "Test " << t << ". Encr: " << td->encrypt << ", Bits: " << key.length()*8 << ", Key: " << td->key << ", data: " << td->data << endl;
+		cout << " Result:   " << result << endl;
+		cout << " Should be " << td->correct << endl;
+		if(result == td->correct)
+			cout << " `---> test " << t << " OK" << endl;
+		else {
+			cout << "!!!!!! test " << t << " FAILED !!!!!" << endl;
+			r++;
+		}
+	}
+	return r;
+}
+
 int main()
 {
 	int r = 0;
 	r += test_md5();
 	r += test_rc4();
+	r += test_aes();
 	if(r)
 		cout << endl << "!!! " << r << "tests failed! Check output for details." << endl;
 	else
@@ -364,5 +460,4 @@ int main()
 }
 
 #endif
-
 

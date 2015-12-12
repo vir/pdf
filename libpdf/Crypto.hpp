@@ -104,5 +104,34 @@ class RC4 // Description: http://en.wikipedia.org/wiki/RC4
 		}
 };
 
+class AES
+{
+private:
+	bool encrypt;
+	int keybits;
+	unsigned long* rk;
+	int nrounds;
+public:
+	AES(bool encrypt, int bits = 128):encrypt(encrypt), keybits(bits), rk(NULL), nrounds(0) {}
+	~AES();
+	void init(const std::string & key);
+	void transform(const unsigned char * source_16_bytes, unsigned char * result_16_bytes);
+	std::string transform(const std::string & data)
+	{
+		if(data.size() != 16)
+			return "";
+		std::string r;
+		unsigned char buf[16];
+		transform(reinterpret_cast<const unsigned char *>(data.c_str()), buf);
+		return std::string(reinterpret_cast<const char*>(buf), sizeof(buf));
+	}
+	static inline std::string transform(const std::string & key, const std::string & data)
+	{
+		RC4 rc4;
+		rc4.init(key);
+		return rc4.transform(data);
+	}
+};
+
 #endif /* CRYPTO_HPP_INCLUDED */
 
