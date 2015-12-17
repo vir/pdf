@@ -12,6 +12,9 @@
 # include <stdint.h>
 #endif
 #include <string>
+#include <vector>
+#include "Exceptions.hpp"
+#include <assert.h>
 
 typedef unsigned char * POINTER;
 
@@ -112,25 +115,90 @@ private:
 	unsigned long* rk;
 	int nrounds;
 public:
-	AES(bool encrypt, int bits = 128):encrypt(encrypt), keybits(bits), rk(NULL), nrounds(0) {}
+	AES(bool encrypt, int keybits = 128):encrypt(encrypt), keybits(keybits), rk(NULL), nrounds(0) {}
 	~AES();
 	void init(const std::string & key);
-	void transform(const unsigned char * source_16_bytes, unsigned char * result_16_bytes);
+	void transform(const char * source_16_bytes, char * result_16_bytes);
 	std::string transform(const std::string & data)
 	{
 		if(data.size() != 16)
 			return "";
 		std::string r;
-		unsigned char buf[16];
-		transform(reinterpret_cast<const unsigned char *>(data.c_str()), buf);
-		return std::string(reinterpret_cast<const char*>(buf), sizeof(buf));
+		char buf[16];
+		transform(data.c_str(), buf);
+		return std::string(buf, sizeof(buf));
 	}
-	static inline std::string transform(const std::string & key, const std::string & data)
+	static inline std::string transform(bool encr, const std::string & key, const std::string & data, int bits = 128)
 	{
-		RC4 rc4;
-		rc4.init(key);
-		return rc4.transform(data);
+		AES aes(encr, bits);
+		aes.init(key);
+		return aes.transform(data);
 	}
+};
+
+class AES_CBC
+{
+	const static unsigned int blocksize = 16;
+public:
+	AES_CBC(const char* iv, bool encr, std::string key, unsigned int blocksize = 16)
+		: aes(encr, 8 * key.size())
+		, encr(encr)
+	{
+		::memcpy(buf, iv, blocksize);
+		aes.init(key);
+	}
+	void transform_one_block(const char * source, char * result)
+	{
+		if(encr) {
+			xor(buf, source);
+			aes.transform(buf, buf);
+			::memcpy(result, buf, sizeof(buf));
+		} else {
+			aes.transform(source, result);
+			xor(result, buf);
+			memcpy(buf, source, sizeof(buf));
+		}
+	}
+	static void xor(char* dst, const char* src)
+	{
+		for(size_t i = 0; i < blocksize; ++i)
+			dst[i] ^= src[i];
+	}
+	static void encrypt(std::string key, std::vector<char>& buf)
+	{
+		NOT_IMPLEMENTED("AES_CBC::encrypt");
+	}
+	static void decrypt(std::string key, std::vector<char>& buf)
+	{
+		assert(buf.size() > blocksize);
+		AES_CBC a(&buf[0], false, key);
+		const char * read = &buf[blocksize];
+		char * write = &buf[0];
+		size_t remaining = buf.size() - blocksize;
+		while(remaining >= blocksize) {
+			a.transform_one_block(read, write);
+			read += blocksize;
+			write += blocksize;
+			remaining -= blocksize;
+		}
+		assert(0 == remaining);
+		// remove padding
+		--write;
+		size_t padding = (size_t)*(unsigned char*)write; // get last byte
+		assert(padding > 0 && padding <= blocksize);
+		read = write - padding + 1; // points at padding beginning
+		size_t new_length = read - &buf[0];
+#ifdef DEBUG
+		for(; read < write; ++read) {
+			assert(*read == *write);
+		}
+#endif
+		buf.resize(new_length);
+	}
+private:
+	AES aes;
+	char buf[blocksize];
+	bool encr;
 };
 
 #endif /* CRYPTO_HPP_INCLUDED */

@@ -265,6 +265,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\Filter_AESV2.cxx"
+				>
+			</File>
+			<File
 				RelativePath="Filter_Base85.cxx"
 				>
 				<FileConfiguration

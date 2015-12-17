@@ -265,7 +265,7 @@ void File::dump(std::ostream & s) const
 {
 	s << "File: " << filename << " Version: " << version() << std::endl;
 	if(m_security)
-		s << "Security handler present" << std::endl;
+		s << "Security handler present:" << m_security->dump() << std::endl;
 	s << "Xref table:" << std::endl;
 	xref_table.dump(s);
 	for(unsigned int i = 0; i < root_refs.size(); i++)

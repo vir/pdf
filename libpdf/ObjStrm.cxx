@@ -113,7 +113,7 @@ Object * ObjIStream::read_delimited(const ObjId * decrypt_info)
 			{
 				std::vector<char> str = read_o_string();
 				if(decrypt_info && sechandler) {
-					sechandler->decrypt_object(decrypt_info->num, decrypt_info->gen, (char*)&str[0], str.size());
+					sechandler->decrypt_object(decrypt_info->num, decrypt_info->gen, str, SecHandler::OBJ_STRING);
 				}
 				String * s = new String( str );
 				f->ignore(); // skip ')'
@@ -220,7 +220,7 @@ Object * ObjIStream::read_delimited(const ObjId * decrypt_info)
 						r.push_back(c);
 					}
 					if(sechandler && decrypt_info)
-						sechandler->decrypt_object(decrypt_info->num, decrypt_info->gen, (char*)&r[0], r.size());
+						sechandler->decrypt_object(decrypt_info->num, decrypt_info->gen, r, SecHandler::OBJ_STRING);
 					return new String(r);
 				}
 			}
@@ -370,12 +370,12 @@ std::string ObjIStream::read_token()
 	return s;
 }
 
-void ObjIStream::read_chunk(unsigned long offset, char * buf, unsigned int len, long obj_id_num, long obj_id_gen)
+void ObjIStream::read_stream_body(unsigned long offset, std::vector<char>& buf, long obj_id_num, long obj_id_gen)
 {
 	f->seekg(offset);
-	f->read(buf, len);
+	f->read(&buf[0], buf.size());
 	if(sechandler && obj_id_num)
-		sechandler->decrypt_object(obj_id_num, obj_id_gen, buf, len);
+		sechandler->decrypt_object(obj_id_num, obj_id_gen, buf, SecHandler::OBJ_STREAM);
 }
 
 std::streambuf::int_type StreamBuffer::underflow()

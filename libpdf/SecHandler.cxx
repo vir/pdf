@@ -2,6 +2,7 @@
 #include "Object.hpp"
 #include "Crypto.hpp"
 #include "File.hpp"
+#include "Filter.hpp"
 
 /** \file SecHandler.cxx Implementation of algorithms, specified in section 3.5
  * of the pdf reference.
@@ -38,14 +39,16 @@ class StdSecHandler:public SecHandler
 	private:
 		const File * f;
 		static const char * pwpadding;
+		int V;
 		int R;
 		std::string O; // 32 chars
 		std::string U; // 32 chars
 		int32_t P;
 		int Length;
+		std::string StmF, StrF, EFF;
 		std::string encrkey;
 	protected:
-		void compute_encryption_key(std::string pw);
+		void compute_encryption_key(std::string pw, bool EncryptMetadata = true);
 		std::string compute_O(const std::string & pw);
 		std::string compute_U_r2(const std::string & pw);
 		std::string compute_U_r3(const std::string & pw);
@@ -56,7 +59,10 @@ class StdSecHandler:public SecHandler
 		void init(const Dictionary * cryptodict);
 		bool set_user_password(const std::string & pw);
 		bool set_owner_password(const std::string & pw);
-		virtual void decrypt_object(long num, long gen, char * buf, long len);
+		virtual void decrypt_object(long num, long gen, std::vector<char>& buf, ObjType ot);
+		virtual Filter * create_stream_filter(Dictionary * dic);
+		virtual Filter * create_string_filter();
+		virtual std::string dump() const;
 };
 
 SecHandler * SecHandler::create(const Dictionary * cryptodict, const File * file)
@@ -84,6 +90,14 @@ void StdSecHandler::init(const Dictionary * cryptodict)
 {
 	Integer * ii;
 	String * ss;
+	Name * nn;
+	if(! cryptodict->find("Filter", nn))
+		throw DocumentStructureException("Bad crypto dict: no Filter string");
+	if(nn->value() != "Standard")
+		throw DocumentStructureException("Unknown crypto filter name ") << nn->value();
+	if(! cryptodict->find("V", ii))
+		throw DocumentStructureException("Bad crypto dict: no V integer");
+	V = ii->value();
 	if(! cryptodict->find("R", ii))
 		throw DocumentStructureException("Bad crypto dict: no R integer");
 	R = ii->value();
@@ -100,10 +114,39 @@ void StdSecHandler::init(const Dictionary * cryptodict)
 		Length = ii->value()/8; // in bytes
 	else
 		Length = 5; // 40 bits
+	if(V == 4) {
+		Dictionary* dd;
+		if(cryptodict->find("CF", dd)) {
+			/* StdCF => { AuthEvent => /DocOpen, CFM => /AESV2, Length => 16 } */
+			// XXX
+		}
+		if(cryptodict->find("StmF", nn)) {
+			StmF = nn->value();
+		} else {
+			StmF = "Identity";
+		}
+		if(cryptodict->find("StrF", nn)) {
+			StrF = nn->value();
+		} else {
+			StrF = "Identity";
+		}
+		if(cryptodict->find("EFF", nn))
+			EFF = nn->value();
+	}
 	// TODO: support EncryptMetadata ?
 }
 
-void StdSecHandler::compute_encryption_key(std::string pw) // Algorithm 3.2 Computing an encryption key
+std::string StdSecHandler::dump() const
+{
+	std::ostringstream s;
+	s << "Standard security handler:" << std::endl;
+	s << " V: " << V << ", R: " << R << ", P: " << std::hex << P << ", Length: " << Length << std::endl;
+	if(V == 4)
+		s << " StmF: " << StmF << ", StrF: " << StrF << ", EFF: " << EFF << std::endl;
+	return s.str();
+}
+
+void StdSecHandler::compute_encryption_key(std::string pw, bool EncryptMetadata /* = true */) // Algorithm 3.2 Computing an encryption key
 {
 	// 1. pad or truncate
 	if(pw.length() < 32) {
@@ -124,7 +167,7 @@ void StdSecHandler::compute_encryption_key(std::string pw) // Algorithm 3.2 Comp
 std::cerr << "First file id: " << hexstr(first_id) << std::endl;
 	md5.update(first_id.c_str(), first_id.length());
 	// 6. if R>=4 and no metadata encr. pass  0xFFFFFFFF
-	if(R >= 4) { // XXX EncryptMetadata
+	if(R >= 4 && !EncryptMetadata) { // XXX EncryptMetadata
 		uint32_t t = 0xFFFFFFFF;
 		md5.update((const char*)&t, sizeof(t));
 	}
@@ -200,12 +243,14 @@ std::cerr << "Testing password match (first 16 bytes:" << std::endl << hexstr(my
 }
 bool StdSecHandler::set_owner_password(const std::string & pw)
 {
-	std::cerr << "Unimplemented StdSecHandler::set_owner_password() called" << std::endl;
+	NOT_IMPLEMENTED("StdSecHandler::set_owner_password()");
 	return false;
 }
 
-void StdSecHandler::decrypt_object(long num, long gen, char * buf, long len) // Algorithm 3.1 Encryption of data using the RC4 or AES algorithms
+void StdSecHandler::decrypt_object(long num, long gen, std::vector<char>& buf, ObjType ot) // Algorithm 3.1 Encryption of data using the RC4 or AES algorithms
 {
+	bool is_aes = true;
+
 	/* 1. Obtain the object number and generation number from the object ... */
 	/* 2. Treating the object number and generation number as binary integers,
 	 * extend the original n-byte encryption key to n + 5 bytes by appending the
@@ -214,6 +259,8 @@ void StdSecHandler::decrypt_object(long num, long gen, char * buf, long len) // 
 	std::string ek = encrkey;
 	ek.append((char*)&num, 3);
 	ek.append((char*)&gen, 2);
+	if(is_aes)
+		ek.append("\x73\x41\x6C\x54");
 	/* 3. Initialize the MD5 hash function and pass the result of step 2 as input to this function. */
 	MD5 md5;
 	md5.update(ek);
@@ -221,9 +268,29 @@ void StdSecHandler::decrypt_object(long num, long gen, char * buf, long len) // 
 	if(Length + 5 < 16)
 		ek.resize(Length + 5);
 
+	if(is_aes) {
+		AES_CBC::decrypt(ek, buf);
+		return;
+	}
+	char* ptr = &buf[0];
+	size_t len = buf.size();
 	RC4 rc4;
 	rc4.init(ek);
-	rc4.transform(buf, len);
+	rc4.transform(ptr, len);
+}
+
+Filter * StdSecHandler::create_stream_filter(Dictionary * dic)
+{
+	if(StmF.empty())
+		return NULL;
+	return new AESV2Filter(encrkey);
+}
+
+Filter * StdSecHandler::create_string_filter()
+{
+	if(StrF.empty())
+		return NULL;
+	return new AESV2Filter(encrkey);
 }
 
 } // namespace PDF

@@ -268,12 +268,14 @@ AES::~AES()
 	delete[] rk;
 }
 
-void AES::transform(const unsigned char * source_16_bytes, unsigned char * result_16_bytes)
+void AES::transform(const char * source_16_bytes, char * result_16_bytes)
 {
+	const unsigned char * src = reinterpret_cast<const unsigned char*>(source_16_bytes);
+	unsigned char * dst = reinterpret_cast<unsigned char*>(result_16_bytes);
 	if(encrypt)
-		rijndaelEncrypt(rk, nrounds, source_16_bytes, result_16_bytes);
+		rijndaelEncrypt(rk, nrounds, src, dst);
 	else
-		rijndaelDecrypt(rk, nrounds, source_16_bytes, result_16_bytes);
+		rijndaelDecrypt(rk, nrounds, src, dst);
 }
 
 #ifdef TEST_MAIN
@@ -343,7 +345,7 @@ static struct testdata td_md5[] = {
 
 int test_md5()
 {
-	unsigned int t, p;
+	unsigned int t;
 	int r = 0;
 	MD5 md5;
 	unsigned char digest[16];
