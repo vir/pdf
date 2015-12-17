@@ -1,4 +1,5 @@
 #include "PdfDoc.hpp"
+#include <wx/msgdlg.h>
 
 IMPLEMENT_DYNAMIC_CLASS(PdfDoc, wxDocument)
 
@@ -19,8 +20,22 @@ bool PdfDoc::OnOpenDocument(const wxString& filename)
 		return false;
 	// XXX Causes a lot of disasters on win32
 	GetDocumentManager()->AddFileToHistory(filename);
-	if(! file.load())
+	try {
+		if(! file.load())
+			return false;
+	}
+	catch(PDF::Exception& e) {
+		wxMessageBox(wxString::FromUTF8(e.what()), wxT("Exception"));
 		return false;
+	}
+	catch(std::exception& e) {
+		wxMessageBox(wxString::FromUTF8(e.what()), wxT("Exception"));
+		return false;
+	}
+	catch(...) {
+		wxMessageBox(wxT("Something strange"), wxT("Exception"));
+		return false;
+	}
 
 	SetFilename(filename, true);
 	Modify(false);
