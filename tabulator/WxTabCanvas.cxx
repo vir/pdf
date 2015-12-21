@@ -16,16 +16,20 @@ WxTabCanvas::WxTabCanvas(WxTabFrame *parent)
 	m_my_frame = parent;
 }
 
+#include "../wxview/PagePaintHelper.h"
+
 void WxTabCanvas::OnPaint(wxPaintEvent &WXUNUSED(event))
 {
 	wxPaintDC dc(this);
 	PrepareDC(dc);
-
 	m_my_frame->PrepareDC(dc);
-
 	dc.Clear();
-	if(theDocument)
+
+	if(theDocument) {
+		PagePaintHelper m(dc, theDocument->Rotation(), theDocument->Scale()/100.0);
+		theDocument->GetPageObject()->draw(&m);
 		theDocument->Draw(&dc);
+	}
 }
 
 void WxTabCanvas::SetScrolledPageSize()

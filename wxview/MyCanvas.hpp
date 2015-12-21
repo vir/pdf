@@ -27,6 +27,7 @@ class MyCanvas: public wxScrolledWindow
 		std::string get_page_log() const { return m_pagelog.str(); }
 		void set_break() { m_break = true; }
 		void set_scale(double scale) { m_scale = scale; }
+		double get_scale() const { return m_scale; }
 	private:
 		PDF::Page* m_page;
 		int m_rotation;

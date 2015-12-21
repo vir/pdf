@@ -136,8 +136,8 @@ void WxTabDocument::Draw(PDF::Media * mf)
 
 void WxTabDocument::Draw(wxDC * dc)
 {
-	PagePaintHelper mf(*dc, m_rotation, m_scale);
-	page->draw(&mf);
+	//PagePaintHelper mf(*dc, m_rotation, m_scale);
+	//page->draw(&mf);
 	tabulator.Draw(dc, m_scale);
 }
 

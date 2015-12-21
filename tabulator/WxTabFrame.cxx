@@ -256,6 +256,7 @@ void WxTabFrame::OnRotate(wxCommandEvent& event)
 void WxTabFrame::OnZoom(wxCommandEvent& event)
 {
 	int scale = 1 + event.GetId() - MenuZoom_First;
+	m_canvas->set_scale(scale);
 	theDocument->Scale(100 * scale);
 	m_canvas->SetScrolledPageSize();
 	m_canvas->Refresh();

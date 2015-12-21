@@ -42,7 +42,9 @@ class WxTabDocument: public wxDocument
 			tabulator.full_process(page);
 			Refresh();
 		}
+		int Rotation() const { return m_rotation; }
 		void Scale(unsigned int pr) { m_scale = pr/100.0; }
+		double Scale() const { return m_scale * 100.0; }
 		WxTabTabulator tabulator;
 		void retab() { tabulator.full_process(page); }
 		bool export_ok() const { return tabulator.ok(); }
