@@ -112,10 +112,12 @@ void Tabulator::build_grid()
 		Grid::KnotsIterator kit;
 		double x1, x2;
 		kit = grid.h_knots.begin();
-		for(unsigned int i = 0; i < options.find_more_rows_column - 1; i++)
+		for(int i = 0; i < options.find_more_rows_column - 1 && kit != grid.h_knots.end(); i++)
 			kit++;
+		if(kit == grid.h_knots.end())
+			throw TabulatorException("Bad options.find_more_rows_column");
 		x1 = kit->first;
-		kit++; /* pointer to second verical line */
+		kit++; /* pointer to second vertical line */
 		x2 = kit->first;
 		if(debug)
 			std::clog << "Adding more rows: " << options.find_more_rows_column << "th column is between " << x1 << " and " << x2 << std::endl;

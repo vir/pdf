@@ -52,7 +52,7 @@ bool MyApp::OnInit()
 
 	if(! fname.empty())
 	{
-		wxCommandEvent ev();
+//		wxCommandEvent ev();
 //		m_docManager->OnFileOpen(ev);
 	}
 	return true;

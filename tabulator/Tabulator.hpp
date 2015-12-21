@@ -17,6 +17,11 @@
 class Tabulator
 {
 	public:
+		class TabulatorException: public std::runtime_error
+		{
+		public:
+			TabulatorException(const char* msg): std::runtime_error(std::string("TabulatorException: ") + msg) { }
+		};
 		/** Coordinate which compares with a specified tolerance */
 		class Coord {
 			private:
@@ -198,7 +203,7 @@ class Tabulator
 		};
 		struct Options {
 			bool find_table_header;
-			unsigned int find_more_rows_column;
+			int find_more_rows_column;
 			bool postprocess;
 			bool find_joined_cells;
 			std::vector<int> split_columns;
