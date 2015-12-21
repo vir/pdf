@@ -29,7 +29,12 @@ public:
 	MyStreamViewer(wxView* view, PDF::OH& h, PDF::OH& parenth);
 	void OnSave(wxCommandEvent& event);
 	void OnDebug(wxCommandEvent& WXUNUSED(event));
+	void OnLog(wxCommandEvent& event);
+	void OnBreak(wxCommandEvent& event);
 	void OnOpLimit(wxSpinEvent& WXUNUSED(event));
+	void OnScale(wxCommandEvent& event);
+
+	void UpdateLogWindow();
 
 	void SelectOperator( unsigned int lim );
 
@@ -50,6 +55,7 @@ private:
 		}
 		return true;
 	}
+	wxSplitterWindow * m_split_log;
 	wxSplitterWindow * m_splitter;
 	PDF::OH& m_oh;
 	PDF::OH& m_parenth;
@@ -60,6 +66,7 @@ private:
 	wxToolBarBase* m_toolBar;
 	wxSpinCtrl* m_oplimitspin;
 	MyCanvas* m_canvas;
+	wxTextCtrl* m_logwin;
 	DECLARE_EVENT_TABLE()
 	bool ParsePage();
 };

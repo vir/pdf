@@ -20,24 +20,23 @@ void Tabulator::Metafile::Size(PDF::Point size)
 }
 
 
-//void Tabulator::Metafile::Text(PDF::Point pos, std::wstring text)
-void Tabulator::Metafile::Text(PDF::Point pos, double angle, std::wstring text, double twidth, double theight)
+void Tabulator::Metafile::Text(PDF::Rect pos, double angle, std::wstring text, bool visible, const PDF::GraphicsState& gs)
 {
-	if(!myarea.in(pos)) {
+	if(!myarea.in(pos.offset())) {
 		std::wclog << L"Skipping text <<" << text << L">> - not in my area" << std::endl;
 		return;
 	}
 //	std::clog << "Text" << pos.dump() << std::endl;
-	pos.y = page_height - pos.y;
+	pos.y1 = page_height - pos.y1;
 //	all_text.insert(TextBlock(pos, text));
-	all_text.insert(TextBlock(pos, angle, text, twidth, theight));
+	all_text.insert(TextBlock(pos.offset(), angle, text, pos.width(), pos.height()));
 }
 
 /**
  * Sort lines to horizontal/vertical/short, store them in h_lines and v_lines
  * and make sure that p1.[xy] < p2.[xy]
  */
-void Tabulator::Metafile::Line(const PDF::Point & p1, const PDF::Point & p2)
+void Tabulator::Metafile::Line(const PDF::Point & p1, const PDF::Point & p2, const PDF::GraphicsState& gs)
 {
 	if(!myarea.in(p1) || !myarea.in(p2)) {
 		std::clog << "Skipping line " << p1.dump() << "-" << p2.dump() << ">> - not in my area" << std::endl;

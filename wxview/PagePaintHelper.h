@@ -13,21 +13,22 @@ private:
 	double m_page_height;
 	double m_font_size;
 	double m_scale;
+	unsigned int m_break_op;
 public:
-	bool m_debug;
+	std::ostream * m_draw_debug_stream;
+	std::ostream * m_page_debug_stream;
 	typedef PDF::Point Point;
-	PagePaintHelper(wxDC & theDC, int r=0, double sc=1.0, bool deb=false):dc(theDC),m_rotation(r),m_font_size(10.0),m_scale(sc),m_debug(deb) { }
+	PagePaintHelper(wxDC & theDC, int r=0, double sc=1.0);
+	void set_draw_debug_stream(std::ostream* strm) { m_draw_debug_stream = strm; }
+	void set_page_debug_stream(std::ostream* strm) { m_page_debug_stream = strm; }
+	void set_break(unsigned int brop) { m_break_op = brop; }
 	virtual ~PagePaintHelper() { };
 	virtual const PDF::CTM & Matrix() { return m; }
 	virtual void SetFont(const PDF::Font * font, double size);
-	virtual void Text(Point pos, double rotation, std::wstring text, double width, double height);
-	virtual void Line(const Point & p1, const Point & p2);
-	virtual void Size(Point size);
-	virtual void Debug(std::string s)
-	{
-		if(m_debug)
-			std::clog << "DEBUG: " << s << std::endl;
-	}
+	virtual void Text(PDF::Rect pos, double angle, std::wstring text, bool visible, const PDF::GraphicsState& gs);
+	virtual void Line(const PDF::Point & p1, const PDF::Point & p2, const PDF::GraphicsState& gs);
+	virtual void Size(PDF::Point size);
+	virtual void Debug(unsigned int opnum, std::string s, const PDF::GraphicsState& gs);
 };
 
 

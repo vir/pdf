@@ -61,23 +61,19 @@ void PDF::Page::TextObject::Flush()
 
 	// build translated clipping path
 	Path result_clip;
-	Point tmp_point;
 	for(Path::const_iterator it = gs->clipping_path.begin(); it != gs->clipping_path.end(); ++it)
-	{
-		tmp_point = gs->ctm.translate(*it);
-		result_clip.push_back(tmp_point);
-	}
+		result_clip.push_back(gs->ctm.translate(*it));
 
 	Rect result_rect(Trm.translate(Point(0,0)), total_width*Trm.get_scale_h(), Trm.get_scale_v());
 	bool is_visible = result_clip.clip(result_rect);
 	//assert(is_visible);
 
 	media->Text(
-		result_rect.offset(),
+		result_rect,
 		Trm.get_rotation_angle(),
 		accumulated_text,
-		result_rect.size().x,
-		result_rect.size().y
+		is_visible,
+		*gs
 	);
 #if 0 // draw clipping path
 	for(Path::const_iterator it = result_clip.begin(); it != result_clip.end(); ++it)

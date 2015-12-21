@@ -13,6 +13,7 @@ END_EVENT_TABLE()
 
 MyCanvas::MyCanvas(wxWindow *parent)
 	: wxScrolledWindow(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxHSCROLL | wxVSCROLL | wxNO_FULL_REPAINT_ON_RESIZE)
+	, m_break(false)
 {
 	m_owner = parent;
 	m_frame = NULL;
@@ -30,7 +31,16 @@ void MyCanvas::OnPaint(wxPaintEvent &WXUNUSED(event))
 
 	dc.Clear();
 
-	PagePaintHelper m(dc, m_rotation, 1.0, m_debug);
+	PagePaintHelper m(dc, m_rotation, m_scale);
+	if(m_debug) {
+		m_pagelog.str("");
+		m.set_draw_debug_stream(&m_pagelog);
+		m.set_page_debug_stream(&m_pagelog);
+	}
+	unsigned int lim = m_page->get_operators_number_limit();
+	if(lim && m_break)
+		m.set_break(lim - 1);
+	m_break = false;
 	m_page->draw(&m);
 }
 

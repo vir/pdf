@@ -27,6 +27,8 @@ bool MyApp::OnInit()
 	// // of all possible settings for this program
 	//pConfig->SetRecordDefaults();
 
+	//delete wxLog::SetActiveTarget(new wxLogStderr);
+
 	//// Create a document manager
 	m_docManager = new wxDocManager;
 	m_docManager->FileHistoryLoad(*wxConfigBase::Get());

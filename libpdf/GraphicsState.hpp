@@ -6,12 +6,12 @@
 
 namespace PDF {
 
-class Page::GraphicsState {
+class GraphicsState {
 public:
 	GraphicsState() {}
 	/*=== device-independent: ===*/
 	CTM ctm;
-	Path clipping_path;
+	Page::Path clipping_path;
 	// color_space
 	// color
 	struct TextState {
@@ -47,15 +47,15 @@ public:
 	// halftone
 	// flatness // set with 'i'
 	// smothness
-	void modify_clipping_path(const Path* p)
+	void modify_clipping_path(const Page::Path* p)
 	{
 		// XXX just replace for now, sorry
 		clipping_path = *p;
 	}
 	void dump(std::ostream & s) const
 	{
-		s << "CTM: " << ctm.dump() << "\n";
-		s << "Clipping path: " << clipping_path.dump() << "\n";
+		s << "CTM:" << std::endl << ctm.dump();
+		s << "Clipping path: " << clipping_path.dump() << std::endl;
 		s << "Text state: ";
 		text_state.dump(s);
 	}

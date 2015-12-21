@@ -1,6 +1,17 @@
 #include <wx/wx.h>
 #include "PagePaintHelper.h"
 
+PagePaintHelper::PagePaintHelper(wxDC & theDC, int r/*=0*/, double sc/*=1.0*/)
+	: dc(theDC)
+	, m_rotation(r)
+	, m_font_size(10.0)
+	, m_scale(sc)
+	, m_draw_debug_stream(NULL)
+	, m_page_debug_stream(NULL)
+	, m_break_op((unsigned int)-1)
+{
+}
+
 void PagePaintHelper::Size(Point size)
 {
 	/*
@@ -17,6 +28,8 @@ void PagePaintHelper::Size(Point size)
 		default: break;
 	}
 	m_page_height *= m_scale;
+	if(m_draw_debug_stream)
+		*m_draw_debug_stream << "SIZE(" << size.x << ',' << size.y << "), scale: " << m_scale << ", page height: " << m_page_height << std::endl;
 }
 
 void PagePaintHelper::SetFont(const PDF::Font * font, double size)
@@ -27,30 +40,44 @@ void PagePaintHelper::SetFont(const PDF::Font * font, double size)
 	dc.SetFont(*f);
 }
 
-void PagePaintHelper::Text(Point pos, double rotation, std::wstring text, double width, double height)
+void PagePaintHelper::Text(PDF::Rect pos, double angle, std::wstring text, bool visible, const PDF::GraphicsState& gs)
 {
-	if(m_debug)
-		std::wclog << L"TEXT(" << pos.x << L',' << pos.y << L',' << rotation << ") \"" << text << L"\" (" << text.length() << L" chars)(" << width << L'x' << height << L")" << std::endl;
+	if(m_draw_debug_stream)
+		*m_draw_debug_stream << "TEXT(" << pos.x1 << ',' << pos.y1 << ',' << angle << ") \"" << wxString(text).utf8_str() << "\" (" << text.length() << " chars, " << pos.width() << 'x' << pos.height() << ")" << std::endl;
 
 	/*
 	 * Add font height to start coordinate because DrawRotatedText coords begins
 	 * at upper left corner, not like pdf (bottom left)
 	 */
-	double a = rotation*M_PI/180.0;
-	pos.x-=m_font_size*sin(a);
-	pos.y+=m_font_size*cos(a);
-	dc.SetBrush(wxBrush(*wxCYAN, wxSOLID));
+	double a = angle*M_PI/180.0;
+	double x = pos.x1 - m_font_size*sin(a);
+	double y = pos.y1 + m_font_size*cos(a);
+	double w = pos.width();
+	double h = pos.height();
+	dc.SetBrush(wxBrush(*(visible ? wxCYAN : wxGREEN), wxSOLID));
 	dc.SetPen(wxPen(*wxCYAN, 0, wxSOLID));
-	dc.DrawRectangle(wxCoord(pos.x), wxCoord(m_page_height - pos.y), wxCoord(width*cos(a)+height*sin(a)), wxCoord(height*cos(a)-width*sin(a)));
-	dc.DrawRotatedText(text, wxCoord(pos.x), wxCoord(m_page_height - pos.y), rotation);
+	dc.DrawRectangle( wxCoord(x), wxCoord(m_page_height - y),
+		wxCoord(w*cos(a) + h*sin(a)), wxCoord(h*cos(a) - w*sin(a)));
+	dc.DrawRotatedText(text, wxCoord(x), wxCoord(m_page_height - y), angle);
 }
 
-void PagePaintHelper::Line(const Point & p1, const Point & p2)
+void PagePaintHelper::Line(const PDF::Point & p1, const PDF::Point & p2, const PDF::GraphicsState& gs)
 {
 	dc.SetPen(wxPen(*wxBLACK, 0, wxSOLID));
 	dc.DrawLine( wxCoord(p1.x), wxCoord(m_page_height - p1.y), wxCoord(p2.x), wxCoord(m_page_height - p2.y) );
-	if(m_debug)
-		std::clog << "LINE " << p1.dump() << '-' << p2.dump() << std::endl;
+	if(m_draw_debug_stream)
+		*m_draw_debug_stream << "LINE " << p1.dump() << '-' << p2.dump() << std::endl;
+}
+
+void PagePaintHelper::Debug(unsigned int opnum, std::string s, const PDF::GraphicsState& gs)
+{
+	if(m_page_debug_stream) {
+		*m_page_debug_stream << s << std::endl;
+	}
+#ifdef _DEBUG
+	if(m_break_op == opnum)
+		DebugBreak();
+#endif
 }
 
 

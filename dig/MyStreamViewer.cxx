@@ -7,6 +7,9 @@
 
 enum {
 	ID_DEBUG_ENABLE = wxID_HIGHEST + 1,
+	ID_LOG_ENABLE,
+	ID_BTN_BREAK,
+	ID_SCALE_1, ID_SCALE_2, ID_SCALE_4,
 };
 
 const static int ID_TOOLBAR = 501;
@@ -20,6 +23,7 @@ MyStreamViewer::MyStreamViewer(wxView* view, PDF::OH& h, PDF::OH& parenth)
 	, m_toolBar(NULL)
 	, m_page(NULL)
 	, m_canvas(NULL)
+	, m_logwin(NULL)
 {
 	wxString title(h.id().dump().c_str(), wxConvUTF8);
 	title.insert(0, _T("Stream "));
@@ -28,21 +32,32 @@ MyStreamViewer::MyStreamViewer(wxView* view, PDF::OH& h, PDF::OH& parenth)
 	m_toolBar = CreateToolBar(wxTB_FLAT | wxTB_HORIZONTAL | wxTB_TEXT | wxTB_NOICONS, ID_TOOLBAR);
 	m_toolBar->AddTool(wxID_SAVE, _T("Save"), wxBitmap(), _T("Save stream into text file"));
 	m_toolBar->AddSeparator();
-	m_toolBar->AddCheckTool(ID_DEBUG_ENABLE, _T("Debug"), wxBitmap(), wxNullBitmap, _T("Save stream object content"));
+	m_toolBar->AddCheckTool(ID_LOG_ENABLE, _T("Log"), wxBitmap(), wxNullBitmap, _T("Show log window"));
+	m_toolBar->AddCheckTool(ID_DEBUG_ENABLE, _T("Debug"), wxBitmap(), wxNullBitmap, _T("Show page canvas and enable debugging"));
 	m_toolBar->AddSeparator();
 	m_oplimitspin = new wxSpinCtrl( m_toolBar, ID_SPIN_OPLIMIT, _T(""), wxDefaultPosition, wxSize(80,wxDefaultCoord) );
 	m_oplimitspin->SetRange(0, 10000);
 	m_oplimitspin->SetValue(0);
 	m_toolBar->AddControl(m_oplimitspin);
 	m_toolBar->EnableTool(ID_SPIN_OPLIMIT, false);
+	m_toolBar->AddTool(ID_BTN_BREAK, _T("Break"), wxBitmap());
+	m_toolBar->EnableTool(ID_BTN_BREAK, false);
+	m_toolBar->AddSeparator();
+	m_toolBar->AddRadioTool(ID_SCALE_1, _T("100%"), wxBitmap());
+	m_toolBar->AddRadioTool(ID_SCALE_2, _T("200%"), wxBitmap());
+	m_toolBar->AddRadioTool(ID_SCALE_4, _T("400%"), wxBitmap());
 	m_toolBar->Realize();
 
-	m_splitter = new wxSplitterWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize,
+	m_split_log = new wxSplitterWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize,
+		wxSP_3D | wxSP_LIVE_UPDATE | wxCLIP_CHILDREN /* | wxSP_NO_XP_THEME */ );
+	m_splitter = new wxSplitterWindow(m_split_log, wxID_ANY, wxDefaultPosition, wxDefaultSize,
 		wxSP_3D | wxSP_LIVE_UPDATE | wxCLIP_CHILDREN /* | wxSP_NO_XP_THEME */ );
 	m_splitter->SetSashGravity(1.0);
+	m_split_log->SetSashGravity(1.0);
 
 	m_text = new wxTextCtrl(m_splitter, wxID_ANY, _T(""), wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE|wxTE_READONLY|wxTE_DONTWRAP|wxTE_NOHIDESEL);
 	m_splitter->Initialize(m_text);
+	m_split_log->Initialize(m_splitter);
 	DumpObject();
 }
 
@@ -66,6 +81,9 @@ void MyStreamViewer::DumpObject()
 BEGIN_EVENT_TABLE(MyStreamViewer, wxFrame)
 EVT_MENU      (wxID_SAVE,       MyStreamViewer::OnSave)
 EVT_MENU      (ID_DEBUG_ENABLE, MyStreamViewer::OnDebug)
+EVT_MENU      (ID_LOG_ENABLE,   MyStreamViewer::OnLog)
+EVT_MENU      (ID_BTN_BREAK,    MyStreamViewer::OnBreak)
+EVT_MENU_RANGE(ID_SCALE_1, ID_SCALE_4, MyStreamViewer::OnScale)
 EVT_SPINCTRL  (ID_SPIN_OPLIMIT, MyStreamViewer::OnOpLimit)
 END_EVENT_TABLE()
 
@@ -85,6 +103,8 @@ void MyStreamViewer::OnDebug(wxCommandEvent& event)
 			m_toolBar->EnableTool(ID_SPIN_OPLIMIT, true);
 			m_page->set_operators_number_limit(m_oplimitspin->GetValue());
 			m_canvas->Refresh();
+			m_canvas->Update();
+			UpdateLogWindow();
 		} else
 			m_toolBar->ToggleTool(ID_DEBUG_ENABLE, false);
 	} else {
@@ -94,6 +114,19 @@ void MyStreamViewer::OnDebug(wxCommandEvent& event)
 		delete m_page;
 		m_page = NULL;
 		m_toolBar->EnableTool(ID_SPIN_OPLIMIT, false);
+	}
+}
+
+void MyStreamViewer::OnLog(wxCommandEvent& event)
+{
+	if(event.IsChecked()) {
+		m_logwin = new wxTextCtrl(m_split_log, wxID_ANY, _T(""), wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE|wxTE_READONLY);
+		m_split_log->SplitHorizontally(m_splitter, m_logwin);
+		UpdateLogWindow();
+	} else {
+		m_split_log->Unsplit(m_logwin);
+		delete m_logwin;
+		m_logwin = NULL;
 	}
 }
 
@@ -109,7 +142,11 @@ void MyStreamViewer::OnOpLimit(wxSpinEvent& WXUNUSED(event))
 	if(m_canvas) {
 		m_canvas->debug(lim > 0);
 		m_canvas->Refresh();
+#ifdef _DEBUG
+		m_toolBar->EnableTool(ID_BTN_BREAK, true);
+#endif
 	}
+	UpdateLogWindow();
 }
 
 void MyStreamViewer::SelectOperator(unsigned int lim)
@@ -164,5 +201,35 @@ unsigned int MyStreamViewer::CountMissedCRChars(unsigned int lim)
 			|| (m_buf[i] == '\r' && (i >= lim -1 || m_buf[i + 1] != '\n')))
 			++crcnt;
 	return crcnt;
+}
+
+void MyStreamViewer::UpdateLogWindow()
+{
+	if(m_logwin && m_canvas) {
+		m_logwin->SetValue(wxString(m_canvas->get_page_log().c_str(), wxConvUTF8));
+		m_logwin->ShowPosition(m_logwin->GetLastPosition());
+	}
+}
+
+void MyStreamViewer::OnBreak(wxCommandEvent& event)
+{
+	if(m_canvas) {
+		m_canvas->set_break();
+		m_canvas->Refresh();
+	}
+}
+
+void MyStreamViewer::OnScale(wxCommandEvent& event)
+{
+	if(! m_canvas)
+		return;
+	switch(event.GetId()) {
+		case ID_SCALE_1: m_canvas->set_scale(1.0); break;
+		case ID_SCALE_2: m_canvas->set_scale(2.0); break;
+		case ID_SCALE_4: m_canvas->set_scale(4.0); break;
+		default: break;
+	}
+	m_canvas->SetPageSize();
+	m_canvas->Refresh();
 }
 

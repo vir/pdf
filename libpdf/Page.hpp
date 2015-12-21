@@ -27,6 +27,7 @@ namespace PDF {
 class Font;
 class OH;
 class Media;
+class GraphicsState;
 
 /** \brief Represents page content
  */
@@ -34,7 +35,6 @@ class Page
 {
 	public:
 		class Operator;
-		class GraphicsState;
 		class Path;
   private:
 		class TextObject;
@@ -64,6 +64,7 @@ class Page
 		/** Set limit on number of operators executed by draw() function (for
 		 * debugging purposes */
 		void set_operators_number_limit(unsigned int n) { m_operators_number_limit = n; }
+		unsigned int get_operators_number_limit() const { return m_operators_number_limit; }
 		size_t get_operators_count() const { return operators.size(); }
 		size_t get_operator_offset(unsigned int n) const;
 };

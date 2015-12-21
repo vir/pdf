@@ -27,18 +27,9 @@ class Rect
 		Point size() const { return Point(x2-x1, y2-y1); }
 		bool in(Point p) const { return p.x>=x1 && p.x<=x2 && p.y>=y1 && p.y<=y2; }
 		bool normalized() const { return x2 >= x1 && y2 >= y1; }
-		bool clip_him(Rect& oth) const
-		{
-			bool r = true;
-			using namespace std;
-			oth.x1 = max(oth.x1, x1);
-			oth.x2 = min(oth.x2, x2);
-			oth.y1 = max(oth.y1, y1);
-			oth.y2 = min(oth.y2, y2);
-			if(oth.x2 < oth.x1) { oth.x2 = oth.x1; r = false; }
-			if(oth.y2 < oth.y1) { oth.y2 = oth.y1; r = false; }
-			return r;
-		}
+		double width() const { return size().x; }
+		double height() const { return size().y; }
+
 //    bool operator < (const Point & p) const { return (y == p.y)?x<p.x:y<p.y; }
 };
   

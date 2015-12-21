@@ -76,9 +76,8 @@ class Tabulator
 				Metafile():rotation(0),myarea(0,0,10000,10000) {}
 				LineMap h_lines, v_lines;
 				TextMap all_text;
-//				virtual void Text(PDF::Point pos, std::wstring text);
-				virtual void Text(PDF::Point pos, double angle, std::wstring text, double twidth, double theight);
-				virtual void Line(const PDF::Point & p1, const PDF::Point & p2);
+				virtual void Text(PDF::Rect pos, double angle, std::wstring text, bool visible, const PDF::GraphicsState& gs);
+				virtual void Line(const PDF::Point & p1, const PDF::Point & p2, const PDF::GraphicsState& gs);
 				virtual const PDF::CTM & Matrix() { return matrix; }
 				virtual void Size(PDF::Point size);
 				void Clear() {

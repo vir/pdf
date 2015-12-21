@@ -193,7 +193,7 @@ std::string Page::dump() const
   return ss.str();
 }
 
-void Page::GraphicsState::TextState::dump(std::ostream & s) const {
+void GraphicsState::TextState::dump(std::ostream & s) const {
 	s << "Tc:" << Tc << " Tw:" << Tw << " Th:" << Th;
 	s << " Tl:" << Tl << " Tfs:" << Tfs << " Trise:" << Trise;
 	s << " Font:" << (Tf?Tf->name():"(null)");
@@ -218,7 +218,7 @@ void Page::draw(Media * m)
 		if(1) {
 			std::stringstream ss;
 			ss << operator_index << ": " << op->dump();
-			m->Debug(ss.str());
+			m->Debug(operator_index, ss.str(), *gs);
 		}
 //std::clog << "Operator " << operator_index << ": " << op->dump() << std::endl;
 
@@ -271,7 +271,7 @@ void Page::draw(Media * m)
 		}
         else
 				{
-					m->Debug(std::string("Ignoring operator ") + op->dump() + " in page mode");
+					m->Debug(operator_index, std::string("Ignoring operator ") + op->dump() + " in page mode", *gs);
 					break;
 				}
         /* NO BREAK!!! */
@@ -331,10 +331,10 @@ void Page::draw(Media * m)
 #endif
 						for(unsigned int i=0; i<curpath->size()-1; i++)
 						{
-							m->Line(gs->ctm.translate(curpath->at(i)), gs->ctm.translate(curpath->at(i+1)));
+							m->Line(gs->ctm.translate(curpath->at(i)), gs->ctm.translate(curpath->at(i+1)), *gs);
 						}
 						if(op->name() == "s" || op->name() == "f")
-							m->Line(gs->ctm.translate(curpath->at(curpath->size()-1)), gs->ctm.translate(curpath->at(0)));
+							m->Line(gs->ctm.translate(curpath->at(curpath->size()-1)), gs->ctm.translate(curpath->at(0)), *gs);
 						delete curpath; curpath=NULL;
 					} else {
 						std::cerr << "Attempted to draw (" << op->dump() << ") non-existent path" << std::endl;
@@ -343,7 +343,7 @@ void Page::draw(Media * m)
         }
         else
 				{
-					m->Debug(std::string("Ignoring operator ") + op->dump() + " in path construction mode");
+					m->Debug(operator_index, std::string("Ignoring operator ") + op->dump() + " in path construction mode", *gs);
 				}
         break;
       case M_TEXT:
@@ -440,7 +440,7 @@ void Page::draw(Media * m)
 				}
         else
 				{
-					m->Debug(std::string("Ignoring operator ") + op->dump() + " in text mode");
+					m->Debug(operator_index, std::string("Ignoring operator ") + op->dump() + " in text mode", *gs);
 				}
         break;
       case M_IMAGE:
@@ -454,23 +454,22 @@ void Page::draw(Media * m)
   }
 	/* Output some debugging information */
 	if(m_operators_number_limit) {
-		std::clog << "=== Page drawing finished (" << operators_num << " operators executed) ===" << std::endl;
-		if(gs)
-			std::clog << "CTM:" << std::endl << gs->ctm.dump();
+		std::ostringstream ss;
+		ss << "=== Page drawing finished (" << operators_num << " operators executed) ===" << std::endl;
+		if(gs) {
+			ss << "Graphics state:";
+			gs->dump(ss);
+			ss << std::endl;
+		}
 		if(tobj) {
-			std::clog << "Line matrix:" << std::endl << tobj->lm.dump();
-			std::clog << "Text matrix:" << std::endl << tobj->tm.dump();
-			if(gs) {
-				std::clog << "Text state: ";
-				gs->text_state.dump(std::clog);
-				std::clog << std::endl;
-			}
+			ss << "Line matrix:" << std::endl << tobj->lm.dump();
+			ss << "Text matrix:" << std::endl << tobj->tm.dump();
 		}
 		if(curpath)
-			std::clog << "Current path: " << curpath->dump() << std::endl;
-		if(m_operators_number_limit < operators.size()) {
-			std::clog << "Next operator: " << operators[m_operators_number_limit]->dump() << std::endl;
-		}
+			ss << "Current path: " << curpath->dump() << std::endl;
+		if(m_operators_number_limit < operators.size())
+			ss << "Next operator: " << operators[m_operators_number_limit]->dump() << std::endl;
+		m->Debug(operators_num, ss.str(), *gs);
 	}
 	if(tobj) delete tobj;
 	if(curpath) delete curpath;

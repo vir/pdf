@@ -2,7 +2,7 @@
 #define PAGE_TEXTOBJECT_HPP_INCLUDED
 
 #include "Page.hpp"
-#include "Page_GraphicsState.hpp"
+#include "GraphicsState.hpp"
 
 namespace PDF {
 
@@ -13,7 +13,7 @@ class Page::TextObject
 {
 	private:
 		enum TextDir { LTR, RTL, TTB, BTT };
-		const Page::GraphicsState * gs;
+		const GraphicsState * gs;
 		Media * media;
 		double kerning_too_big;
 	public:
@@ -23,7 +23,7 @@ class Page::TextObject
 		double total_width;
 		bool update_font;
 
-		TextObject(const Page::GraphicsState * g, Media * m):gs(g),media(m),total_width(0),update_font(false)
+		TextObject(const GraphicsState * g, Media * m):gs(g),media(m),total_width(0),update_font(false)
 		{
 			kerning_too_big = 0.3; //0.4;
 		}

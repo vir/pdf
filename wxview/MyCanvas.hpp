@@ -7,6 +7,7 @@
 #endif
 
 #include <wx/wx.h>
+#include <sstream>
 
 namespace PDF { class Page; }
 
@@ -23,11 +24,16 @@ class MyCanvas: public wxScrolledWindow
 		void OnMouse(wxMouseEvent &event);
 		void Rotate(int quas) { m_rotation = quas; Refresh(); }
 		void debug(bool d) { m_debug = d; }
+		std::string get_page_log() const { return m_pagelog.str(); }
+		void set_break() { m_break = true; }
+		void set_scale(double scale) { m_scale = scale; }
 	private:
 		PDF::Page* m_page;
 		int m_rotation;
 		double m_scale;
 		bool m_debug;
+		bool m_break;
+		std::ostringstream m_pagelog;
 		CanvasScrollState *m_scrolling;
 		wxWindowBase *m_owner;
 		wxFrameBase *m_frame;
