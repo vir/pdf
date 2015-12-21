@@ -151,7 +151,7 @@ public:
 
 		void load_crypto_dict(const Dictionary * d);
 		void load_file_ids(const Array * a);
-		std::ios_base::open_mode open_prepare(std::string fname, OpenMode mode);
+		std::ios_base::openmode open_prepare(std::string fname, OpenMode mode);
 	public:
 		File(std::string fn = "", OpenMode mode = MODE_CLOSED);
 		File(double pdf_version);

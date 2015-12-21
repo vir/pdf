@@ -74,7 +74,7 @@ File::~File()
 	delete ostrm;
 }
 
-std::ios_base::open_mode File::open_prepare(std::string fname, OpenMode mode)
+std::ios_base::openmode File::open_prepare(std::string fname, OpenMode mode)
 {
 	if(! filename.empty())
 		throw LogicException("File already opened");
@@ -99,7 +99,7 @@ std::ios_base::open_mode File::open_prepare(std::string fname, OpenMode mode)
 
 bool File::open(std::string fn, OpenMode mode)
 {
-	std::ios_base::open_mode fom = open_prepare(fn, mode);
+	std::ios_base::openmode fom = open_prepare(fn, mode);
 	file.open(filename.c_str(), fom);
 
 	if(open_mode == MODE_CREATE && file.good())
