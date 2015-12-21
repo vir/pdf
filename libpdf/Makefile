@@ -7,9 +7,11 @@ SOURCES = \
 	Page.cxx Page_Path.cxx Page_TextObject.cxx \
 	Font.cxx Font_Encoding.cxx Font_CMap.cxx \
 	Font_StdFonts.cxx SecHandler.cxx Crypto.cxx \
-	ObjStrm.cxx
-OBJS = $(SOURCES:.cxx=.o)
-DEPS = $(SOURCES:.cxx=.d)
+	ObjStrm.cxx AES.c Filter_AESV2.cxx
+OBJS := $(filter %.o,$(SOURCES:.cxx=.o))
+OBJS += $(filter %.o,$(SOURCES:.c=.o))
+DEPS := $(filter %.d,$(SOURCES:.cxx=.d))
+DEPS += $(filter %.d,$(SOURCES:.c=.d))
 
 #CC = /usr/local/gcc-3.4.3/bin/gcc
 #CXX = /usr/local/gcc-3.4.3/bin/g++
@@ -18,7 +20,7 @@ CXXFLAGS = -Wall -pipe -g
 all: $(DEPS) $(OBJS) libpdf.a
 
 clean:
-	rm -f ${OBJS} $(SOURCES:.cxx=.d) libpdf.a .depend core
+	rm -f $(OBJS) $(DEPS) libpdf.a .depend core
 
 libpdf.a: $(OBJS)
 	ar r $@ $?
@@ -28,6 +30,15 @@ libpdf.a: $(OBJS)
 	$(CC) -MM $(CPPFLAGS) $< > $@.$$$$; \
 	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@; \
 	rm -f $@.$$$$
+
+%.d: %.c
+	@set -e; rm -f $@; \
+	$(CC) -MM $(CPPFLAGS) $< > $@.$$$$; \
+	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@; \
+	rm -f $@.$$$$
+
+%.o: %.c
+	$(COMPILE.c) $(OUTPUT_OPTION) $<
 
 %.o: %.cxx
 	$(COMPILE.cpp) $(OUTPUT_OPTION) $<
@@ -54,6 +65,6 @@ Core14_AFMs.tar:
 	wget http://www.adobe.com/devnet/font/pdfs/Core14_AFMs.tar
 
 ifneq "$(wildcard *.d)" ""
-include $(SOURCES:.cxx=.d)
+include $(wildcard $(DEPS))
 endif
 

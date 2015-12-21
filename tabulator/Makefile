@@ -11,7 +11,8 @@ OBJS_TABULATOR = $(SOURCES_TABULATOR:.cxx=.o)
 
 SOURCES_WXTAB = \
 	wxtab.cxx WxTabCanvas.cxx WxTabDocument.cxx WxTabFrame.cxx WxTabTabulator.cxx \
-	WxTabBatchExportDlg.cxx PageNumCtrl.cxx
+	WxTabBatchExportDlg.cxx PageNumCtrl.cxx \
+	../wxview/MyCanvas.cxx ../wxview/PagePaintHelper.cxx
 OBJS_WXTAB = $(SOURCES_WXTAB:.cxx=.o)
 
 CXXFLAGS = -Wall -Wno-write-strings -pipe -g -I.. `wx-config --cxxflags`

@@ -35,44 +35,48 @@ bool PDF::Page::Path::clip(Rect& r) const
 	bool even_odd_rule = true;
 	if(empty())
 		return true;
-	bool visible = false; // invisible by default
 	Point p1, p2;
+	Point p;
 	// top left corner is inside clipping region
-	if(is_inside(Point(r.x1, r.y1), even_odd_rule)) {
+	p = Point(r.x1, r.y1);
+	if(is_inside(p, even_odd_rule)) {
 		Point oth1(r.x2, r.y1);
 		Point oth2(r.x1, r.y2);
-		clip_line(Point(r.x1, r.y1), oth1, even_odd_rule);
-		clip_line(Point(r.x1, r.y1), oth2, even_odd_rule);
+		clip_line(p, oth1, even_odd_rule);
+		clip_line(p, oth2, even_odd_rule);
 		r.x2 = oth1.x;
 		r.y2 = oth2.y;
 		return true;
 	}
 	// top right corner is inside clipping region
-	if(is_inside(Point(r.x2, r.y1), even_odd_rule)) {
+	p = Point(r.x2, r.y1);
+	if(is_inside(p, even_odd_rule)) {
 		Point oth1(r.x1, r.y1);
 		Point oth2(r.x2, r.y2);
-		clip_line(Point(r.x2, r.y1), oth1, even_odd_rule);
-		clip_line(Point(r.x2, r.y1), oth2, even_odd_rule);
+		clip_line(p, oth1, even_odd_rule);
+		clip_line(p, oth2, even_odd_rule);
 		r.x1 = oth1.x;
 		r.y2 = oth2.y;
 		return true;
 	}
 	// bottom left corner is inside clipping region
-	if(is_inside(Point(r.x1, r.y2), even_odd_rule)) {
+	p = Point(r.x1, r.y2);
+	if(is_inside(p, even_odd_rule)) {
 		Point oth1(r.x2, r.y2);
 		Point oth2(r.x1, r.y1);
-		clip_line(Point(r.x1, r.y2), oth1, even_odd_rule);
-		clip_line(Point(r.x1, r.y2), oth2, even_odd_rule);
+		clip_line(p, oth1, even_odd_rule);
+		clip_line(p, oth2, even_odd_rule);
 		r.x2 = oth1.x;
 		r.y1 = oth2.y;
 		return true;
 	}
 	// bottom right corner is inside clipping region
-	if(is_inside(Point(r.x2, r.y2), even_odd_rule)) {
+	p = Point(r.x2, r.y2);
+	if(is_inside(p, even_odd_rule)) {
 		Point oth1(r.x1, r.y2);
 		Point oth2(r.x2, r.y1);
-		clip_line(Point(r.x2, r.y2), oth1, even_odd_rule);
-		clip_line(Point(r.x2, r.y2), oth2, even_odd_rule);
+		clip_line(p, oth1, even_odd_rule);
+		clip_line(p, oth2, even_odd_rule);
 		r.x1 = oth1.x;
 		r.y1 = oth2.y;
 		return true;

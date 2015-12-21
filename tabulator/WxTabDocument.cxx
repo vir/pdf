@@ -35,7 +35,7 @@ bool WxTabDocument::DoOpenDocument(const wxString& file)
 {
 	if(LoadFile(file))
 		return true;
-	wxLogError(_("Failed to load document from the file \"%s\"."), file);
+	wxLogError(_("Failed to load document from the file \"%s\"."), file.c_str());
 	return false;
 }
 
@@ -55,7 +55,7 @@ bool WxTabDocument::LoadFile(const wxString & fn)
 #ifdef _MSC_VER
 		file.open(fn.wc_str(), PDF::File::MODE_READ);
 #else
-		file.open(fn.utf8_str(), PDF::File::MODE_READ);
+		file.open(static_cast<const char*>(fn.utf8_str()), PDF::File::MODE_READ);
 #endif
 		if(! file.load()) {
 			file.close();

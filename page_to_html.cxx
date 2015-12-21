@@ -36,8 +36,8 @@ class Metafile:public PDF::Media
 			s << setiosflags(ios::fixed) << setprecision(0);
     }
     virtual ~Metafile() { s << "</body></html>" << endl; s.close(); };
-    virtual void Text(Point pos, std::wstring text);
-    virtual void Line(const Point & p1, const Point & p2);
+		virtual void Text(PDF::Rect posx, double angle, std::wstring text, bool visible, const PDF::GraphicsState& gs);
+    virtual void Line(const PDF::Point & p1, const PDF::Point & p2, const PDF::GraphicsState& gs);
     virtual void Size(Point size)
 		{
 			m.set_unity();
@@ -58,12 +58,13 @@ class Metafile:public PDF::Media
 		virtual const PDF::CTM & Matrix() { return m; }
 };
 
-void Metafile::Text(Point pos, std::wstring text)
+void Metafile::Text(PDF::Rect posx, double angle, std::wstring text, bool visible, const PDF::GraphicsState& gs)
 {
+	PDF::Point pos = posx.offset();
   s << "<div style=\"left:" << pos.x << "px; top:" << pos.y << "px;\" class=\"" << (curfont?curfont->name():"[default]") << "\">" << ws2utf8(text) << "</div>" << endl;
 }
 
-void Metafile::Line(const Point & p1, const Point & p2)
+void Metafile::Line(const PDF::Point & p1, const PDF::Point & p2, const PDF::GraphicsState& gs)
 {
 	const double prc = 2.0;
 	double l = p1.x<p2.x?p1.x:p2.x;
@@ -83,7 +84,7 @@ static void do_it(const char * fname, int pagenum)
   
   PDF::File f;
 	f.debug(0);
-  f.open(fname);
+  f.open(fname, PDF::File::MODE_READ);
   if(!f.load()) { f.close(); return; }
 
   clog << "+ File loaded" << endl;

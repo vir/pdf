@@ -37,8 +37,8 @@ class Tabulator:public PDF::Media
 
     Tabulator(int rot = 0):pheight(0),rotation(rot),myarea(0,0,10000,10000),output_csv(true) {  }
     virtual ~Tabulator()   {  };
-    virtual void Text(Point pos, std::wstring text);
-    virtual void Line(const Point & p1, const Point & p2);
+		virtual void Text(PDF::Rect pos, double angle, std::wstring text, bool visible, const PDF::GraphicsState& gs);
+		virtual void Line(const PDF::Point & p1, const Point & p2, const PDF::GraphicsState& gs);
     void dump() const;
     void chew(bool skip_headers=false);
 		virtual const PDF::CTM & Matrix() { return matrix; }

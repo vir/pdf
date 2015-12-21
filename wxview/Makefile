@@ -8,7 +8,7 @@ all: wxview
 .cxx.o:
 	$(CXX) -Wall -pipe -g -c -I${LIBPDFDIR} `wx-config --cxxflags` -o $*.o $<
 
-wxview: wxview.o MyFrame.o MyCanvas.o MyDocument.o ${LIBPDFDIR}/libpdf.a
+wxview: wxview.o MyFrame.o MyCanvas.o MyDocument.o PagePaintHelper.o ${LIBPDFDIR}/libpdf.a
 	$(LINK.cpp) `wx-config --libs` -lz -o $@ $^
 #	strip $@
 

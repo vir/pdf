@@ -6,9 +6,9 @@ PagePaintHelper::PagePaintHelper(wxDC & theDC, int r/*=0*/, double sc/*=1.0*/)
 	, m_rotation(r)
 	, m_font_size(10.0)
 	, m_scale(sc)
+	, m_break_op((unsigned int)-1)
 	, m_draw_debug_stream(NULL)
 	, m_page_debug_stream(NULL)
-	, m_break_op((unsigned int)-1)
 {
 }
 

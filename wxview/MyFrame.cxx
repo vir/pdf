@@ -2,6 +2,7 @@
 #include "MyCanvas.hpp"
 #include "MyDocument.hpp"
 #include <wx/artprov.h>
+#include <wx/spinctrl.h>
 
 enum {
 	File_Quit = wxID_EXIT,

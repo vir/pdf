@@ -140,61 +140,11 @@ class AES_CBC
 {
 	const static unsigned int blocksize = 16;
 public:
-	AES_CBC(const char* iv, bool encr, std::string key, unsigned int blocksize = 16)
-		: aes(encr, 8 * key.size())
-		, encr(encr)
-	{
-		::memcpy(buf, iv, blocksize);
-		aes.init(key);
-	}
-	void transform_one_block(const char * source, char * result)
-	{
-		if(encr) {
-			xor(buf, source);
-			aes.transform(buf, buf);
-			::memcpy(result, buf, sizeof(buf));
-		} else {
-			aes.transform(source, result);
-			xor(result, buf);
-			memcpy(buf, source, sizeof(buf));
-		}
-	}
-	static void xor(char* dst, const char* src)
-	{
-		for(size_t i = 0; i < blocksize; ++i)
-			dst[i] ^= src[i];
-	}
-	static void encrypt(std::string key, std::vector<char>& buf)
-	{
-		NOT_IMPLEMENTED("AES_CBC::encrypt");
-	}
-	static void decrypt(std::string key, std::vector<char>& buf)
-	{
-		assert(buf.size() > blocksize);
-		AES_CBC a(&buf[0], false, key);
-		const char * read = &buf[blocksize];
-		char * write = &buf[0];
-		size_t remaining = buf.size() - blocksize;
-		while(remaining >= blocksize) {
-			a.transform_one_block(read, write);
-			read += blocksize;
-			write += blocksize;
-			remaining -= blocksize;
-		}
-		assert(0 == remaining);
-		// remove padding
-		--write;
-		size_t padding = (size_t)*(unsigned char*)write; // get last byte
-		assert(padding > 0 && padding <= blocksize);
-		read = write - padding + 1; // points at padding beginning
-		size_t new_length = read - &buf[0];
-#ifdef DEBUG
-		for(; read < write; ++read) {
-			assert(*read == *write);
-		}
-#endif
-		buf.resize(new_length);
-	}
+	AES_CBC(const char* iv, bool encr, std::string key, unsigned int blocksize = 16);
+	void transform_one_block(const char * source, char * result);
+	static void XOR(char* dst, const char* src);
+	static void encrypt(std::string key, std::vector<char>& buf);
+	static void decrypt(std::string key, std::vector<char>& buf);
 private:
 	AES aes;
 	char buf[blocksize];

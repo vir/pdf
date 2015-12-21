@@ -4,7 +4,7 @@
 #include <string>
 #include <iostream>
 #include <iomanip>
-#include <math.h>
+#include <cmath>
 
 #include "Point.hpp"
 #include "Rect.hpp"

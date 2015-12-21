@@ -15,7 +15,7 @@
 #include <iostream>
 #include <iomanip>
 #include <stack>
-#include <math.h>
+#include <cmath>
 
 #include "Object.hpp"
 #include "Point.hpp"

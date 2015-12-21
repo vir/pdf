@@ -19,9 +19,9 @@ MyStreamViewer::MyStreamViewer(wxView* view, PDF::OH& h, PDF::OH& parenth)
 	: wxFrame(NULL, wxID_ANY, _T("Stream viewer"))
 	, m_oh(h)
 	, m_parenth(parenth)
+	, m_page(NULL)
 	, m_view(view)
 	, m_toolBar(NULL)
-	, m_page(NULL)
 	, m_canvas(NULL)
 	, m_logwin(NULL)
 {
@@ -167,7 +167,7 @@ bool MyStreamViewer::ParsePage()
 	m_page = NULL;
 
 	try {
-		PdfDoc * doc = static_cast<PdfDoc*>(m_view->GetDocument());
+//		PdfDoc * doc = static_cast<PdfDoc*>(m_view->GetDocument());
 		m_page = new PDF::Page();
 		m_page->debug(5);
 		m_page->load(m_parenth);

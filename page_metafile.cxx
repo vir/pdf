@@ -20,8 +20,8 @@ class Metafile:public PDF::Media
     Metafile(ostream & out):s(out) { }
     virtual ~Metafile() { };
 		virtual void SetFont(const PDF::Font * font, double size);
-    virtual void Text(Point pos, std::wstring text);
-    virtual void Line(const Point & p1, const Point & p2);
+		virtual void Text(PDF::Rect posx, double angle, std::wstring text, bool visible, const PDF::GraphicsState& gs);
+    virtual void Line(const PDF::Point & p1, const PDF::Point & p2, const PDF::GraphicsState& gs);
 		virtual void Debug(string s);
 #if 1
 		PDF::CTM m;
@@ -51,12 +51,13 @@ void Metafile::SetFont(const PDF::Font * font, double size)
 	s << "SetFont(" << font->name() << ", " << size << ")" << endl;
 }
 
-void Metafile::Text(Point pos, std::wstring text)
+void Metafile::Text(PDF::Rect posx, double angle, std::wstring text, bool visible, const PDF::GraphicsState& gs)
 {
+	Point pos = posx.offset();
   s << "Text" << pos.dump() << "[" << ws2utf8(text) << "]" << endl;
 }
 
-void Metafile::Line(const Point & p1, const Point & p2)
+void Metafile::Line(const PDF::Point & p1, const PDF::Point & p2, const PDF::GraphicsState& gs)
 {
   s << "Line" << p1.dump() << "-" << p2.dump() << endl;
 }
@@ -72,7 +73,7 @@ static void do_it(const char * fname, int pagenum)
   
   PDF::File f;
 	f.debug(0);
-  f.open(fname);
+  f.open(fname, PDF::File::MODE_READ);
   if(!f.load()) { f.close(); return; }
 
   clog << "+ File loaded" << endl;

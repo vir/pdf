@@ -2,6 +2,7 @@
 #include "Crypto.hpp"
 #include <assert.h>
 #include "Exceptions.hpp"
+#include <string.h> // for memcpy
 
 PDF::AESV2Filter::AESV2Filter(const Dictionary * params /*= NULL*/)
 	: aes(NULL)
@@ -35,7 +36,7 @@ void PDF::AESV2Filter::process(const std::vector<char> &src, bool encr, std::vec
 	const char * data = &src[0];
 	size_t remaining = src.size();
 	if(bufused) {
-		size_t append = min(sizeof(buf) - bufused, src.size());
+		size_t append = std::min((size_t)(sizeof(buf) - bufused), src.size());
 		memcpy(&buf[bufused], data, append);
 		bufused += append;
 		skip += append;

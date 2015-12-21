@@ -200,8 +200,9 @@ v_knots[cur_y].push_back(PLine(Point(0, cur_y), Point(500, cur_y)));
   }
 }
 
-void Tabulator::Text(Point pos, std::wstring text)
+void Tabulator::Text(PDF::Rect posx, double angle, std::wstring text, bool visible, const PDF::GraphicsState& gs)
 {
+	PDF::Point pos = posx.offset();
 	if(!myarea.in(pos)) {
 		std::clog << "Skipping text <<" << ws2utf8(text) << ">> - not in my area" << std::endl;
 		return;
@@ -216,7 +217,7 @@ void Tabulator::Text(Point pos, std::wstring text)
  * Sort lines to horizontal/vertical/short, store them in h_lines and v_lines
  * and make sure that p1.[xy] < p2.[xy]
  */
-void Tabulator::Line(const Point & xp1, const Point & xp2)
+void Tabulator::Line(const PDF::Point & xp1, const PDF::Point & xp2, const PDF::GraphicsState& gs)
 {
 	if(!myarea.in(xp1) || !myarea.in(xp2)) {
 		std::clog << "Skipping line " << xp1.dump() << "-" << xp2.dump() << ">> - not in my area" << std::endl;

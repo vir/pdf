@@ -1,4 +1,3 @@
-#include "MyFrame.hpp"
 #include "MyCanvas.hpp"
 #include <iomanip> /* for setiosflags and so */
 #include "../PDF.hpp"

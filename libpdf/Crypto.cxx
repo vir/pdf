@@ -256,7 +256,7 @@ static void Decode(uint32_t *output, const unsigned char *input, unsigned int le
 void AES::init(const std::string & key)
 {
 	rk = new unsigned long[RKLENGTH(keybits)];
-	if(key.length() != KEYLENGTH(keybits))
+	if(key.length() != (unsigned int)KEYLENGTH(keybits))
 		throw std::logic_error("Bad key length");
 	nrounds = encrypt
 		? rijndaelSetupEncrypt(rk, reinterpret_cast<const unsigned char*>(key.c_str()), keybits)
@@ -277,6 +277,68 @@ void AES::transform(const char * source_16_bytes, char * result_16_bytes)
 	else
 		rijndaelDecrypt(rk, nrounds, src, dst);
 }
+
+
+
+AES_CBC::AES_CBC(const char* iv, bool encr, std::string key, unsigned int blocksize)
+	: aes(encr, 8 * key.size())
+	, encr(encr)
+{
+	::memcpy(buf, iv, blocksize);
+	aes.init(key);
+}
+void AES_CBC::transform_one_block(const char * source, char * result)
+{
+	if(encr) {
+		XOR(buf, source);
+		aes.transform(buf, buf);
+		::memcpy(result, buf, sizeof(buf));
+	} else {
+		aes.transform(source, result);
+		XOR(result, buf);
+		memcpy(buf, source, sizeof(buf));
+	}
+}
+void AES_CBC::XOR(char* dst, const char* src)
+{
+	for(size_t i = 0; i < blocksize; ++i)
+		dst[i] ^= src[i];
+}
+void AES_CBC::encrypt(std::string key, std::vector<char>& buf)
+{
+	NOT_IMPLEMENTED("AES_CBC::encrypt");
+}
+void AES_CBC::decrypt(std::string key, std::vector<char>& buf)
+{
+	assert(buf.size() > blocksize);
+	AES_CBC a(&buf[0], false, key);
+	const char * read = &buf[blocksize];
+	char * write = &buf[0];
+	size_t remaining = buf.size() - blocksize;
+	while(remaining >= blocksize) {
+		a.transform_one_block(read, write);
+		read += blocksize;
+		write += blocksize;
+		remaining -= blocksize;
+	}
+	assert(0 == remaining);
+	// remove padding
+	--write;
+	size_t padding = (size_t)*(unsigned char*)write; // get last byte
+	assert(padding > 0 && padding <= blocksize);
+	read = write - padding + 1; // points at padding beginning
+	size_t new_length = read - &buf[0];
+#ifdef DEBUG
+	for(; read < write; ++read) {
+		assert(*read == *write);
+	}
+#endif
+	buf.resize(new_length);
+}
+
+
+
+
 
 #ifdef TEST_MAIN
 #include <iostream>
@@ -462,4 +524,6 @@ int main()
 }
 
 #endif
+
+
 

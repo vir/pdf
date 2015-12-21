@@ -7,6 +7,7 @@
 #include <PDF.hpp>
 
 class wxSpinEvent;
+class wxSpinCtrl;
 class MyCanvas;
 
 class MyTextWidget: public wxTextCtrl

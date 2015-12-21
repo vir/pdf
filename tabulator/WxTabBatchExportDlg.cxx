@@ -133,6 +133,7 @@ void WxTabBatchExportDialog::OnStartExport( wxCommandEvent &event )
 		document->ExportPage(pagenum, exporter);
 		exporter->page_end();
 	}
+#ifdef _WIN32
 	if(exporterselect->GetSelection() == 2)
 	{
 		ExporterExcel* e = static_cast<ExporterExcel*>(exporter);
@@ -140,6 +141,7 @@ void WxTabBatchExportDialog::OnStartExport( wxCommandEvent &event )
 		if(excel_save->GetValue())
 			e->save_as(MakeExportedName().wc_str());
 	}
+#endif
 	progr.Update(page_last - page_first + 1, _T("Finished"));
 	delete exporter;
 }

@@ -9,7 +9,7 @@ static void do_it(const char * fname, unsigned int p_first = 0, unsigned int p_l
   
   PDF::File f;
   f.debug(1);
-  f.open(fname);
+  f.open(fname, PDF::File::MODE_READ);
   if(!f.load()) { f.close(); return; }
 
 	std::clog << "+ File " << fname << " loaded" << std::endl;

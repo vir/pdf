@@ -36,8 +36,8 @@ class Tabulator:public PDF::Media
       clog << "SetPageSize(" << unity.dump() << endl;
       pheight=unity.y;
     }
-    virtual void Text(Point pos, std::wstring text);
-    virtual void Line(const Point & p1, const Point & p2);
+		virtual void Text(PDF::Rect pos, double angle, std::wstring text, bool visible, const PDF::GraphicsState& gs);
+		virtual void Line(const PDF::Point & p1, const Point & p2, const PDF::GraphicsState& gs);
     void dump() const;
     void chew();
 };
@@ -124,8 +124,9 @@ void Tabulator::chew()
   }
 }
 
-void Tabulator::Text(Point pos, std::wstring text)
+void Tabulator::Text(PDF::Rect posx, double angle, std::wstring text, bool visible, const PDF::GraphicsState& gs)
 {
+	Point pos = posx.offset();
   pos.y=pheight-pos.y;// upsidedown
 //  clog << "Text" << pos.dump() << "[" << ws2utf8(text) << "]" << endl;
   all_text[pos]=ws2utf8(text);
@@ -135,7 +136,7 @@ void Tabulator::Text(Point pos, std::wstring text)
  * Sort lines to horizontal/vertical/short, store them in h_lines and v_lines
  * and make sure that p1.[xy] < p2.[xy]
  */
-void Tabulator::Line(const Point & xp1, const Point & xp2)
+void Tabulator::Line(const PDF::Point & xp1, const PDF::Point & xp2, const PDF::GraphicsState& gs)
 {
   Point p1=xp1; Point p2=xp2;
   p1.y=pheight-p1.y; p2.y=pheight-p2.y; // upsidedown
@@ -189,7 +190,7 @@ static void do_it(const char * fname)
   
   PDF::File f;
   f.debug(1);
-  f.open(fname);
+  f.open(fname, PDF::File::MODE_READ);
   if(!f.load()) { f.close(); return; }
 
   clog << "+ File " << fname << " loaded" << endl;

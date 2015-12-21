@@ -1,10 +1,12 @@
 #ifndef MYFRAME_HPP_INCLUDED
 #define MYFRAME_HPP_INCLUDED
+
 #include <wx/wx.h>
-#include <wx/spinctrl.h>
 #include <wx/aui/aui.h>
 
 class MyCanvas;
+class wxSpinCtrl;
+class wxSpinEvent;
 class MyFrame : public wxFrame
 {
 	public:
