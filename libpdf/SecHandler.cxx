@@ -33,6 +33,13 @@ namespace PDF {
  	U => (\xAE\x82O\x05\x9B\xCC\xA1\xB8]2j\x02\xC0\x1A\x8C\x82\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00)
 	V => 2
  */
+struct CryptoFilterDefinition
+{
+	std::string CFM, AuthEvent;
+	int Length;
+	bool is_aes() const { return CFM == "AESV2"; }
+	bool is_rc4() const { return CFM == "V2"; }
+};
 
 class StdSecHandler:public SecHandler
 {
@@ -47,11 +54,13 @@ class StdSecHandler:public SecHandler
 		int Length;
 		std::string StmF, StrF, EFF;
 		std::string encrkey;
+		std::map<std::string, CryptoFilterDefinition> cryptofilters;
 	protected:
 		void compute_encryption_key(std::string pw, bool EncryptMetadata = true);
 		std::string compute_O(const std::string & pw);
 		std::string compute_U_r2(const std::string & pw);
 		std::string compute_U_r3(const std::string & pw);
+		const CryptoFilterDefinition* get_filter_definition(SecHandler::ObjType ot) const;
 	public:
 		StdSecHandler(const File * file):f(file),R(0),P(0),Length(0) { }
 		virtual ~StdSecHandler() { }
@@ -118,7 +127,19 @@ void StdSecHandler::init(const Dictionary * cryptodict)
 		Dictionary* dd;
 		if(cryptodict->find("CF", dd)) {
 			/* StdCF => { AuthEvent => /DocOpen, CFM => /AESV2, Length => 16 } */
-			// XXX
+			for(Dictionary::Iterator it = dd->get_iterator(); dd->check_iterator(it); ++it) {
+				Dictionary* d = dynamic_cast<Dictionary*>(it->second);
+				if(! d)
+					continue;
+				CryptoFilterDefinition def;
+				if(d->find("CFM", nn))
+					def.CFM = nn->value();
+				if(d->find("AuthEvent", nn))
+					def.AuthEvent = nn->value();
+				if(d->find("Length", ii))
+					def.Length = ii->value();
+				cryptofilters[it->first] = def;
+			}
 		}
 		if(cryptodict->find("StmF", nn)) {
 			StmF = nn->value();
@@ -144,6 +165,22 @@ std::string StdSecHandler::dump() const
 	if(V == 4)
 		s << " StmF: " << StmF << ", StrF: " << StrF << ", EFF: " << EFF << std::endl;
 	return s.str();
+}
+
+const CryptoFilterDefinition* StdSecHandler::get_filter_definition(SecHandler::ObjType ot) const
+{
+	std::map<std::string, CryptoFilterDefinition>::const_iterator it = cryptofilters.end();
+	switch(ot) {
+		case OBJ_STREAM:
+			it = cryptofilters.find(StmF);
+			break;
+		case OBJ_STRING:
+			it = cryptofilters.find(StrF);
+			break;
+		default:
+			break;
+	}
+	return it == cryptofilters.end() ? NULL : &it->second;
 }
 
 void StdSecHandler::compute_encryption_key(std::string pw, bool EncryptMetadata /* = true */) // Algorithm 3.2 Computing an encryption key
@@ -249,7 +286,9 @@ bool StdSecHandler::set_owner_password(const std::string & pw)
 
 void StdSecHandler::decrypt_object(long num, long gen, std::vector<char>& buf, ObjType ot) // Algorithm 3.1 Encryption of data using the RC4 or AES algorithms
 {
-	bool is_aes = true;
+	const CryptoFilterDefinition* fd = get_filter_definition(ot);
+	if(! fd)
+		throw std::logic_error("No crypto filter definition found");
 
 	/* 1. Obtain the object number and generation number from the object ... */
 	/* 2. Treating the object number and generation number as binary integers,
@@ -259,7 +298,7 @@ void StdSecHandler::decrypt_object(long num, long gen, std::vector<char>& buf, O
 	std::string ek = encrkey;
 	ek.append((char*)&num, 3);
 	ek.append((char*)&gen, 2);
-	if(is_aes)
+	if(fd->is_aes())
 		ek.append("\x73\x41\x6C\x54");
 	/* 3. Initialize the MD5 hash function and pass the result of step 2 as input to this function. */
 	MD5 md5;
@@ -268,15 +307,15 @@ void StdSecHandler::decrypt_object(long num, long gen, std::vector<char>& buf, O
 	if(Length + 5 < 16)
 		ek.resize(Length + 5);
 
-	if(is_aes) {
+	if(fd->is_aes()) {
 		AES_CBC::decrypt(ek, buf);
 		return;
+	} else if(fd->is_rc4()) {
+		RC4 rc4;
+		rc4.init(ek);
+		rc4.transform(&buf[0], buf.size());
+		return;
 	}
-	char* ptr = &buf[0];
-	size_t len = buf.size();
-	RC4 rc4;
-	rc4.init(ek);
-	rc4.transform(ptr, len);
 }
 
 Filter * StdSecHandler::create_stream_filter(Dictionary * dic)
