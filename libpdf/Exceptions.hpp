@@ -13,7 +13,7 @@
 #include <stdexcept>
 
 #define NOT_IMPLEMENTED(a) \
-	throw UnimplementedException((std::string(__FILE__) + a).c_str());
+	throw PDF::UnimplementedException((std::string(__FILE__) + a).c_str());
 
 namespace PDF {
 
@@ -22,16 +22,17 @@ class Exception:public std::exception
 protected:
 	std::string prefix;
 	std::string msg;
+	mutable std::string res;
 public:
 	Exception(const char * prefix = "", const char * msg = "") throw() :prefix(prefix), msg(msg) { }
 	virtual ~Exception() throw() {}
-	virtual const char * what() throw()
+	virtual const char * what() const throw()
 	{
-		std::string r = prefix;
-		if(r.length())
-			r += ": ";
-		r += msg;
-		return r.c_str();
+		res = prefix;
+		if(res.length())
+			res += ": ";
+		res += msg;
+		return res.c_str();
 	}
 	Exception& operator << (const std::string& s) { msg += s; return *this; }
 	Exception& operator << (const char * s) { msg += s; return *this; }
@@ -48,7 +49,8 @@ public:
 class FormatException:public std::exception
 {
   private:
-    std::string s, r;
+    std::string s;
+    mutable std::string r;
     long off;
   public:
     /**
@@ -62,7 +64,7 @@ class FormatException:public std::exception
     {
     }
     virtual ~FormatException() throw() {}
-    virtual const char * what() throw()
+    virtual const char * what() const throw()
     {
       std::stringstream ss;
       ss << "PDF format error: " << s;
@@ -80,7 +82,7 @@ class DocumentStructureException:public std::exception
   public:
     DocumentStructureException(std::string s="") throw() :msg(s) { }
     virtual ~DocumentStructureException() throw() {}
-    virtual const char * what() throw() { return (std::string("DocStrucErr: ")+msg).c_str(); }
+    virtual const char * what() const throw() { return (std::string("DocStrucErr: ")+msg).c_str(); }
     DocumentStructureException& operator << (const std::string& s) { msg += s; return *this; }
     DocumentStructureException& operator << (const char * s) { msg += s; return *this; }
 };
@@ -95,7 +97,7 @@ class InvalidNodeTypeException: public DocumentStructureException
 {
 public:
 	InvalidNodeTypeException(std::string s="") throw() :DocumentStructureException(s) { }
-	virtual const char * what() throw() { return (std::string("NodeTypeErr: ")+msg).c_str(); }
+	virtual const char * what() const throw() { return (std::string("NodeTypeErr: ")+msg).c_str(); }
 };
 
 class UnimplementedException:public Exception
@@ -112,7 +114,7 @@ public:
 
 class WrongPasswordException:public std::exception
 {
-	virtual const char * what() throw()
+	virtual const char * what() const throw()
 	{
 		return "Wrong password";
 	}

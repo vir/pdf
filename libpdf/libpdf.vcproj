@@ -173,6 +173,10 @@
 			Filter="cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 			>
 			<File
+				RelativePath=".\AES.c"
+				>
+			</File>
+			<File
 				RelativePath="Crypto.cxx"
 				>
 				<FileConfiguration
@@ -259,6 +263,10 @@
 						PreprocessorDefinitions=""
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\Filter_AESV2.cxx"
+				>
 			</File>
 			<File
 				RelativePath="Filter_Base85.cxx"
@@ -515,6 +523,10 @@
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl"
 			>
+			<File
+				RelativePath=".\AES.h"
+				>
+			</File>
 			<File
 				RelativePath="Crypto.hpp"
 				>

@@ -78,7 +78,7 @@ static Filter *  CreateStreamFilter(Object * name, Object * params)
 bool Stream::get_data(std::vector<char> & buf)
 {
 	m_data.resize(slength());
-	ostrm->read_chunk(soffset, &m_data[0], m_data.size(), encryption()?m_id.num:0, encryption()?m_id.gen:0);
+	ostrm->read_stream_body(soffset, m_data, encryption()?m_id.num:0, encryption()?m_id.gen:0);
 
 	Object * filternode;
 	if(!(filternode = m_dict->find("Filter"))) {
@@ -88,7 +88,14 @@ bool Stream::get_data(std::vector<char> & buf)
 	}
 
 	std::vector<Filter *> filters;
-
+#if 0
+	SecHandler* sh = ostrm->get_security_handler();
+	if(sh) {
+		Filter* f = sh->create_stream_filter(m_dict);
+		if(f)
+			filters.push_back(f);
+	}
+#endif
 	Object * filterparams = m_dict->find("DecodeParms");
 	Array * filterarray = dynamic_cast<Array *>(filternode);
 	if(filterarray) { // filter chain

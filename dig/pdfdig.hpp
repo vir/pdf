@@ -8,7 +8,7 @@
 class MyApp : public wxApp
 {
 	private:
-//		wxString fname;
+		wxString fname;
 	protected:
 		wxDocManager* m_docManager;
 		MyFrame * frame;

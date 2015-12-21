@@ -69,6 +69,7 @@ class ObjIStream
 		ObjIStream(std::istream & sref, bool want_throw_eof = true):f(&sref),ownstream(false),sechandler(NULL),will_throw_eof(want_throw_eof),will_allow_keywords(false) { }
 		ObjIStream(Stream * object_stream):f(new std::istream(new StreamBuffer(object_stream))), ownstream(true), sechandler(NULL), will_throw_eof(false), will_allow_keywords(false) { }
 		~ObjIStream() { if(ownstream) { f->clear(); delete f; } }
+		SecHandler* get_security_handler() { return sechandler; }
 		void set_security_handler(SecHandler * h) { sechandler = h; }
 		void throw_eof(bool want) { will_throw_eof = want; }
 		bool throw_eof() { return will_throw_eof; }
@@ -76,7 +77,7 @@ class ObjIStream
 		bool allow_keywords() { return will_allow_keywords; }
 		Object * read_direct_object() { return read_direct_object(NULL); }
 		Object * read_indirect_object(bool need_decrypt = true);
-		void read_chunk(unsigned long offset, char * buf, unsigned int len, long obj_id_num = 0, long obj_id_gen = 0);
+		void read_stream_body(unsigned long offset, std::vector<char>& buf, long obj_id_num = 0, long obj_id_gen = 0);
 		std::string read_token();
 };
 

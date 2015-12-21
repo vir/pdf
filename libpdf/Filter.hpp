@@ -10,6 +10,8 @@
 #include <vector>
 #include <string>
 
+class AES_CBC;
+
 namespace PDF {
 
 class Dictionary;
@@ -56,6 +58,30 @@ class Base85Filter:public Filter
     virtual bool Decode(const std::vector<char> & src, std::vector<char> & dst);
 		virtual const char * Name() { return "Base85Filter"; };
 };
+
+/// AES-CBC encoder/decoder
+class AESV2Filter:public Filter
+{
+	const static unsigned int keysize = 128 / 8;
+	const static unsigned int blocksize = 128 / 8;
+private:
+	AES_CBC * aes;
+	char buf[keysize];
+	unsigned long bufused;
+	std::string key;
+protected:
+	void process(const std::vector<char> &src, bool encr, std::vector<char> &dst);
+	void process(const char * data, bool encr, std::vector<char> &dst);
+public:
+	AESV2Filter(const Dictionary * params = NULL);
+	AESV2Filter(const std::string& key): aes(NULL), bufused(0), key(key) { }
+	virtual ~AESV2Filter();
+	virtual bool Encode(const std::vector<char> & src, std::vector<char> & dst);
+
+	virtual bool Decode(const std::vector<char> & src, std::vector<char> & dst);
+	virtual const char * Name() { return "AESV2Filter"; };
+};
+
 
 }; // namespace PDF
 
