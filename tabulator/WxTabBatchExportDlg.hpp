@@ -26,7 +26,7 @@ private:
 	wxTextCtrl * expopts;
 #ifdef _WIN32
 	wxBoxSizer *s_eopts_excel;
-	wxCheckBox *excel_background, *excel_save;
+	wxCheckBox *excel_background, *excel_save, *excel_page_numbers;
 	wxSpinCtrl *excel_pages_in_row;
 #endif
 };

@@ -132,6 +132,7 @@ bool ExporterExcel::set_params(std::string pstr)
 {
 	std::stringstream ss(pstr);
 	ss >> sheets_number;
+	ss >> insert_page_numbers;
 	std::clog << "ExporterExcel: sheets_number set to " << sheets_number << std::endl;
 	return true;
 }
@@ -162,6 +163,17 @@ void ExporterExcel::table_end()
 	} else { // move right
 		move_cursor(cols_number, 0);
 		cur_col+=cols_number;
+	}
+}
+
+void ExporterExcel::page_begin(std::string fname, unsigned int pnum)
+{
+	if(insert_page_numbers) {
+		std::wstring wfn(fname.begin(), fname.end());
+		std::wostringstream ss;
+		ss << wfn << " page " << pnum;
+		set_cell_value(ss.str());
+		move_cursor(0, 1);
 	}
 }
 

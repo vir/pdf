@@ -48,6 +48,8 @@ WxTabBatchExportDialog::WxTabBatchExportDialog( wxWindow * parent, WxTabDocument
 		s_eopts_excel->Add(new wxStaticText(this, wxID_ANY, _T("Excel options: ")));
 		excel_background = new wxCheckBox(this, wxID_ANY, wxT("Background operation"));
 		s_eopts_excel->Add(excel_background);
+		excel_page_numbers = new wxCheckBox(this, wxID_ANY, wxT("Insert page numbers"));
+		s_eopts_excel->Add(excel_page_numbers);
 		excel_save = new wxCheckBox(this, wxID_ANY, wxString(wxT("Save file ")) + MakeExportedName());
 		s_eopts_excel->Add(excel_save);
 
@@ -103,6 +105,7 @@ void WxTabBatchExportDialog::OnStartExport( wxCommandEvent &event )
 					int pgs = excel_pages_in_row->GetValue();
 					if(pgs)
 						e->set_sheets_number(pgs);
+					e->set_insert_page_numbers(excel_page_numbers->GetValue());
 				}
 				e->set_visible(! excel_background->GetValue());
 				exporter = e;
