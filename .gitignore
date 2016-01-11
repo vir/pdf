@@ -4,3 +4,9 @@ Debug
 Release
 OutputDebug
 OutputRelease
+testDebug
+*.suo
+*.ncb
+*.sdf
+*.cbp
+*.opensdf
