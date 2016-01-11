@@ -1,3 +1,6 @@
 *.o
 libpdf/*.d
-
+Debug
+Release
+OutputDebug
+OutputRelease
