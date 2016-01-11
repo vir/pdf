@@ -27,9 +27,7 @@ void Tabulator::Metafile::Text(PDF::Rect pos, double angle, std::wstring text, b
 		return;
 	}
 //	std::clog << "Text" << pos.dump() << std::endl;
-	pos.y1 = page_height - pos.y1;
-//	all_text.insert(TextBlock(pos, text));
-	all_text.insert(TextBlock(pos.offset(), angle, text, pos.width(), pos.height()));
+	all_text.insert(TextBlock(PDF::Point(pos.x1, page_height - pos.y1), angle, text, pos.width(), pos.height()));
 }
 
 /**
