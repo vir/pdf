@@ -574,7 +574,7 @@ void File::ReconstructXRefTable()
 	Object * o = istrm->read_indirect_object(false);
 	Dictionary * lindict = dynamic_cast<Dictionary *>(o);
 	if(lindict && lindict->find("Linearized")) {
-		std::clog << "Found Linearization dictionary, good" << std::clog;
+		std::clog << "Found Linearization dictionary, good" << std::endl;
 		// Load "first page xref table" and may be some parts of other(s)
 		std::fstream::pos_type xreftablestart = file.tellg();
 		LoadXRefTable(file.tellg(), true);

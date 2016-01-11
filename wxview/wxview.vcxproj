@@ -84,7 +84,7 @@
     <Link>
       <AdditionalDependencies>wxmsw28ud_core.lib;wxbase28ud.lib;Comdlg32.lib;comctl32.lib;rpcrt4.lib;winmm.lib;wsock32.lib;zdll.lib;libpdf.lib;getopt.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(OutDir);$(SolutionDir)/win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>.\wxview___Win32_Unicode_Debug/wxview.pdb</ProgramDatabaseFile>
       <SubSystem>Windows</SubSystem>
@@ -129,7 +129,7 @@
     <Link>
       <AdditionalDependencies>wxmsw28u_core.lib;wxbase28u.lib;Comdlg32.lib;comctl32.lib;rpcrt4.lib;winmm.lib;wsock32.lib;zdll.lib;libpdf.lib;getopt.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(OutDir);$(SolutionDir)/win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>.\wxview___Win32_Unicode_Release/wxview.pdb</ProgramDatabaseFile>
       <SubSystem>Windows</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
