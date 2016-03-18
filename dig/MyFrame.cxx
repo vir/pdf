@@ -109,9 +109,21 @@ void MyFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
 
 void MyFrame::OnViewStream(wxCommandEvent& event)
 {
-	wxView* curview = static_cast<MyApp*>(wxTheApp)->GetDocManager()->GetCurrentView();
-	if(curview)
-		static_cast<PdfExplorerView*>(curview)->ViewStreamData();
+	try
+	{
+		wxView* curview = static_cast<MyApp*>(wxTheApp)->GetDocManager()->GetCurrentView();
+		if (curview)
+			static_cast<PdfExplorerView*>(curview)->ViewStreamData();
+	}
+	catch (PDF::FormatException & e) {
+		wxMessageBox(wxString(e.what(), wxConvUTF8), _T("PDF::FormatException"), wxOK | wxICON_INFORMATION, this);
+	}
+	catch (std::exception & e) {
+		wxMessageBox(wxString(e.what(), wxConvUTF8), _T("std::exception"), wxOK | wxICON_INFORMATION, this);
+	}
+	catch (...) {
+		wxMessageBox(_T("Unknown Exception"), _T("Exception!"), wxOK | wxICON_INFORMATION, this);
+	}
 }
 
 void MyFrame::OnSaveStream(wxCommandEvent& event)
@@ -125,10 +137,22 @@ void MyFrame::OnSaveStream(wxCommandEvent& event)
 			wxFD_SAVE, wxDefaultPosition);
 		if (OpenDialog->ShowModal() == wxID_OK) // if the user click "Open" instead of "Cancel"
 		{
-			wxString SavePath = OpenDialog->GetPath();
-			std::ofstream s;
-			s.open(SavePath.mb_str(), std::ios_base::out|std::ios_base::binary);
-			static_cast<PdfExplorerView*>(curview)->SaveStreamData(s);
+			try
+			{
+				wxString SavePath = OpenDialog->GetPath();
+				std::ofstream s;
+				s.open(SavePath.mb_str(), std::ios_base::out | std::ios_base::binary);
+				static_cast<PdfExplorerView*>(curview)->SaveStreamData(s);
+			}
+			catch (PDF::FormatException & e) {
+				wxMessageBox(wxString(e.what(), wxConvUTF8), _T("PDF::FormatException"), wxOK | wxICON_INFORMATION, this);
+			}
+			catch (std::exception & e) {
+				wxMessageBox(wxString(e.what(), wxConvUTF8), _T("std::exception"), wxOK | wxICON_INFORMATION, this);
+			}
+			catch (...) {
+				wxMessageBox(_T("Unknown Exception"), _T("Exception!"), wxOK | wxICON_INFORMATION, this);
+			}
 		}
 		OpenDialog->Destroy();
 	}
