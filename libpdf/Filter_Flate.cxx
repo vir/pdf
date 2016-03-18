@@ -8,41 +8,85 @@
 
 namespace PDF {
 
-class PredictorPNG_Up:public PredictorBase
+class PredictorPNG:public PredictorBase
 {
-	private:
-		unsigned int m_ncols;
-	public:
-		PredictorPNG_Up(unsigned int ncols):m_ncols(ncols) { }
-		virtual void Insert(std::vector<char> & data);
-		virtual void Remove(std::vector<char> & data);
+public:
+	typedef std::vector<char> DataVector;
+private:
+	unsigned int m_bpc, m_colors, m_ncols;
+	unsigned int m_bpp, m_bpr;
+	DataVector m_prev_row;
+public:
+	PredictorPNG(unsigned int ncols, unsigned int colors, unsigned int bpc)
+		: m_ncols(ncols), m_colors(colors), m_bpc(bpc)
+	{
+		m_bpp = 1 + ((m_bpc * m_colors - 1) / 8); // bytes per point
+		m_bpr = m_bpp * m_ncols;
+	}
+	virtual void Insert(DataVector & data);
+	virtual void Remove(DataVector & data);
+private:
+	inline void RemoveRow_None(DataVector::iterator& w, DataVector::const_iterator& r)
+	{
+		std::copy(r, r + m_ncols, w);
+		r += m_ncols;
+		w += m_ncols;
+	}
+	void RemoveRow_Sub(DataVector::iterator& w, DataVector::const_iterator& r);
+	void RemoveRow_Up(DataVector::iterator& w, DataVector::const_iterator& r);
 };
 
-void PredictorPNG_Up::Insert(std::vector<char> & data)
+void PredictorPNG::Insert(std::vector<char> & data)
 {
 	throw UnimplementedException("PNG predictor insertion");
 }
 
-void PredictorPNG_Up::Remove(std::vector<char> & data)
+void PredictorPNG::Remove(std::vector<char> & data)
 {
-	std::vector<char>::const_iterator r = data.begin();
-	std::vector<char>::iterator w = data.begin();
-	std::vector<char> prev_row(m_ncols, 0);
+	DataVector::const_iterator r = data.begin();
+	DataVector::iterator w = data.begin();
+	m_prev_row.resize(m_bpr, 0);
 	int col = -1;
 	while(r != data.end()) {
-		if(col == -1) {
-			if(*r != 2)
-				throw FormatException("Wrong predictor");
-		} else {
-			*w = prev_row[col] = *r + prev_row[col];
-			++w;
+		int predictor = *r++;
+		if (data.end() - r < m_bpr)
+			throw FormatException("Short data row");
+		DataVector::iterator rowstart = w;
+		switch (predictor) {
+		case 0:
+			RemoveRow_None(w, r);
+			break;
+		case 1:
+			RemoveRow_Sub(w, r);
+			break;
+		case 2:
+			RemoveRow_Up(w, r);
+			break;
+		default:
+			throw UnimplementedException("Wrong predictor ") << predictor;
+			// more predictors here: https://tools.ietf.org/html/rfc2083
 		}
-		++r;
-		++col;
-		if((unsigned int)col >= m_ncols)
-			col = -1;
+		m_prev_row.assign(rowstart, w);
 	}
 	data.resize(w - data.begin());
+}
+
+void PredictorPNG::RemoveRow_Sub(DataVector::iterator& w, DataVector::const_iterator& r)
+{
+	unsigned int index = 0;
+	for (; index < m_bpr; ++index) {
+		*w = *r + (index < m_bpp ? 0 : w[-m_bpp]);
+		++w; ++r;
+	}
+}
+
+void PredictorPNG::RemoveRow_Up(DataVector::iterator& w, DataVector::const_iterator& r)
+{
+	unsigned int b = 0;
+	for (; b < m_bpr; ++b) {
+		*w = *r + m_prev_row[b];
+		++w; ++r;
+	}
 }
 
 /// Flate filter constructor
@@ -53,17 +97,23 @@ FlateFilter::FlateFilter(const Dictionary * params)
  : m_predictor(0)
 {
 	long predictor_id;
-	unsigned int cols;
+	unsigned int cols, colors, bpc;
 	if(!params)
 		return;
 	const Object * o = params->find("Predictor");
 	if(o && o->to_number(predictor_id)) {
-		switch(predictor_id) {
-			case 12:
-				if((o = params->find("Columns")) && o->to_number(cols))
-					m_predictor = new PredictorPNG_Up(cols);
-				else
-					throw FormatException("PNG Up predictor: required parameter 'Columns' not found in xref stream dictionary");
+		if (predictor_id == 1) // No prediction (the default value)
+			return;
+		if (!((o = params->find("Colors")) && o->to_number(colors)))
+			colors = 1;
+		if (!((o = params->find("BitsPerComponent")) && o->to_number(bpc)))
+			bpc = 8;
+		if (!((o = params->find("Columns")) && o->to_number(cols)))
+			cols = 1;
+
+		switch (predictor_id) {
+			case 10: case 11: case 12: case 13: case 14: case 15:
+				m_predictor = new PredictorPNG(cols, colors, bpc);
 				break;
 			default:
 				throw UnimplementedException("Only PNG Up predictor is implemented :(");
