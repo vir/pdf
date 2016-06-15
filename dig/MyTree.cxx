@@ -104,7 +104,7 @@ void MyTree::Update()
 {
 	wxString s;
 	PdfDoc * doc = static_cast<PdfDoc*>(m_view->GetDocument());
-	doc->GetPrintableName(s);
+	s = doc->GetUserReadableName();
 	SetItemText(rootId, s);
 //	SetItemData(NULL);
 	wxTreeItemId id = AppendChild(rootId, wxT("Catalog"), doc->get_object( doc->get_root(0) ) );

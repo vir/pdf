@@ -442,7 +442,7 @@ static struct testdata td_rc4[] = {
 
 int test_rc4()
 {
-	unsigned int t, p;
+	unsigned int t;
 	int r = 0;
 	RC4 rc4;
 	cout << endl << "Testing RC4 crypto function..." << endl;
@@ -488,7 +488,7 @@ static struct testdata_aes td_aes[] = {
 
 int test_aes()
 {
-	unsigned int t, p;
+	unsigned int t;
 	int r = 0;
 	cout << endl << "Testing AES crypto function..." << endl;
 	for(t = 0; t < sizeof(td_aes)/sizeof(td_aes[0]); t++) {

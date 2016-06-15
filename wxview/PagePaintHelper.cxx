@@ -36,7 +36,7 @@ void PagePaintHelper::SetFont(const PDF::Font * font, double size)
 {
 	if(size < 4) size = 4;
 	m_font_size = size;
-	wxFont* f = wxTheFontList->FindOrCreateFont(int(size/1.8 /* empirical constant to get wxWidgets font of needed size */), wxSWISS, wxNORMAL /*wxITALIC*/, wxNORMAL/*wxBOLD*/);
+	wxFont* f = wxTheFontList->FindOrCreateFont(int(size/1.8 /* empirical constant to get wxWidgets font of needed size */), wxFONTFAMILY_SWISS, wxFONTSTYLE_NORMAL /*wxITALIC*/, wxFONTWEIGHT_NORMAL/*wxBOLD*/);
 	dc.SetFont(*f);
 }
 
@@ -54,8 +54,8 @@ void PagePaintHelper::Text(PDF::Rect pos, double angle, std::wstring text, bool 
 	double y = pos.y1 + m_font_size*cos(a);
 	double w = pos.width();
 	double h = pos.height();
-	dc.SetBrush(wxBrush(*(visible ? wxCYAN : wxGREEN), wxSOLID));
-	dc.SetPen(wxPen(*wxCYAN, 0, wxSOLID));
+	dc.SetBrush(wxBrush(*(visible ? wxCYAN : wxGREEN), wxBRUSHSTYLE_SOLID));
+	dc.SetPen(wxPen(*wxCYAN, 0, wxPENSTYLE_SOLID));
 	dc.DrawRectangle( wxCoord(x), wxCoord(m_page_height - y),
 		wxCoord(w*cos(a) + h*sin(a)), wxCoord(h*cos(a) - w*sin(a)));
 	dc.DrawRotatedText(text, wxCoord(x), wxCoord(m_page_height - y), angle);
@@ -63,7 +63,7 @@ void PagePaintHelper::Text(PDF::Rect pos, double angle, std::wstring text, bool 
 
 void PagePaintHelper::Line(const PDF::Point & p1, const PDF::Point & p2, const PDF::GraphicsState& gs)
 {
-	dc.SetPen(wxPen(*wxBLACK, 0, wxSOLID));
+	dc.SetPen(wxPen(*wxBLACK, 0, wxPENSTYLE_SOLID));
 	dc.DrawLine( wxCoord(p1.x), wxCoord(m_page_height - p1.y), wxCoord(p2.x), wxCoord(m_page_height - p2.y) );
 	if(m_draw_debug_stream)
 		*m_draw_debug_stream << "LINE " << p1.dump() << '-' << p2.dump() << std::endl;

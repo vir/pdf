@@ -123,7 +123,7 @@ bool File::close()
 	m_streams->flush();
 	if(open_mode == MODE_CREATE || open_mode == MODE_UPDATE) {
 		file.seekg(0, std::ios_base::end);
-		long offs = write_xref_table();
+		std::streamoff offs = write_xref_table();
 		Dictionary * d = new Dictionary();
 		long generation = 0;
 		d->set("Root", new ObjRef(root_refs[generation]));
@@ -185,9 +185,9 @@ Object * File::load_object(const ObjId & oi, bool decrypt)
 		return new FreeObjectPlaceholder;
 
 	if(xe->compressed())
-		return m_streams->load_object(xe->offset, xe->obj_stream_index);
+		return m_streams->load_object((long)xe->offset, xe->obj_stream_index);
 
-	long offset = xe->offset;
+	std::streamoff offset = xe->offset;
 	Object * r;
 	if(offset) {
 		file.seekg(offset);
@@ -207,7 +207,7 @@ void File::save_object(Object * o)
 {
 	if(! o->indirect)
 		throw LogicException("File::save_object called with direct object");
-	long pos = file.tellg();
+	std::streamoff pos = file.tellg();
 	const ObjId & oi = o->m_id;;
 	if(m_debug>1)
 		std::clog << "Saving object " << oi.dump() << std::endl;
@@ -288,7 +288,7 @@ bool File::read_xref_table_part(bool try_recover)
 	//  std::clog << "First object in this table: " << objnum << ", number of objects: " << count << std::endl;
 	for(; count>0 && !file.eof(); count--, objnum++)
 	{
-		long linestart = file.tellg();
+		std::streamoff linestart = file.tellg();
 		// XXX We can read 20byte chunks here!
 		getline(s);
 		//std::clog << "XRef table line " << objnum << "/" << count << ": " << s << std::endl;
@@ -321,9 +321,9 @@ bool File::read_xref_table_part(bool try_recover)
 	return true;
 }
 
-long File::write_xref_table()
+std::streamoff File::write_xref_table()
 {
-	long r = file.tellg();
+	std::streamoff r = file.tellg();
 	//std::pair<ObjId, XRefTable::Entry>* iter = xref_table.get_next(true);
 	std::map<ObjId, XRefTable::Entry>::value_type* iter = xref_table.get_next(true);
 	file << "xref\r\n0 " << 1 + xref_table.count() << "\r\n";
@@ -338,7 +338,7 @@ long File::write_xref_table()
 
 Dictionary * File::read_trailer()
 {
-	size_t pos = file.tellg();
+	std::streamoff pos = file.tellg();
 	std::string s(istrm->read_token());
 	if(s != "trailer")
 		throw FormatException("No trailer", pos);
@@ -352,7 +352,7 @@ Dictionary * File::read_trailer()
 	return dic;
 }
 
-void File::write_trailer(Dictionary * trailerdict, long xrefoffs)
+void File::write_trailer(Dictionary * trailerdict, std::streamoff xrefoffs)
 {
 	file << "trailer\r\n";
 	trailerdict->indirect = false;
@@ -442,7 +442,7 @@ void File::read_xref_stream(Stream * s)
 	} // for each row in stream data
 }
 
-long File::offset_lookup(const ObjId & oi) const
+std::streamoff File::offset_lookup(const ObjId & oi) const
 {
   return xref_table.get_offset(oi);
 }
@@ -462,7 +462,7 @@ void File::load_file_ids(const Array * a)
 	}
 }
 
-long File::LoadXRefTable( long xref_off, bool try_recover )
+std::streamoff File::LoadXRefTable( std::streamoff xref_off, bool try_recover )
 {
 	while(xref_off)
 	{

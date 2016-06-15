@@ -28,7 +28,7 @@ void WxTabTabulator::Draw(wxDC * dc, double scale)
 	wxSize cs = dc->GetSize();
 
 	// Draw grid
-	dc->SetPen(wxPen(*wxRED, 0, wxSOLID));
+	dc->SetPen(wxPen(*wxRED, 0, wxPENSTYLE_SOLID));
 	Grid::KnotsIterator kit;
 	for(kit = grid.h_knots.begin(); kit != grid.h_knots.end(); kit++) {
 		dc->DrawLine(kit->first * scale, 0, kit->first * scale, cs.GetHeight() * scale);
@@ -37,7 +37,7 @@ void WxTabTabulator::Draw(wxDC * dc, double scale)
 		dc->DrawLine(0, kit->first * scale, cs.GetWidth() * scale, kit->first * scale);
 	}
 	if(grid.headers_end >= 0) {
-		dc->SetPen(wxPen(*wxGREEN, 3, wxSHORT_DASH));
+		dc->SetPen(wxPen(*wxGREEN, 3, wxPENSTYLE_SHORT_DASH));
 		dc->DrawLine(0, wxCoord(grid.headers_end) * scale, cs.GetWidth() * scale, wxCoord(grid.headers_end) * scale);
 	}
 

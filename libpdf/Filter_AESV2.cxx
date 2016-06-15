@@ -6,6 +6,7 @@
 #include <cmath>
 
 #ifndef min
+# include <algorithm>
 using std::min;
 #endif
 

@@ -77,7 +77,7 @@ class ObjIStream
 		bool allow_keywords() { return will_allow_keywords; }
 		Object * read_direct_object() { return read_direct_object(NULL); }
 		Object * read_indirect_object(bool need_decrypt = true);
-		void read_stream_body(unsigned long offset, std::vector<char>& buf, long obj_id_num = 0, long obj_id_gen = 0);
+		void read_stream_body(std::streamoff offset, std::vector<char>& buf, long obj_id_num = 0, long obj_id_gen = 0);
 		std::string read_token();
 };
 

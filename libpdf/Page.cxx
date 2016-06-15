@@ -154,11 +154,11 @@ bool Page::parse(const std::vector<char> & data)
     Keyword * kw=dynamic_cast<Keyword *>(o);
     if(kw)
     {
-      size_t offs = kw->m_offset;
+		std::streamoff offs = kw->m_offset;
       if(args)
           offs = (*args->begin())->m_offset;
       operators.push_back(new Operator(offs, kw->value(), args));
-      args=NULL;
+      args = NULL;
       delete kw; // name already copied
     }
     else
@@ -475,7 +475,7 @@ void Page::draw(Media * m)
 	if(curpath) delete curpath;
 }
 
-size_t Page::get_operator_offset(unsigned int n) const
+std::streamoff Page::get_operator_offset(unsigned int n) const
 {
 	if(n < operators.size()) {
 		Operator* o = operators.at(n);

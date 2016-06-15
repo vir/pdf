@@ -16,7 +16,7 @@ void read_file(const char * filename, std::vector<char> & vec)
 	ifstream::pos_type fileSize = ifs.tellg();
 	ifs.seekg(0, ios::beg);
 
-	vec.resize(fileSize);
+	vec.resize((size_t)fileSize);
 	ifs.read(&vec[0], fileSize);
 }
 

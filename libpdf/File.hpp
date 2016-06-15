@@ -28,13 +28,13 @@ class XRefTable
 public: // types
 	struct Entry
 	{
-		unsigned long offset;
+		std::streamoff offset;
 		unsigned int obj_stream_index;
 		enum { Normal, Compressed, Free } type;
 		bool compressed() const { return type == Compressed; };
 		bool free() const { return type == Free; };
 		explicit Entry(): offset(0), obj_stream_index(0), type(Free) { }
-		Entry(unsigned long off):offset(off), obj_stream_index(0), type(Normal) { }
+		Entry(std::streamoff off):offset(off), obj_stream_index(0), type(Normal) { }
 		Entry(unsigned long objnum, unsigned int index):offset(objnum), obj_stream_index(index), type(Compressed) { }
 	};
 private:
@@ -61,7 +61,7 @@ public:
 		std::map<ObjId, Entry>::const_iterator it = m_table.find(oid);
 		return (it != m_table.end())?&it->second:NULL;
 	}
-	long get_offset(const ObjId & oid) const
+	std::streamoff get_offset(const ObjId & oid) const
 	{
 		const Entry * e = find(oid);
 		if(!e)
@@ -73,7 +73,7 @@ public:
 		return e->offset;
 	}
 	void dump(std::ostream & strm = std::clog) const;
-	void insert_normal(const ObjId & objid, unsigned long offset)
+	void insert_normal(const ObjId & objid, std::streamoff offset)
 	{
 		m_table[objid] = Entry(offset);
 	}
@@ -135,7 +135,7 @@ public:
 		std::fstream::pos_type m_header_end_offset;
 	protected:
 		void getline(std::string & s);
-		long offset_lookup(const ObjId & oi) const;
+		std::streamoff offset_lookup(const ObjId & oi) const;
 
 		std::string check_header();
 		void write_header();
@@ -144,10 +144,10 @@ public:
 		bool read_xref_table_part(bool try_recover = false);
 		void read_xref_stream(Stream * s);
 		void load_xref_table();
-		long write_xref_table();
+		std::streamoff write_xref_table();
 
 		Dictionary * read_trailer();
-		void write_trailer(Dictionary * trailerdict, long xrefoffs);
+		void write_trailer(Dictionary * trailerdict, std::streamoff xrefoffs);
 
 		void load_crypto_dict(const Dictionary * d);
 		void load_file_ids(const Array * a);
@@ -189,7 +189,7 @@ public:
 			root_refs.resize(generation + 1);
 		root_refs[generation] = id;
 	}
-	long LoadXRefTable( long xref_off, bool try_recover = false );
+	std::streamoff LoadXRefTable( std::streamoff xref_off, bool try_recover = false );
 	void ReconstructXRefTable();
 	bool can_load() const { return open_mode != MODE_CREATE; }
 	bool can_save() const { return open_mode != MODE_READ; }

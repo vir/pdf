@@ -4,7 +4,7 @@
 #ifndef CRYPTO_HPP_INCLUDED
 #define CRYPTO_HPP_INCLUDED
 
-#ifdef _MSC_VER
+#if defined _MSC_VER && _MSC_VER < 1900
 # include <wtypes.h>
 # define uint32_t DWORD
 # define int32_t LONG

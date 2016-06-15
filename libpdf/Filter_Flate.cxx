@@ -49,7 +49,7 @@ void PredictorPNG::Remove(std::vector<char> & data)
 	int col = -1;
 	while(r != data.end()) {
 		int predictor = *r++;
-		if (data.end() - r < m_bpr)
+		if (std::distance(r, static_cast<DataVector::const_iterator>(data.end())) < static_cast<ptrdiff_t>(m_bpr))
 			throw FormatException("Short data row");
 		DataVector::iterator rowstart = w;
 		switch (predictor) {

@@ -66,17 +66,17 @@ class Page
 		void set_operators_number_limit(unsigned int n) { m_operators_number_limit = n; }
 		unsigned int get_operators_number_limit() const { return m_operators_number_limit; }
 		size_t get_operators_count() const { return operators.size(); }
-		size_t get_operator_offset(unsigned int n) const;
+		std::streamoff get_operator_offset(unsigned int n) const;
 };
 
 class Page::Operator
 {
   private:
-    size_t m_offset;
+    std::streamoff m_offset;
     std::string m_name;
     std::vector<Object *> * m_args;
   public:
-    Operator(size_t offset, std::string op, std::vector<Object *>* a):m_offset(offset),m_name(op),m_args(a) {}
+    Operator(std::streamoff offset, std::string op, std::vector<Object *>* a):m_offset(offset),m_name(op),m_args(a) {}
     ~Operator()
     {
       if(!m_args) return;
@@ -84,7 +84,7 @@ class Page::Operator
       delete m_args;
     }
     std::string name() const { return m_name; }
-	size_t offset() const { return m_offset; }
+    std::streamoff offset() const { return m_offset; }
 		bool operator == (const char * cmp) { return m_name == cmp; }
     const Object * arg(unsigned int i) const { return i>=m_args->size()?NULL:m_args->at(i); }
 		const Object * operator[](unsigned int i) const { return arg(i); }

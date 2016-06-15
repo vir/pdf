@@ -31,7 +31,7 @@ Object * ObjIStream::read_direct_object(const ObjId * decrypt_info)
 
 	Object * r = NULL;
 
-	long objstart = f->tellg();
+	std::streamoff objstart = f->tellg();
 
 	char c = f->peek();
 	if(!will_throw_eof && c == EOF)
@@ -66,7 +66,7 @@ Object * ObjIStream::read_indirect_object(bool need_decrypt)
   skip_whitespace();
 
 	/* read object number */
-	long start = f->tellg();
+	std::streamoff start = f->tellg();
 	s = read_token();
 	if(static_cast<int>(s.find_first_not_of("0123456789")) >= 0)
 		throw FormatException("Invalid object number", start);
@@ -104,7 +104,7 @@ Object * ObjIStream::read_indirect_object(bool need_decrypt)
  */
 Object * ObjIStream::read_delimited(const ObjId * decrypt_info)
 {
-	long start = f->tellg();
+	std::streamoff start = f->tellg();
 	char c; *f >> c;
 	Object * o;
 	switch(c)
@@ -165,7 +165,7 @@ Object * ObjIStream::read_delimited(const ObjId * decrypt_info)
 					}
 
 					if(( o = r->find("Length") )) { // check for stream object
-						long savepos = f->tellg();
+						std::streamoff savepos = f->tellg();
 						skip_whitespace();
 						std::string s = read_token();
 						if(s == "stream") {
@@ -177,7 +177,7 @@ Object * ObjIStream::read_delimited(const ObjId * decrypt_info)
 									f->get();
 							} else if(c != '\x0A')
 								throw FormatException("No newline after 'stream' keyword", f->tellg());
-							long stream_begin = f->tellg();
+							std::streamoff stream_begin = f->tellg();
 
 							/* extract stream length */
 							Integer * ii = dynamic_cast<Integer *>(o);
@@ -312,7 +312,7 @@ Object * ObjIStream::read_o_digits()
 		return new Integer(firstint);
 
 	// look what is there (another number + R => reference), else => integer
-	long savepos = f->tellg();
+	std::streamoff savepos = f->tellg();
 	skip_whitespace();
 
 	// check out next token --- must be an integer, and after it 'R'
@@ -333,7 +333,7 @@ Object * ObjIStream::read_o_digits()
 /// \todo enable keywords reading only when they are allowed
 Object * ObjIStream::read_o_chars()
 {
-	long startpos = f->tellg();
+	std::streamoff startpos = f->tellg();
 	std::string b=read_token();
 	if(b == "true") return new Boolean(true);
 	if(b == "false") return new Boolean(false);
@@ -370,7 +370,7 @@ std::string ObjIStream::read_token()
 	return s;
 }
 
-void ObjIStream::read_stream_body(unsigned long offset, std::vector<char>& buf, long obj_id_num, long obj_id_gen)
+void ObjIStream::read_stream_body(std::streamoff offset, std::vector<char>& buf, long obj_id_num, long obj_id_gen)
 {
 	f->seekg(offset);
 	f->read(&buf[0], buf.size());

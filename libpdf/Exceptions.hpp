@@ -51,7 +51,7 @@ class FormatException:public std::exception
   private:
     std::string s;
     mutable std::string r;
-    long off;
+	std::streamoff off;
   public:
     /**
      * Constructs exception object
@@ -59,7 +59,7 @@ class FormatException:public std::exception
      * \param offset offset from the beginning of file at (or near) which
      * error encountered.
      */
-    FormatException(std::string descr="", long offset=-1) throw()
+    FormatException(std::string descr="", std::streamoff offset=-1) throw()
       :s(descr),off(offset)
     {
     }
