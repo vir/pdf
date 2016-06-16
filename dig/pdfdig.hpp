@@ -8,7 +8,7 @@
 class MyApp : public wxApp
 {
 	private:
-		wxString fname;
+		wxVector<wxString> m_filesFromCmdLine;
 	protected:
 		wxDocManager* m_docManager;
 		MyFrame * frame;
@@ -22,7 +22,7 @@ class MyApp : public wxApp
 		virtual bool OnCmdLineParsed(wxCmdLineParser& parser);
 };
 
-
+wxDECLARE_APP(MyApp);
 
 #endif /* PDFDIG_HPP_INCLUDED */
 

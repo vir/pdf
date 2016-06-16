@@ -14,7 +14,7 @@ struct MyTreeEventsHandler
 class MyTree: public wxTreeCtrl
 {
 	private:
-		wxTreeItemId rootId;
+		wxTreeItemId rootId, catalogId;
 		wxView * m_view;
 		MyTreeEventsHandler * m_handler;
 	protected:
@@ -31,7 +31,7 @@ class MyTree: public wxTreeCtrl
 			TreeCtrlIcon_FolderOpened
 		};
 #endif
-		MyTree():m_view(NULL),m_handler(NULL) { }
+		MyTree():m_view(NULL),m_handler(NULL),catalogId(0) { }
 		MyTree(wxView * view, wxWindow *parent, MyTreeEventsHandler *handler = NULL);
 	//	MyTree(wxWindow *parent, const wxWindowID id = wxID_ANY, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxTR_HAS_BUTTONS);
 		virtual ~MyTree(){};

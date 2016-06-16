@@ -16,7 +16,7 @@ class PdfDoc:public wxDocument
 		PDF::OH doc_root;
 	public:
 		PdfDoc();
-		virtual bool OnOpenDocument(const wxString& filename);
+		virtual bool DoOpenDocument(const wxString& filename);
 		virtual bool OnSaveDocument(const wxString& filename);
 		virtual bool OnCloseDocument();
 

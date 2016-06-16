@@ -1,15 +1,14 @@
 #include "PdfDoc.hpp"
 #include <wx/msgdlg.h>
 
-IMPLEMENT_DYNAMIC_CLASS(PdfDoc, wxDocument)
+wxIMPLEMENT_DYNAMIC_CLASS(PdfDoc, wxDocument)
 
 PdfDoc::PdfDoc()
 	:cache(file)
 {
-std::cerr << "Created document" << std::endl;
 }
 
-bool PdfDoc::OnOpenDocument(const wxString& filename)
+bool PdfDoc::DoOpenDocument(const wxString& filename)
 {
 	cache.flush();
 #ifdef _MSC_VER
@@ -37,7 +36,7 @@ bool PdfDoc::OnOpenDocument(const wxString& filename)
 		return false;
 	}
 
-	SetFilename(filename, true);
+	//SetFilename(filename, true);
 	Modify(false);
 	UpdateAllViews();
 	return true;
@@ -64,17 +63,5 @@ wxString PdfDoc::get_file_brief() const
 	file.dump(ss);
 	return wxString(ss.str().c_str(), wxConvUTF8);
 }
-
-#if 0
-bool PdfDoc::open(std::string fname)
-{
-	return true;
-}
-
-void PdfDoc::close()
-{
-}
-#endif
-
 
 

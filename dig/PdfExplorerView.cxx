@@ -5,7 +5,7 @@
 #include "PdfDoc.hpp"
 #include "MyStreamViewer.hpp"
 
-IMPLEMENT_DYNAMIC_CLASS(PdfExplorerView, wxView)
+wxIMPLEMENT_DYNAMIC_CLASS(PdfExplorerView, wxView)
 
 BEGIN_EVENT_TABLE(PdfExplorerView, wxView)
 //	EVT_MENU(DOODLE_CUT, PdfExplorerView::OnCut)
@@ -17,24 +17,6 @@ PdfExplorerView::PdfExplorerView()
 	, m_stream_handle(NULL), m_stream_parent_handle(NULL)
 {
 	m_mainframe = static_cast<MyApp*>(wxTheApp)->GetMainFrame();
-	//// Make a child frame
-	wxDocMDIChildFrame *subframe = new wxDocMDIChildFrame(GetDocument(), this, m_mainframe, wxID_ANY, _T("Child Frame"), wxPoint(10, 10), wxSize(300, 300), wxDEFAULT_FRAME_STYLE);
-#ifdef __WXMSW__
-	//subframe->SetIcon(wxString(isCanvas ? _T("chrt_icn") : _T("notepad_icn")));
-#endif
-	subframe->Centre(wxBOTH);
-	m_frame = subframe;
-	m_frame->Show(true);
-	SetFrame(m_frame);
-	m_splitter = new wxSplitterWindow(m_frame, wxID_ANY, wxDefaultPosition, wxDefaultSize,
-		wxSP_3D | wxSP_LIVE_UPDATE | wxCLIP_CHILDREN /* | wxSP_NO_XP_THEME */ );
-	m_splitter->SetSashGravity(1.0);
-
-	m_tree = new MyTree(this, m_splitter, this);
-	m_right = new wxTextCtrl(m_splitter, wxID_ANY, _T("second text"), wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE|wxTE_READONLY|wxTE_DONTWRAP);
-
-	subframe->Maximize();
-	m_splitter->SplitVertically(m_tree, m_right, 300);
 }
 
 PdfExplorerView::~PdfExplorerView()
@@ -51,7 +33,27 @@ PdfExplorerView::~PdfExplorerView()
 bool PdfExplorerView::OnCreate(wxDocument *doc, long WXUNUSED(flags) )
 {
 	wxTrace("PdfExplorerView::OnCreate");
-	Activate(true);
+
+	//// Make a child frame
+	wxFrame* subframe = subframe = new wxDocMDIChildFrame(doc, this, wxStaticCast(wxGetApp().GetTopWindow(), wxDocMDIParentFrame),
+		wxID_ANY, "Child Frame", wxDefaultPosition, wxSize(300, 300));
+	wxASSERT(subframe == GetFrame());
+	subframe->Centre(wxBOTH);
+	m_frame = subframe;
+	//SetFrame(m_frame);
+	m_splitter = new wxSplitterWindow(m_frame, wxID_ANY, wxDefaultPosition, wxDefaultSize,
+		wxSP_3D | wxSP_LIVE_UPDATE | wxCLIP_CHILDREN /* | wxSP_NO_XP_THEME */);
+	m_splitter->SetSashGravity(1.0);
+
+	m_tree = new MyTree(this, m_splitter, this);
+	m_right = new wxTextCtrl(m_splitter, wxID_ANY, _T("second text"), wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE | wxTE_READONLY | wxTE_DONTWRAP);
+
+	subframe->Maximize();
+	m_splitter->SplitVertically(m_tree, m_right, 300);
+
+
+	m_frame->Show(true);
+	//Activate(true);
 	return true;
 }
 
@@ -71,6 +73,15 @@ void PdfExplorerView::OnUpdate(wxView *WXUNUSED(sender), wxObject *WXUNUSED(hint
 bool PdfExplorerView::OnClose(bool deleteWindow)
 {
 	wxTrace("PdfExplorerView::OnClose");
+	if (!wxView::OnClose(deleteWindow))
+		return false;
+
+	Activate(false);
+	if (deleteWindow)
+	{
+		GetFrame()->Destroy();
+		SetFrame(NULL);
+	}
 	return true;
 }
 

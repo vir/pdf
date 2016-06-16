@@ -9,7 +9,7 @@
 
 class PdfExplorerView:public wxView, public MyTreeEventsHandler
 {
-	DECLARE_DYNAMIC_CLASS(PdfExplorerView)
+	wxDECLARE_DYNAMIC_CLASS(PdfExplorerView);
 	private:
 		wxSplitterWindow * m_splitter;
 		MyTree * m_tree;

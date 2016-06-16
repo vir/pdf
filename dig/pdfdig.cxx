@@ -16,9 +16,11 @@ bool MyApp::OnInit()
 {
 	if(!wxApp::OnInit()) // it parses command line
 		return false;
+	::wxInitAllImageHandlers();
 
 	SetVendorName(_T("vir"));
 	SetAppName(_T("pdfdig")); // not needed, it's the default value
+	SetAppDisplayName("PDF Digger");
 
 	//wxConfigBase *pConfig = wxConfigBase::Get();
 
@@ -39,7 +41,7 @@ bool MyApp::OnInit()
     
 	//m_docManager->SetMaxDocsOpen(1);
 
-	frame = new MyFrame(m_docManager, (wxFrame *) NULL, wxID_ANY, _T("PDF Digger"), wxPoint(0, 0), wxSize(800, 600), wxDEFAULT_FRAME_STYLE);
+	frame = new MyFrame(m_docManager, (wxFrame *) NULL, wxID_ANY, GetAppDisplayName(), wxDefaultPosition, wxSize(800, 600), wxDEFAULT_FRAME_STYLE);
 
 #ifdef __WXMSW__
 	//// Give it an icon (this is ignored in MDI mode: uses resources)
@@ -48,12 +50,16 @@ bool MyApp::OnInit()
 
 	frame->Centre(wxBOTH);
 	frame->Show(true);
-	SetTopWindow(frame);
+	//SetTopWindow(frame);
 
-	if(! fname.empty())
+	if (m_filesFromCmdLine.empty())
 	{
-//		wxCommandEvent ev();
-//		m_docManager->OnFileOpen(ev);
+		//m_docManager->CreateNewDocument();
+	}
+	else // we have files to open on command line
+	{
+		for (size_t i = 0; i != m_filesFromCmdLine.size(); ++i)
+			m_docManager->CreateDocument(m_filesFromCmdLine[i], wxDOC_SILENT);
 	}
 	return true;
 }
@@ -61,19 +67,20 @@ bool MyApp::OnInit()
 int MyApp::OnExit()
 {
 	//XXX m_docManager->FileHistorySave(*wxConfigBase::Get());
-	delete m_docManager;
+	//delete m_docManager;
 	return wxApp::OnExit();
 }
 
 static const wxCmdLineEntryDesc g_cmdLineDesc [] =
 {
-	{ wxCMD_LINE_SWITCH, "h", "help", "displays help on the command line parameters", wxCMD_LINE_VAL_NONE, wxCMD_LINE_OPTION_HELP },
+//	{ wxCMD_LINE_SWITCH, "h", "help", "displays help on the command line parameters", wxCMD_LINE_VAL_NONE, wxCMD_LINE_OPTION_HELP },
 	{ wxCMD_LINE_PARAM,  NULL, NULL, "input file", wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_OPTIONAL },
 	{ wxCMD_LINE_NONE }
 };
 
 void MyApp::OnInitCmdLine(wxCmdLineParser& parser)
 {
+	wxApp::OnInitCmdLine(parser);
 	parser.SetDesc(g_cmdLineDesc);
 #ifdef _MSC_VER
 	parser.SetSwitchChars(wxT("/-"));
@@ -85,12 +92,11 @@ void MyApp::OnInitCmdLine(wxCmdLineParser& parser)
 
 bool MyApp::OnCmdLineParsed(wxCmdLineParser& parser)
 {
-	if(parser.GetParamCount() == 1) {
-		fname = parser.GetParam(0);
-//		if(! theDoc->open(std::string(fname.mb_str())) )
-//			return false;
-	}
-	return true;
+	// save any files given on the command line: we'll open them in OnInit()
+	// later, after creating the frame
+	for (size_t i = 0; i != parser.GetParamCount(); ++i)
+		m_filesFromCmdLine.push_back(parser.GetParam(i));
+	return wxApp::OnCmdLineParsed(parser);
 }
 
 

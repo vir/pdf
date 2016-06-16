@@ -107,7 +107,9 @@ void MyTree::Update()
 	s = doc->GetUserReadableName();
 	SetItemText(rootId, s);
 //	SetItemData(NULL);
-	wxTreeItemId id = AppendChild(rootId, wxT("Catalog"), doc->get_object( doc->get_root(0) ) );
+	if(catalogId)
+		Delete(catalogId);
+	catalogId = AppendChild(rootId, wxT("Catalog"), doc->get_object( doc->get_root(0) ) );
 //	SetItemData(rootId, new MyTreeItemData( doc->get_object( doc->get_root(0) ) ));
 #if 0
 	wxString text;
