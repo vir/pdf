@@ -64,6 +64,12 @@ glyphlist.txt:
 Core14_AFMs.tar:
 	wget http://www.adobe.com/devnet/font/pdfs/Core14_AFMs.tar
 
+stdfont_metrics.i: glyphlist.txt FontMetrics/Courier.afm
+	FontMetrics/convert.pl > stdfont_metrics.i
+
+FontMetrics/Courier.afm: Core14_AFMs.tar
+	tar xf Core14_AFMs.tar -C FontMetrics
+
 ifneq "$(wildcard *.d)" ""
 include $(wildcard $(DEPS))
 endif

@@ -21,6 +21,7 @@ class Font::Metrics
 		}
 	private:
 		std::map<int, unsigned long> charwidths;
+		std::map<wchar_t, unsigned long> unicodewidths;
 		unsigned long defcharwidth;
 		Font::Encoding* encoding;
 };

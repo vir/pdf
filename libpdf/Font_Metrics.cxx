@@ -26,7 +26,7 @@ void PDF::Font::Metrics::load_widths_array(OH widths, OH firstchar)
 
 void PDF::Font::Metrics::load_base_font(std::string font)
 {
-	load_stdfont_widths_table(charwidths, font);
+	load_stdfont_widths_table(charwidths, unicodewidths, font);
 }
 
 void PDF::Font::Metrics::set_char_widths(int first, int last, unsigned long val)
@@ -38,6 +38,12 @@ void PDF::Font::Metrics::set_char_widths(int first, int last, unsigned long val)
 
 double PDF::Font::Metrics::get_glyph_width(int glyph_index, wchar_t char_code)
 {
+	if (char_code && !unicodewidths.empty()) // first, try unicode map, as it takes into account Encoding's Differences arrays
+	{
+		std::map<wchar_t, unsigned long>::const_iterator it = unicodewidths.find(char_code);
+		if (it != unicodewidths.end())
+			return it->second / 1000.0;
+	}
 	std::map<int, unsigned long>::const_iterator it = charwidths.find(glyph_index);
 	return ((it != charwidths.end()) ? it->second : defcharwidth) / 1000.0;
 }

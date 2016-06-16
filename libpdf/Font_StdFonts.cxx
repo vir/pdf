@@ -10,6 +10,8 @@
  * (link at page bottom).
  */
 
+#if 0
+
 struct width_table {
 	const char * name;
 	const short * w;
@@ -32,4 +34,44 @@ void load_stdfont_widths_table(std::map<int, unsigned long> & charwidths, std::s
 	std::cerr << "Can not find widths array for standard font " << basefont << std::endl;
 }
 
+#endif
 
+// { "space", 0x0020, 32, 600 },
+struct StdFontChar {
+	const char* name;
+	wchar_t unicode;
+	int code;
+	unsigned long width;
+	const char* box;
+};
+
+enum FontEncoding {
+	Unknown,
+	FontSpecific,
+	AdobeStandardEncoding,
+};
+
+// { "Courier", AdobeStandardEncoding, 315, &stdfont_Courier_chars },
+struct StdFontMetric {
+	const char* name;
+	enum FontEncoding enc;
+	size_t nchars;
+	struct StdFontChar* chars;
+};
+
+#include "stdfont_metrics.i"
+
+void load_stdfont_widths_table(std::map<int, unsigned long> & glyphwidths, std::map<wchar_t, unsigned long> & unicodewidths, std::string font)
+{
+	unsigned int i, c;
+	for (i = 0; i < sizeof(fonts) / sizeof(fonts[0]); i++) {
+		if (font != fonts[i].name)
+			continue;
+		for (c = 0; c < fonts[i].nchars; c++) {
+			glyphwidths[fonts[i].chars[c].code] = fonts[i].chars[c].width;
+			unicodewidths[fonts[i].chars[c].unicode] = fonts[i].chars[c].width;
+		}
+		return;
+	} // for all fonts
+	std::cerr << "Can not find widths array for standard font " << font << std::endl;
+}
