@@ -119,6 +119,7 @@
     <ClCompile Include="Font.cxx" />
     <ClCompile Include="Font_CMap.cxx" />
     <ClCompile Include="Font_Encoding.cxx" />
+    <ClCompile Include="Font_Metrics.cxx" />
     <ClCompile Include="Font_StdFonts.cxx" />
     <ClCompile Include="Object.cxx" />
     <ClCompile Include="ObjectsCache.cxx" />
@@ -139,6 +140,7 @@
     <ClInclude Include="Font.hpp" />
     <ClInclude Include="Font_CMap.hpp" />
     <ClInclude Include="Font_Encoding.hpp" />
+    <ClInclude Include="Font_Metrics.hpp" />
     <ClInclude Include="Font_StdFonts.hpp" />
     <ClInclude Include="GraphicsState.hpp" />
     <ClInclude Include="Media.hpp" />

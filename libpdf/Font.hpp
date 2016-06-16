@@ -17,13 +17,13 @@ class Font
 {
 	public:
 		class Encoding;
-    class CMap;
-  private:
+		class CMap;
+		class Metrics;
+	private:
 		Encoding * encoding;
-    CMap * to_unicode_map;
+		CMap * to_unicode_map;
+		Metrics * metrics;
 		std::string fontname, fontobjid;
-		std::map<int, unsigned long> charwidths;
-		unsigned long defcharwidth;
 		std::string fonttype, basefont;
 		long fontflags;
 		unsigned int charbytes;

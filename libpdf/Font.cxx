@@ -2,7 +2,7 @@
 #include "Font_Encoding.hpp"
 #include "Font_CMap.hpp"
 #include "OH.hpp"
-#include "Font_StdFonts.hpp"
+#include "Font_Metrics.hpp"
 
 #include <sstream>
 #include <stdio.h> // for fprintf
@@ -20,7 +20,6 @@ Font::Font(std::string name)
 	:encoding(NULL)
 	,to_unicode_map(NULL)
 	,fontname(name)
-	,defcharwidth(1000)
 	,fontflags(0)
 	,charbytes(1)
 {
@@ -56,27 +55,14 @@ bool Font::load(OH fontnode)
 		if(i) fontflags = i->value();
 	}
 
+	metrics = new PDF::Font::Metrics(NULL);
+
 	// extract characters' widths
 	OH widths = fontnode.find("Widths");
 	if(widths) {
-		int firstchar = 0;
-
-		OH fc = fontnode.find("FirstChar");
-		if(fc) {
-			Integer * i;
-			fc.put(i, "FirstChar is not an integer?!?");
-			firstchar = i->value();
-		}
-
-		for(unsigned int i = 0; i < widths.size(); i++) {
-			OH aeh = widths[i];
-			Integer * ip;
-			aeh.put(ip, "Non-integer char width not supported");
-			if(ip && ip->value())
-				charwidths[i + firstchar] = ip->value();
-		}
+		metrics->load_widths_array(widths, fontnode.find("FirstChar"));
 	} else { // load widths of standard font
-		load_stdfont_widths_table(charwidths, basefont);
+		metrics->load_base_font(basefont);
 	}
 
 	// Extract parameters of Type0 (Composite) fonts
@@ -167,12 +153,11 @@ bool Font::extract_text(const String * so, std::wstring & ws, double & twid, uns
 			c|=(unsigned char)s[pos++];
 		}
 
-		// Get glyph width
-		std::map<int, unsigned long>::const_iterator it = charwidths.find(c);
-		twid += (it != charwidths.end()) ? it->second : defcharwidth;
-
 		// Convert to unicode
 		wchar_t res = to_unicode(c);
+
+		// Get glyph width
+		twid += metrics->get_glyph_width(c, res);
 //printf("Map(%s)(%d): %04X -> %04X\n", fontname.c_str(), charbytes, (unsigned int)c, (unsigned int)res);
 
 		// Check for end of token
@@ -205,16 +190,15 @@ bool Font::extract_one_char(const String * so, wchar_t & nextchar, double & char
 		c|=(unsigned char)so->value()[pos++];
 	}
 
-	// Get glyph width
-	std::map<int, unsigned long>::const_iterator it = charwidths.find(c);
-	charwidth = ((it != charwidths.end()) ? it->second : defcharwidth)/1000.0;
-
 	// Convert to unicode
 	nextchar = to_unicode(c);
 	if(!nextchar) {
 		fprintf(stderr, "Can not translate char %04lX (font: %s)\n", c, fontname.c_str());
 		nextchar = L'@';
 	}
+
+	// Get glyph width
+	charwidth = metrics->get_glyph_width(c, nextchar);
 	return true;
 }
 
@@ -235,7 +219,8 @@ std::string Font::dump() const
 	};
 	std::stringstream ss;
 	ss << std::setw(6) << fontobjid << ' ' << std::setw(8) << fonttype << " " << charbytes << "-byte font, "
-		<< std::setw(3) << charwidths.size() << " char widhs, base: " << std::setw(15) << std::left << basefont;
+		"base: " << std::setw(15) << std::left << basefont;
+	// TODO: add metrics dump std::setw(3) << charwidths.size() << " char widhs"
 	if(encoding)
 		ss << " +Enc:" << std::setw(16) << std::left << encoding->name();
 	if(to_unicode_map)
@@ -268,7 +253,7 @@ bool Font::load_type0_font_dic(OH fdic)
 	if(defw) {
 		Integer * i;
 		defw.put(i, "Glyph width is not integer");
-		defcharwidth = i->value();
+		metrics->set_defcharwidth(i->value());
 	}
 
 	OH w = fdic.find("W");
@@ -285,14 +270,7 @@ bool Font::load_type0_font_dic(OH fdic)
 
 			h2 = w[index++];
 			if(h2.put(a)) {
-				for(unsigned int i = 0; i < a->size(); i++) {
-					const Object * oo = a->at(i);
-					const Integer * cw = dynamic_cast<const Integer *>(oo);
-					if(!cw)
-						throw DocumentStructureException("Type0 font: char width must be an integer");
-					charwidths[i1->value() + i] = cw->value();
-				}
-//				std::clog << "Charwidths of chars from " << i1->value() << " shuld be read from " << a->dump() << std::endl;
+				metrics->load_widths_array(h2, h1);
 				continue;
 			}
 			h2.put(i2, "Second element must be an array or integer, not a ");
@@ -302,11 +280,7 @@ bool Font::load_type0_font_dic(OH fdic)
 			h3 = w[index++];
 			h3.put(i3, "Third element must be an integer, not a ");
 
-			for(int i = i1->value(); i <= i2->value(); i++) {
-//				std::clog << "charwidth for char " << i << " is " << i3->value() << std::endl;
-				charwidths[i] = i3->value();
-			}
-
+			metrics->set_char_widths(i1->value(), i2->value(), i3->value());
 		}
 	}
 	return true;

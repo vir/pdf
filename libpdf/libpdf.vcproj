@@ -379,6 +379,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\Font_Metrics.cxx"
+				>
+			</File>
+			<File
 				RelativePath="Font_StdFonts.cxx"
 				>
 				<FileConfiguration
@@ -561,6 +565,10 @@
 			</File>
 			<File
 				RelativePath="Font_Encoding.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Font_Metrics.hpp"
 				>
 			</File>
 			<File
