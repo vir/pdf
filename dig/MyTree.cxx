@@ -197,7 +197,8 @@ void MyTree::AppendChildren(wxTreeItemId id)
 	MyTreeItemData * d = static_cast<MyTreeItemData*>(GetItemData(id));
 	if(!d) return;
 	PDF::OH obj = d->h;
-	if(dynamic_cast<PDF::Dictionary *>(obj.obj())) {
+	if(dynamic_cast<PDF::Dictionary *>(obj.obj())
+			|| dynamic_cast<PDF::Stream *>(obj.obj())) {
 		PDF::OH::DictIterator it = obj.begin_dict();
 		while(it) {
 			AppendChild(id, wxString(it.key().c_str(), wxConvUTF8), it.value());
