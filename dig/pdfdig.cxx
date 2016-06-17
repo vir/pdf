@@ -33,7 +33,7 @@ bool MyApp::OnInit()
 
 	//// Create a document manager
 	m_docManager = new wxDocManager;
-	m_docManager->FileHistoryLoad(*wxConfigBase::Get());
+	m_docManager->FileHistoryLoad(*wxConfig::Get());
 
 	//// Create a template relating drawing documents to their views
 	(void) new wxDocTemplate(m_docManager, _T("PDF document"), _T("*.pdf"), _T(""), _T("pdf"),
@@ -66,8 +66,8 @@ bool MyApp::OnInit()
 
 int MyApp::OnExit()
 {
-	//XXX m_docManager->FileHistorySave(*wxConfigBase::Get());
-	//delete m_docManager;
+	m_docManager->FileHistorySave(*wxConfig::Get());
+	delete m_docManager;
 	return wxApp::OnExit();
 }
 

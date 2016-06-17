@@ -17,7 +17,6 @@ bool PdfDoc::DoOpenDocument(const wxString& filename)
 	if(! file.open(static_cast<const char*>(filename.utf8_str()), PDF::File::MODE_READ))
 #endif
 		return false;
-	// XXX Causes a lot of disasters on win32
 	GetDocumentManager()->AddFileToHistory(filename);
 	try {
 		if(! file.load())
