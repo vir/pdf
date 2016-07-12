@@ -72,6 +72,7 @@ File::~File()
 	delete m_security;
 	delete istrm;
 	delete ostrm;
+	delete m_streams;
 }
 
 std::ios_base::openmode File::open_prepare(std::string fname, OpenMode mode)
