@@ -28,6 +28,7 @@ class Font;
 class OH;
 class Media;
 class GraphicsState;
+class XObject;
 
 /** \brief Represents page content
  */
@@ -47,6 +48,7 @@ class Page
     
     std::vector<Operator *> operators;
     std::map<std::string,Font *> fonts;
+    std::map<std::string, XObject *> xobjects;
     int m_debug;
 		unsigned int m_operators_number_limit;
   public:
@@ -98,6 +100,29 @@ class Page::Operator
 			return CTM(number(0), number(1), number(2), number(3), number(4), number(5));
 		}
     std::string dump() const;
+};
+
+class XObject
+{
+private:
+	XObject();
+	XObject(const XObject&);
+protected:
+	XObject(std::string name): m_name(name) { }
+public:
+	virtual ~XObject() { }
+	static XObject* create(std::string name, OH definition);
+	const std::string& name() const { return m_name; }
+private:
+	std::string m_name;
+};
+
+class FormXObject : public XObject
+{
+private:
+public:
+	FormXObject(std::string name);
+	void load(OH dic);
 };
 
 

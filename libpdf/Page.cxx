@@ -26,6 +26,8 @@ Page::~Page()
   /// \todo move to 'foreach'
   // delete all fonts
   for(std::map<std::string,Font *>::iterator it=fonts.begin(); it!=fonts.end(); it++) delete it->second;
+  // delete all xobjects
+  for(std::map<std::string, XObject *>::iterator it = xobjects.begin(); it != xobjects.end(); it++) delete it->second;
   // delete all operators
   for(unsigned int i=0;i<operators.size(); i++) { delete operators[i]; }
   // delete all forgotten graphics stack contents
@@ -132,6 +134,20 @@ bool Page::load(OH pagenode)
       {
         std::clog << "No fonts found" << std::endl;
       }
+
+	  OH xobjs_h = resources_h.find("XObject");
+	  if(xobjs_h)
+	  {
+		Dictionary * xobjs_d;
+		xobjs_h.put(xobjs_d, "XObject node is not a Dictionary but is a ");
+		for(Dictionary::Iterator it = xobjs_d->get_iterator(); xobjs_d->check_iterator(it); it++)
+		{
+			XObject * x = XObject::create(it->first, xobjs_h.dig(it->second));
+			if(x)
+				xobjects[it->first] = x;
+		}
+
+	  }
     }
   }
 
@@ -238,7 +254,30 @@ void Page::draw(Media * m)
         if(op->name() == "m" || op->name() == "re") { mode=M_PATH; /* NO BREAK! */ }
         else if(op->name() == "BT") { mode=M_TEXT; break; }
         else if(op->name() == "BI") { mode=M_IMAGE; break; }
-        else if(op->name() == "Do" || op->name() == "sh") { /* ignore it */ break; }
+        else if(op->name() == "Do")
+		{
+			const Name * n = dynamic_cast<const Name *>(op->arg(0));
+			if(!n)
+				throw WrongPageException("XObject id is not a name");
+			std::map<std::string, XObject*>::const_iterator it = xobjects.find(n->value());
+			if(it == xobjects.end())
+				throw UnimplementedException("XXX may be this xobject was not loaded");
+			// 1. Saves the current graphics state, as if by invoking the q operator
+			gstack.push(gs);
+			gs = new GraphicsState(*gs);
+			// 2. Concatenates the matrix from the form dictionary’s Matrix entry with the current transformation matrix (CTM)
+			gs->ctm *= op->matrix();
+			// 3. Clips according to the form dictionary’s BBox entry
+			// XXX
+			// 4. Paints the graphics objects specified in the form’s content stream
+			// 5. Restores the saved graphics state, as if by invoking the Q operator
+			if(gs) delete gs;
+			gs = NULL;
+			assert(!gstack.empty());
+			if(!gstack.empty()) { gs = gstack.top(); gstack.pop(); }
+			break;
+		}
+        else if(op->name() == "sh") { /* ignore it */ break; }
         else if(op->name() == "q")
         {
           gstack.push(gs);
@@ -516,4 +555,32 @@ std::string Page::Operator::dump() const
 }
 
 }; // namespace PDF
+
+PDF::XObject* PDF::XObject::create(std::string name, PDF::OH definition)
+{
+	PDF::Stream* s = NULL;
+	definition.expand();
+	definition.put(s, "XObject description is not a stream");
+	PDF::Name* subtype = dynamic_cast<PDF::Name*>(s->dict()->find("Subtype"));
+	if(!subtype)
+		return NULL;
+	if(subtype->value() == "Form")
+	{
+		FormXObject* f = new FormXObject(name);
+		f->load(definition);
+		return f;
+	}
+	return NULL;
+}
+
+PDF::FormXObject::FormXObject(std::string name)
+	: XObject(name)
+{
+}
+
+void PDF::FormXObject::load(PDF::OH dic)
+{
+	// Matrix, BBox
+	// Resources - use page's unless defined
+}
 
