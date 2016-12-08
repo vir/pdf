@@ -348,10 +348,16 @@ Object * ObjIStream::read_o_chars()
 /// skip whitespace characters
 void ObjIStream::skip_whitespace()
 {
-	while(f->peek() != EOF && (is_a_whitespace(f->peek()) || f->peek()=='\0')) {
-		f->ignore();
-	}
-	if(will_throw_eof && f->peek() == EOF) throw FormatException("Unexpected EOF");
+	do {
+		while(f->peek() != EOF && (is_a_whitespace(f->peek()) || f->peek() == '\0')) {
+			f->ignore();
+		}
+		if(will_throw_eof && f->peek() == EOF) throw FormatException("Unexpected EOF");
+		if(f->peek() == '%') { // skip comments - whitespace equivalent
+			while(f->peek() != EOF && f->peek() != '\r' && f->peek() != '\n')
+				f->ignore();
+		}
+	} while(is_a_whitespace(f->peek()));
 }
 
 /// read a single "word"
