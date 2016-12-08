@@ -126,6 +126,7 @@
     <ClCompile Include="ObjStrm.cxx" />
     <ClCompile Include="Page.cxx" />
     <ClCompile Include="Page_Path.cxx" />
+    <ClCompile Include="Page_Render.cxx" />
     <ClCompile Include="Page_TextObject.cxx" />
     <ClCompile Include="SecHandler.cxx" />
   </ItemGroup>

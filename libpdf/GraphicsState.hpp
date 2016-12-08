@@ -3,6 +3,7 @@
 
 #include "Page.hpp"
 #include "Page_Path.hpp"
+#include "Exceptions.hpp"
 
 namespace PDF {
 

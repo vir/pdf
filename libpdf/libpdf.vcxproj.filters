@@ -71,6 +71,9 @@
     <ClCompile Include="Font_Metrics.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Page_Render.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AES.h">

@@ -14,8 +14,8 @@
 //#include <sstream>
 #include <iostream>
 #include <iomanip>
-#include <stack>
 #include <cmath>
+#include <stack>
 
 #include "Object.hpp"
 #include "Point.hpp"
@@ -37,14 +37,31 @@ class Page
 	public:
 		class Operator;
 		class Path;
-  private:
+		class Render;
 		class TextObject;
-    //class Path;
+		class GraphicsStateStack
+		{
+		public:
+			GraphicsStateStack();
+			~GraphicsStateStack();
+			GraphicsState* operator ->() { return gs; }
+			operator GraphicsState& () { return *gs; }
+			operator GraphicsState* () { return gs; }
+			void push();
+			void pop();
+			void dump(std::ostream& ss);
+		private:
+			GraphicsState * gs;
+			std::stack<GraphicsState *> gstack;
+		};
+		struct ResourceProvider
+		{
+			virtual Font* get_font(std::string name) = 0;
+			virtual XObject* get_xobject(std::string name) = 0;
+		};
+private:
 		Rect media_box, crop_box;
-    
-    // graphics state
-    GraphicsState * gs;
-    std::stack<GraphicsState *> gstack;
+		GraphicsStateStack gs;
     
     std::vector<Operator *> operators;
     std::map<std::string,Font *> fonts;
@@ -100,6 +117,30 @@ class Page::Operator
 			return CTM(number(0), number(1), number(2), number(3), number(4), number(5));
 		}
     std::string dump() const;
+};
+
+class Page::Render
+{
+public:
+	enum Mode { M_PAGE, M_PATH, M_TEXT, M_IMAGE };
+public:
+	Render(Page::GraphicsStateStack& gs, Page::ResourceProvider& res, Media& m);
+	~Render();
+	bool draw(const Page::Operator& op);
+	void dump(std::ostream& s);
+	const char* mode_string() const;
+protected:
+	bool draw_page_mode(const Page::Operator& op);
+	bool draw_path_mode(const Page::Operator& op);
+	bool draw_text_mode(const Page::Operator& op);
+	bool draw_image_mode(const Page::Operator& op);
+private:
+	Page::GraphicsStateStack& gs;
+	ResourceProvider& res;
+	Media& m;
+	Mode mode;
+	Page::Path* curpath;
+	Page::TextObject* tobj;
 };
 
 class XObject
