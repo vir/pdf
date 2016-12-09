@@ -5,7 +5,7 @@
 
 namespace PDF {
 
-Page::Render::Render(Page::GraphicsStateStack& gs, Page::ResourceProvider& res, Media& m)
+Page::Render::Render(GraphicsStateStack& gs, Page::ResourceProvider& res, Media& m)
 	: gs(gs), res(res), m(m)
 	, mode(M_PAGE)
 	, curpath(NULL)
@@ -113,7 +113,7 @@ bool Page::Render::draw_path_mode(const Page::Operator& op)
 			std::cerr << "Deleting live path!!!" << curpath->dump() << std::endl;
 			delete curpath;
 		}
-		curpath = new Page::Path;
+		curpath = new Path;
 		curpath->push_back(op.point(0));
 		return true;
 	}

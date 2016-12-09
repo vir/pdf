@@ -1,17 +1,21 @@
 #ifndef PAGE_GRAPHICSSTATE_HPP_INCLUDED
 #define PAGE_GRAPHICSSTATE_HPP_INCLUDED
 
+#include <stack>
 #include "Path.hpp"
+#include "Ctm.hpp"
 #include "Exceptions.hpp"
 
 namespace PDF {
+
+class Font;
 
 class GraphicsState {
 public:
 	GraphicsState() {}
 	/*=== device-independent: ===*/
 	CTM ctm;
-	PDF::Path clipping_path;
+	Path clipping_path;
 	// color_space
 	// color
 	struct TextState {
@@ -60,6 +64,23 @@ public:
 		text_state.dump(s);
 	}
 };
+
+class GraphicsStateStack
+{
+public:
+	GraphicsStateStack();
+	~GraphicsStateStack();
+	GraphicsState* operator ->() { return gs; }
+	operator GraphicsState& () { return *gs; }
+	operator GraphicsState* () { return gs; }
+	void push();
+	void pop();
+	void dump(std::ostream& ss);
+private:
+	GraphicsState * gs;
+	std::stack<GraphicsState *> gstack;
+};
+
 
 }; // namespace PDF
 

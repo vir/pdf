@@ -74,6 +74,9 @@
     <ClCompile Include="Path.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="GraphicsState.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AES.h">

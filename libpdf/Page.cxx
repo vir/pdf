@@ -12,7 +12,6 @@
 #include "Media.hpp"
 #include "ObjStrm.hpp"
 #include "Exceptions.hpp"
-#include "GraphicsState.hpp"
 
 namespace PDF {
 
@@ -310,43 +309,6 @@ std::string Page::Operator::dump() const
 	}
 	ss << ")";
 	return ss.str();
-}
-
-inline Page::GraphicsStateStack::GraphicsStateStack()
-{
-	gs = new GraphicsState();
-}
-
-inline Page::GraphicsStateStack::~GraphicsStateStack()
-{
-	// delete all forgotten graphics stack contents
-	while(!gstack.empty()) { delete gstack.top(); gstack.pop(); }
-	if(gs) delete gs;
-}
-
-void Page::GraphicsStateStack::push()
-{
-	gstack.push(gs);
-	gs = new GraphicsState(*gs);
-}
-
-void Page::GraphicsStateStack::pop()
-{
-	if(gs) delete gs;
-	if(gstack.empty())
-		throw WrongPageException("GraphicsState stack underrun");
-	gs = gstack.top();
-	gstack.pop();
-}
-
-void Page::GraphicsStateStack::dump(std::ostream & ss)
-{
-	if(gs) {
-		ss << "Graphics state:";
-		gs->dump(ss);
-		ss << std::endl;
-	}
-	ss << "Graphics state stack: " << gstack.size() << " entries" << std::endl;
 }
 
 }; // namespace PDF

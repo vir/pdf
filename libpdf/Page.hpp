@@ -15,13 +15,13 @@
 #include <iostream>
 #include <iomanip>
 #include <cmath>
-#include <stack>
 
 #include "Object.hpp"
 #include "Point.hpp"
 #include "Rect.hpp"
 #include "Ctm.hpp"
 #include "Path.hpp"
+#include "GraphicsState.hpp"
 
 namespace PDF {
 
@@ -39,21 +39,6 @@ class Page
 		class Operator;
 		class Render;
 		class TextObject;
-		class GraphicsStateStack
-		{
-		public:
-			GraphicsStateStack();
-			~GraphicsStateStack();
-			GraphicsState* operator ->() { return gs; }
-			operator GraphicsState& () { return *gs; }
-			operator GraphicsState* () { return gs; }
-			void push();
-			void pop();
-			void dump(std::ostream& ss);
-		private:
-			GraphicsState * gs;
-			std::stack<GraphicsState *> gstack;
-		};
 		struct ResourceProvider
 		{
 			virtual Font* get_font(std::string name) = 0;
@@ -124,7 +109,7 @@ class Page::Render
 public:
 	enum Mode { M_PAGE, M_PATH, M_TEXT, M_IMAGE };
 public:
-	Render(Page::GraphicsStateStack& gs, Page::ResourceProvider& res, Media& m);
+	Render(GraphicsStateStack& gs, Page::ResourceProvider& res, Media& m);
 	~Render();
 	bool draw(const Page::Operator& op);
 	void dump(std::ostream& s);
@@ -135,7 +120,7 @@ protected:
 	bool draw_text_mode(const Page::Operator& op);
 	bool draw_image_mode(const Page::Operator& op);
 private:
-	Page::GraphicsStateStack& gs;
+	GraphicsStateStack& gs;
 	ResourceProvider& res;
 	Media& m;
 	Mode mode;

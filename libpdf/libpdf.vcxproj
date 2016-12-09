@@ -121,6 +121,7 @@
     <ClCompile Include="Font_Encoding.cxx" />
     <ClCompile Include="Font_Metrics.cxx" />
     <ClCompile Include="Font_StdFonts.cxx" />
+    <ClCompile Include="GraphicsState.cxx" />
     <ClCompile Include="Object.cxx" />
     <ClCompile Include="ObjectsCache.cxx" />
     <ClCompile Include="ObjStrm.cxx" />
