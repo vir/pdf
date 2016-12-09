@@ -121,6 +121,15 @@ class OH
 			put(n, "can't extract string value from ");
 			return n->value();
 		}
+		/// Get number content
+		double numvalue() const
+		{
+			const Real* r;
+			if(put(r)) return r->value();
+			const Integer* i;
+			put(i, "can't extract numeric value from ");
+			return i->value();
+		}
     /// Replace indirect object reference with real object
     bool expand()
     {

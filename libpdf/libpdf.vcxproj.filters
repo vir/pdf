@@ -71,13 +71,13 @@
     <ClCompile Include="GraphicsState.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Content_TextObject.cxx">
+    <ClCompile Include="Content.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Content_Render.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Content.cxx">
+    <ClCompile Include="Content_TextObject.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

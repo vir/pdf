@@ -24,6 +24,7 @@ public:
 		virtual XObject* get_xobject(std::string name) = 0;
 	};
 public:
+	Content();
 	~Content();
 	bool parse(const std::vector<char> & data);
 	size_t get_operators_count() const { return operators.size(); }

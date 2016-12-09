@@ -13,6 +13,73 @@
 #include "Media.hpp"
 
 namespace PDF {
+PageResourceProvider::~PageResourceProvider()
+{
+	// delete all fonts
+	for(std::map<std::string, Font *>::iterator it = fonts.begin(); it != fonts.end(); it++) delete it->second;
+	// delete all xobjects
+	for(std::map<std::string, XObject *>::iterator it = xobjects.begin(); it != xobjects.end(); it++) delete it->second;
+}
+
+inline void PageResourceProvider::load(OH resources_h)
+{
+	// load fonts
+	OH fonts_h = resources_h.find("Font");
+	if(fonts_h)
+	{
+		Dictionary * fonts_d;
+		fonts_h.put(fonts_d, "Font's node is not a Dictionary but is a ");
+
+		// load all fonts' objects
+		for(Dictionary::Iterator it = fonts_d->get_iterator(); fonts_d->check_iterator(it); it++)
+		{
+			OH font_h = fonts_h.dig(it->second);
+			Font * f = new Font(it->first);
+			f->load(font_h);
+			fonts[it->first] = f;
+		}
+	}
+	else
+	{
+		std::clog << "No fonts found" << std::endl;
+	}
+
+	OH xobjs_h = resources_h.find("XObject");
+	if(xobjs_h)
+	{
+		Dictionary * xobjs_d;
+		xobjs_h.put(xobjs_d, "XObject node is not a Dictionary but is a ");
+		for(Dictionary::Iterator it = xobjs_d->get_iterator(); xobjs_d->check_iterator(it); it++)
+		{
+			XObject * x = XObject::create(it->first, xobjs_h.dig(it->second));
+			if(x)
+				xobjects[it->first] = x;
+		}
+	}
+}
+
+Font * PageResourceProvider::get_font(std::string name)
+{
+	std::map<std::string, Font *>::const_iterator it = fonts.find(name);
+	if(it == fonts.end())
+		throw DocumentStructureException(std::string("Font not found: ") + name);
+	return it->second;
+}
+
+XObject * PageResourceProvider::get_xobject(std::string name)
+{
+	std::map<std::string, XObject*>::const_iterator it = xobjects.find(name);
+	return it == xobjects.end() ? NULL : it->second;
+}
+
+void PageResourceProvider::dump(std::ostream & ss) const
+{
+	ss << "Resources: " << fonts.size() << " fonts" << std::endl;
+	for(std::map<std::string, Font *>::const_iterator it = fonts.begin(); it != fonts.end(); it++)
+		ss << "Font " << std::setw(5) << std::left << it->first << it->second->dump();
+}
+
+
 
 Page::Page():m_debug(0),m_operators_number_limit(0)
 {
@@ -20,11 +87,6 @@ Page::Page():m_debug(0),m_operators_number_limit(0)
 
 Page::~Page()
 {
-  /// \todo move to 'foreach'
-  // delete all fonts
-  for(std::map<std::string,Font *>::iterator it=fonts.begin(); it!=fonts.end(); it++) delete it->second;
-  // delete all xobjects
-  for(std::map<std::string, XObject *>::iterator it = xobjects.begin(); it != xobjects.end(); it++) delete it->second;
 }
 
 static Rect get_box(OH boxnode)
@@ -105,41 +167,8 @@ bool Page::load(OH pagenode)
     }
     else
     {
-      // load fonts
-      resources_h.expand();
-      OH fonts_h=resources_h.find("Font");
-      if(fonts_h)
-      {
-				Dictionary * fonts_d;
-				fonts_h.put(fonts_d, "Font's node is not a Dictionary but is a ");
-
-        // load all fonts' objects
-        for( Dictionary::Iterator it=fonts_d->get_iterator(); fonts_d->check_iterator(it); it++)
-        {
-          OH font_h=fonts_h.dig(it->second);
-          Font * f=new Font(it->first);
-          f->load(font_h);
-          fonts[it->first]=f;
-        }
-      }
-      else
-      {
-        std::clog << "No fonts found" << std::endl;
-      }
-
-	  OH xobjs_h = resources_h.find("XObject");
-	  if(xobjs_h)
-	  {
-		Dictionary * xobjs_d;
-		xobjs_h.put(xobjs_d, "XObject node is not a Dictionary but is a ");
-		for(Dictionary::Iterator it = xobjs_d->get_iterator(); xobjs_d->check_iterator(it); it++)
-		{
-			XObject * x = XObject::create(it->first, xobjs_h.dig(it->second));
-			if(x)
-				xobjects[it->first] = x;
-		}
-
-	  }
+		resources_h.expand();
+		resources.load(resources_h);
     }
   }
 
@@ -151,39 +180,11 @@ std::string Page::dump() const
   std::stringstream ss;
   ss << "Page dump: " << std::endl;
   ss << "\t" << get_operators_count() << " operators" << std::endl;
-  ss << "\t" << fonts.size() << " fonts" << std::endl;
-  for(std::map<std::string,Font *>::const_iterator it=fonts.begin(); it!=fonts.end(); it++)
-  {
-    ss << "Font " << std::setw(5) << std::left << it->first << it->second->dump();
-  }
+  resources.dump(ss);
   ss << "Graphics state:" << std::endl;
   
   return ss.str();
 }
-
-class SimplePageResourceProvider : public Page::ResourceProvider
-{
-public:
-	SimplePageResourceProvider(std::map<std::string, Font *>& fonts, std::map<std::string, XObject *>& xobjects)
-		: fonts(fonts), xobjects(xobjects)
-	{
-	}
-	virtual Font* get_font(std::string name)
-	{
-		std::map<std::string, Font *>::const_iterator it = fonts.find(name);
-		if(it == fonts.end())
-			throw DocumentStructureException(std::string("Font not found: ") + name);
-		return it->second;
-	}
-	virtual XObject* get_xobject(std::string name)
-	{
-		std::map<std::string, XObject*>::const_iterator it = xobjects.find(name);
-		return it == xobjects.end() ? NULL : it->second;
-	}
-private:
-	std::map<std::string, Font *>& fonts;
-	std::map<std::string, XObject *>& xobjects;
-};
 
 void GraphicsState::TextState::dump(std::ostream & s) const {
 	s << "Tc:" << Tc << " Tw:" << Tw << " Th:" << Th;
@@ -193,18 +194,16 @@ void GraphicsState::TextState::dump(std::ostream & s) const {
 
 void Page::draw(Media * m)
 {
+	assert(m);
 
 	m->Size(media_box.size());
 	gs->ctm = m->Matrix();
-
-	assert(m);
-	SimplePageResourceProvider res(fonts, xobjects);
 
 	unsigned int operators_num = get_operators_count();
 	if(m_operators_number_limit && m_operators_number_limit < operators_num)
 		operators_num = m_operators_number_limit;
 
-	this->PDF::Content::draw(res, *m, operators_num);
+	this->PDF::Content::draw(resources, *m, operators_num);
 }
 
 /*============== Page::Operator ========================*/
@@ -264,13 +263,44 @@ PDF::FormXObject::FormXObject(std::string name)
 {
 }
 
-void PDF::FormXObject::load(OH dic)
+void PDF::FormXObject::load(OH strm)
 {
+	OH dic = strm.dig(strm.cast<Stream*>("Not a stream")->dict());
 	// Matrix, BBox
-	// Resources - use page's unless defined
+	{
+		OH bbox_h = dic.find("BBox");
+		if(bbox_h)
+			bbox = get_box(bbox_h);
+		OH matrix_h = dic.find("Matrix");
+		if(matrix_h && matrix_h.size() == 6)
+			xobjctm = CTM(matrix_h[0].numvalue(), matrix_h[1].numvalue(),
+				matrix_h[2].numvalue(), matrix_h[3].numvalue(),
+				matrix_h[4].numvalue(), matrix_h[5].numvalue());
+	}
+	// load contents
+	{
+		std::vector<char> pagedata;
+		Stream * stream;
+		strm.put(stream, "Form XObject is not a stream");
+		stream->get_data(pagedata);
+		parse(pagedata);
+	}
+
+	// load resources
+	{
+		OH resources_h = dic.find("Resources");
+		// XXX Resources - use page's unless defined
+		if(!resources_h)
+			throw UnimplementedException("Should use Page's resource");
+		resources_h.expand();
+		resources.load(resources_h);
+	}
+	
 }
 
-void PDF::FormXObject::draw(Page::Render & r)
+void PDF::FormXObject::draw(GraphicsStateStack& parentgs, Content::ResourceProvider& res, Media& m, Content::Render& r)
 {
+	gs.inherit(parentgs);
+	this->Content::draw(resources, m, get_operators_count());
 }
 

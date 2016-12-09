@@ -3,6 +3,10 @@
 #include "ObjStrm.hpp"
 #include "Media.hpp"
 
+PDF::Content::Content()
+{
+}
+
 PDF::Content::~Content()
 {
 	// delete all operators

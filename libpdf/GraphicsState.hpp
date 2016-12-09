@@ -76,6 +76,11 @@ public:
 	void push();
 	void pop();
 	void dump(std::ostream& ss);
+	void clear();
+	void inherit(const GraphicsStateStack& parent);
+private:
+	GraphicsStateStack(const GraphicsStateStack&);
+	GraphicsStateStack& operator=(const GraphicsStateStack&);
 private:
 	GraphicsState * gs;
 	std::stack<GraphicsState *> gstack;

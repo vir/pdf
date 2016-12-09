@@ -23,16 +23,29 @@ namespace PDF {
 class Font;
 class OH;
 class GraphicsState;
+class Font;
+class XObject;
+
+class PageResourceProvider : public Content::ResourceProvider
+{
+public:
+	~PageResourceProvider();
+	void load(OH resources_h);
+	virtual Font* get_font(std::string name);
+	virtual XObject* get_xobject(std::string name);
+	void dump(std::ostream& ss) const;
+private:
+	std::map<std::string, Font *> fonts;
+	std::map<std::string, XObject *> xobjects;
+};
 
 class Page: public Content
 {
 private:
 		Rect media_box, crop_box;
-    
-    std::map<std::string,Font *> fonts;
-    std::map<std::string, XObject *> xobjects;
     int m_debug;
 		unsigned int m_operators_number_limit;
+		PageResourceProvider resources;
   public:
     Page();
     ~Page();
@@ -50,6 +63,7 @@ private:
 		unsigned int get_operators_number_limit() const { return m_operators_number_limit; }
 };
 
+
 class XObject
 {
 private:
@@ -62,20 +76,22 @@ public:
 	static XObject* create(std::string name, OH definition);
 	const std::string& name() const { return m_name; }
 	virtual void update_ctm(CTM& ctm) { }
-	virtual void draw(Page::Render& r) = 0;
+	virtual void draw(GraphicsStateStack& gs, Content::ResourceProvider& res, Media& m, Content::Render& r) = 0;
 private:
 	std::string m_name;
 };
 
-class FormXObject : public XObject
+class FormXObject : public XObject, public Content
 {
 private:
+	Rect bbox;
 	CTM xobjctm;
+	PageResourceProvider resources;
 public:
 	FormXObject(std::string name);
 	void load(OH dic);
 	virtual void update_ctm(CTM& ctm) { ctm *= xobjctm; }
-	virtual void draw(Page::Render& r);
+	virtual void draw(GraphicsStateStack& gs, Content::ResourceProvider& res, Media& m, Content::Render& r);
 };
 
 

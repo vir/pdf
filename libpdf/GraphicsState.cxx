@@ -7,9 +7,7 @@ PDF::GraphicsStateStack::GraphicsStateStack()
 
 PDF::GraphicsStateStack::~GraphicsStateStack()
 {
-	// delete all forgotten graphics stack contents
-	while(!gstack.empty()) { delete gstack.top(); gstack.pop(); }
-	if(gs) delete gs;
+	clear();
 }
 
 void PDF::GraphicsStateStack::push()
@@ -35,5 +33,18 @@ void PDF::GraphicsStateStack::dump(std::ostream & ss)
 		ss << std::endl;
 	}
 	ss << "Graphics state stack: " << gstack.size() << " entries" << std::endl;
+}
+
+void PDF::GraphicsStateStack::clear()
+{
+	// delete all forgotten graphics stack contents
+	while(!gstack.empty()) { delete gstack.top(); gstack.pop(); }
+	if(gs) delete gs;
+}
+
+void PDF::GraphicsStateStack::inherit(const GraphicsStateStack & parent)
+{
+	clear();
+	gs = new GraphicsState(*parent.gs);
 }
 
