@@ -1,11 +1,11 @@
-#include "Page.hpp"
-#include "Page_TextObject.h"
+#include "Content_TextObject.hpp"
 #include "Exceptions.hpp"
 #include "Media.hpp"
+#include "Object.hpp"
 
 namespace PDF {
 
-Page::Render::Render(GraphicsStateStack& gs, Page::ResourceProvider& res, Media& m)
+Content::Render::Render(GraphicsStateStack& gs, Page::ResourceProvider& res, Media& m)
 	: gs(gs), res(res), m(m)
 	, mode(M_PAGE)
 	, curpath(NULL)
@@ -13,13 +13,13 @@ Page::Render::Render(GraphicsStateStack& gs, Page::ResourceProvider& res, Media&
 {
 }
 
-Page::Render::~Render()
+Content::Render::~Render()
 {
 	if(tobj) delete tobj;
 	if(curpath) delete curpath;
 }
 
-bool Page::Render::draw(const Page::Operator& op)
+bool Content::Render::draw(const Page::Operator& op)
 {
 	/* Check for any-mode-operators */
 	if(op.name() == "cm") {
@@ -40,7 +40,7 @@ bool Page::Render::draw(const Page::Operator& op)
 	}
 }
 
-void Page::Render::dump(std::ostream & s)
+void Content::Render::dump(std::ostream & s)
 {
 	if(tobj) {
 		s << "Line matrix:" << std::endl << tobj->lm.dump();
@@ -50,7 +50,7 @@ void Page::Render::dump(std::ostream & s)
 		s << "Current path: " << curpath->dump() << std::endl;
 }
 
-const char * Page::Render::mode_string() const
+const char * Content::Render::mode_string() const
 {
 	switch(mode)
 	{
@@ -62,7 +62,7 @@ const char * Page::Render::mode_string() const
 	}
 }
 
-bool Page::Render::draw_page_mode(const Page::Operator& op)
+bool Content::Render::draw_page_mode(const Content::Operator& op)
 {
 	if(op.name() == "m" || op.name() == "re") { mode = M_PATH; return draw_path_mode(op); }
 	if(op.name() == "BT") { mode = M_TEXT; return true; }
@@ -103,7 +103,7 @@ bool Page::Render::draw_page_mode(const Page::Operator& op)
 	return false;
 }
 
-bool Page::Render::draw_path_mode(const Page::Operator& op)
+bool Content::Render::draw_path_mode(const Content::Operator& op)
 {
 	if(op.name() == "m") // moveto
 	{
@@ -179,7 +179,7 @@ bool Page::Render::draw_path_mode(const Page::Operator& op)
 	return false;
 }
 
-bool Page::Render::draw_text_mode(const Page::Operator& op)
+bool Content::Render::draw_text_mode(const Content::Operator& op)
 {
 	if(!tobj) tobj = new TextObject(gs, &m);
 	/* Check text showing operators first */
@@ -262,7 +262,7 @@ bool Page::Render::draw_text_mode(const Page::Operator& op)
 	return false;
 }
 
-bool Page::Render::draw_image_mode(const Page::Operator& op)
+bool Content::Render::draw_image_mode(const Content::Operator& op)
 {
 	if(op.name() == "EI") { mode = M_PAGE; return true; }
 	return false;

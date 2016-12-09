@@ -1,15 +1,17 @@
-#ifndef PAGE_TEXTOBJECT_HPP_INCLUDED
-#define PAGE_TEXTOBJECT_HPP_INCLUDED
+#ifndef CONTENT_TEXTOBJECT_HPP_INCLUDED
+#define CONTENT_TEXTOBJECT_HPP_INCLUDED
 
 #include "Page.hpp"
 #include "GraphicsState.hpp"
 
 namespace PDF {
 
+class String;
+
 /** Work around mutiple text-showing operators in same text object.
  *  if so, concatenate them and output them all together.
  */
-class Page::TextObject
+class Content::TextObject
 {
 	private:
 		enum TextDir { LTR, RTL, TTB, BTT };
@@ -53,5 +55,5 @@ class Page::TextObject
 
 }; // namespace PDF
 
-#endif /* PAGE_TEXTOBJECT_HPP_INCLUDED */
+#endif /* CONTENT_TEXTOBJECT_HPP_INCLUDED */
 
