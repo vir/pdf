@@ -179,6 +179,7 @@ bool Page::parse(const std::vector<char> & data)
       args->push_back(o);
     }
   }
+  assert(!args);
 
   // delete tail of (broken?) content stream
   if(args)
@@ -208,7 +209,7 @@ std::string Page::dump() const
 class SimplePageResourceProvider : public Page::ResourceProvider
 {
 public:
-	SimplePageResourceProvider(std::map<std::string, Font *> fonts, std::map<std::string, XObject *> xobjects)
+	SimplePageResourceProvider(std::map<std::string, Font *>& fonts, std::map<std::string, XObject *>& xobjects)
 		: fonts(fonts), xobjects(xobjects)
 	{
 	}
@@ -376,5 +377,9 @@ void PDF::FormXObject::load(PDF::OH dic)
 {
 	// Matrix, BBox
 	// Resources - use page's unless defined
+}
+
+void PDF::FormXObject::draw(Page::Render & r)
+{
 }
 

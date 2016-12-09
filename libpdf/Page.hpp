@@ -154,6 +154,8 @@ public:
 	virtual ~XObject() { }
 	static XObject* create(std::string name, OH definition);
 	const std::string& name() const { return m_name; }
+	virtual void update_ctm(CTM& ctm) { }
+	virtual void draw(Page::Render& r) = 0;
 private:
 	std::string m_name;
 };
@@ -161,9 +163,12 @@ private:
 class FormXObject : public XObject
 {
 private:
+	CTM xobjctm;
 public:
 	FormXObject(std::string name);
 	void load(OH dic);
+	virtual void update_ctm(CTM& ctm) { ctm *= xobjctm; }
+	virtual void draw(Page::Render& r);
 };
 
 
