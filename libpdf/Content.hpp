@@ -23,7 +23,15 @@ public:
 		virtual Font* get_font(std::string name) = 0;
 		virtual XObject* get_xobject(std::string name) = 0;
 	};
+public:
+	~Content();
+	bool parse(const std::vector<char> & data);
+	size_t get_operators_count() const { return operators.size(); }
+	std::streamoff get_operator_offset(unsigned int n) const;
 protected:
+	void draw(ResourceProvider& res, Media& m, unsigned int operators_num);
+	GraphicsStateStack gs;
+private:
 	std::vector<Operator *> operators;
 };
 

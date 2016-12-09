@@ -17,12 +17,6 @@
 #include <cmath>
 
 #include "Content.hpp"
-#if 0
-#include "Object.hpp"
-#include "Point.hpp"
-#include "Rect.hpp"
-#include "Ctm.hpp"
-#endif
 
 namespace PDF {
 
@@ -34,7 +28,6 @@ class Page: public Content
 {
 private:
 		Rect media_box, crop_box;
-		GraphicsStateStack gs;
     
     std::map<std::string,Font *> fonts;
     std::map<std::string, XObject *> xobjects;
@@ -48,7 +41,6 @@ private:
     std::string dump() const;
     bool load(OH pagenode);
 //    bool load(std::istream & pagestream);
-    bool parse(const std::vector<char> & data);
 	const Rect& get_meadia_box() const { return media_box; }
 	const Rect& get_crop_box() const { return crop_box; }
     void draw(Media * m);
@@ -56,8 +48,6 @@ private:
 		 * debugging purposes */
 		void set_operators_number_limit(unsigned int n) { m_operators_number_limit = n; }
 		unsigned int get_operators_number_limit() const { return m_operators_number_limit; }
-		size_t get_operators_count() const { return operators.size(); }
-		std::streamoff get_operator_offset(unsigned int n) const;
 };
 
 class XObject
