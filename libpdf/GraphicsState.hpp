@@ -1,8 +1,7 @@
 #ifndef PAGE_GRAPHICSSTATE_HPP_INCLUDED
 #define PAGE_GRAPHICSSTATE_HPP_INCLUDED
 
-#include "Page.hpp"
-#include "Page_Path.hpp"
+#include "Path.hpp"
 #include "Exceptions.hpp"
 
 namespace PDF {
@@ -12,7 +11,7 @@ public:
 	GraphicsState() {}
 	/*=== device-independent: ===*/
 	CTM ctm;
-	Page::Path clipping_path;
+	PDF::Path clipping_path;
 	// color_space
 	// color
 	struct TextState {
@@ -48,7 +47,7 @@ public:
 	// halftone
 	// flatness // set with 'i'
 	// smothness
-	void modify_clipping_path(const Page::Path* p)
+	void modify_clipping_path(const Path* p)
 	{
 		// XXX just replace for now, sorry
 		clipping_path = *p;

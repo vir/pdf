@@ -351,7 +351,9 @@ void Page::GraphicsStateStack::dump(std::ostream & ss)
 
 }; // namespace PDF
 
-PDF::XObject* PDF::XObject::create(std::string name, PDF::OH definition)
+#include "OH.hpp"
+
+PDF::XObject* PDF::XObject::create(std::string name, OH definition)
 {
 	PDF::Stream* s = NULL;
 	definition.expand();
@@ -373,7 +375,7 @@ PDF::FormXObject::FormXObject(std::string name)
 {
 }
 
-void PDF::FormXObject::load(PDF::OH dic)
+void PDF::FormXObject::load(OH dic)
 {
 	// Matrix, BBox
 	// Resources - use page's unless defined

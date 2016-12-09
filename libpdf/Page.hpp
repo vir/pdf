@@ -21,6 +21,7 @@
 #include "Point.hpp"
 #include "Rect.hpp"
 #include "Ctm.hpp"
+#include "Path.hpp"
 
 namespace PDF {
 
@@ -36,7 +37,6 @@ class Page
 {
 	public:
 		class Operator;
-		class Path;
 		class Render;
 		class TextObject;
 		class GraphicsStateStack
@@ -139,7 +139,7 @@ private:
 	ResourceProvider& res;
 	Media& m;
 	Mode mode;
-	Page::Path* curpath;
+	Path* curpath;
 	Page::TextObject* tobj;
 };
 

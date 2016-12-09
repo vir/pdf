@@ -125,7 +125,7 @@
     <ClCompile Include="ObjectsCache.cxx" />
     <ClCompile Include="ObjStrm.cxx" />
     <ClCompile Include="Page.cxx" />
-    <ClCompile Include="Page_Path.cxx" />
+    <ClCompile Include="Path.cxx" />
     <ClCompile Include="Page_Render.cxx" />
     <ClCompile Include="Page_TextObject.cxx" />
     <ClCompile Include="SecHandler.cxx" />
@@ -150,7 +150,7 @@
     <ClInclude Include="ObjStrm.hpp" />
     <ClInclude Include="OH.hpp" />
     <ClInclude Include="Page.hpp" />
-    <ClInclude Include="Page_Path.hpp" />
+    <ClInclude Include="Path.hpp" />
     <ClInclude Include="Page_TextObject.h" />
     <ClInclude Include="Point.hpp" />
     <ClInclude Include="Rect.hpp" />
