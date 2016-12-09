@@ -1,8 +1,9 @@
-#include "Page_Path.hpp"
+#include "Path.hpp"
 #include "Exceptions.hpp"
 #include <limits>
+#include <cassert>
 
-std::string PDF::Page::Path::dump() const
+std::string PDF::Path::dump() const
 {
 	std::stringstream ss;
 	if(empty())
@@ -12,7 +13,7 @@ std::string PDF::Page::Path::dump() const
 	return ss.str();
 }
 
-bool PDF::Page::Path::is_rectangular() const
+bool PDF::Path::is_rectangular() const
 {
 	if(size() != 5)
 		return false;
@@ -30,7 +31,7 @@ bool PDF::Page::Path::is_rectangular() const
 	return false;
 }
 
-bool PDF::Page::Path::clip(Rect& r) const
+bool PDF::Path::clip(Rect& r) const
 {
 	bool even_odd_rule = true;
 	if(empty())
@@ -97,7 +98,7 @@ bool PDF::Page::Path::clip(Rect& r) const
  * After counting all the crossings, if the result is 0, the
  * point is outside the path; otherwise, it is inside.
  */
-bool PDF::Page::Path::is_inside_n0wnr(const Point& pt) const
+bool PDF::Path::is_inside_n0wnr(const Point& pt) const
 {
 	NOT_IMPLEMENTED("PDF::Page::Path::is_inside_n0wnr");
 }
@@ -115,7 +116,7 @@ bool PDF::Page::Path::is_inside_n0wnr(const Point& pt) const
  * rule for paths with simple shapes, but produces different
  * results for more complex shapes.
  */
-bool PDF::Page::Path::is_inside_eor(const Point& pt) const
+bool PDF::Path::is_inside_eor(const Point& pt) const
 {
 	const static Point faraway(10000000.0, 10000000.0);
 	unsigned int intersection_count = 0;
@@ -129,7 +130,7 @@ bool PDF::Page::Path::is_inside_eor(const Point& pt) const
 	return intersection_count % 2 ? true : false;
 }
 
-bool PDF::Page::Path::clip_line(Point& pt1, Point& pt2, bool even_odd_rule) const
+bool PDF::Path::clip_line(Point& pt1, Point& pt2, bool even_odd_rule) const
 {
 	assert(even_odd_rule);
 	even_odd_rule = true;
@@ -152,7 +153,7 @@ bool PDF::Page::Path::clip_line(Point& pt1, Point& pt2, bool even_odd_rule) cons
 }
 
 /* Checks that lines AB and CD intersects and returns intersection point if X is not NULL */
-bool PDF::Page::Path::lines_intersects(const Point& A, const Point& B, const Point C, const Point D, Point* X /*= NULL*/)
+bool PDF::Path::lines_intersects(const Point& A, const Point& B, const Point C, const Point D, Point* X /*= NULL*/)
 {
 	double tolerance = 0.00000001;
 	double a = det2(A.x - B.x, A.y - B.y, C.x - D.x, C.y - D.y);

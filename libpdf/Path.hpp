@@ -1,11 +1,13 @@
-#ifndef PAGE_PATH_HPP_INCLUDED
-#define PAGE_PATH_HPP_INCLUDED
+#ifndef PATH_HPP_INCLUDED
+#define PATH_HPP_INCLUDED
 
-#include "Page.hpp"
+#include <vector>
+#include "Point.hpp"
+#include "Rect.hpp"
 
 namespace PDF {
 
-class Page::Path: public std::vector<Point>
+class Path: public std::vector<Point>
 {
 public:
 	std::string dump() const;
@@ -23,6 +25,6 @@ protected:
 	bool is_inside_eor(const Point& pt) const;
 };
 
-}; // namespace PDF
+} // namespace PDF
 
-#endif /* PAGE_PATH_HPP_INCLUDED */
+#endif /* PATH_HPP_INCLUDED */

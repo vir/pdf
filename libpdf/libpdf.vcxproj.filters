@@ -59,16 +59,25 @@
     <ClCompile Include="Page.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Page_Path.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Page_TextObject.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="SecHandler.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Font_Metrics.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Path.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GraphicsState.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Content.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Content_Render.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Content_TextObject.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -127,12 +136,6 @@
     <ClInclude Include="Page.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Page_Path.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Page_TextObject.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Point.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -143,6 +146,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Font_Metrics.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Path.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Content_TextObject.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Content.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

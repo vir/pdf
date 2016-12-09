@@ -14,41 +14,38 @@
 //#include <sstream>
 #include <iostream>
 #include <iomanip>
-#include <stack>
 #include <cmath>
 
-#include "Object.hpp"
-#include "Point.hpp"
-#include "Rect.hpp"
-#include "Ctm.hpp"
+#include "Content.hpp"
 
 namespace PDF {
 
 class Font;
 class OH;
-class Media;
 class GraphicsState;
+class Font;
+class XObject;
 
-/** \brief Represents page content
- */
-class Page
+class PageResourceProvider : public Content::ResourceProvider
 {
-	public:
-		class Operator;
-		class Path;
-  private:
-		class TextObject;
-    //class Path;
+public:
+	~PageResourceProvider();
+	void load(OH resources_h);
+	virtual Font* get_font(std::string name);
+	virtual XObject* get_xobject(std::string name);
+	void dump(std::ostream& ss) const;
+private:
+	std::map<std::string, Font *> fonts;
+	std::map<std::string, XObject *> xobjects;
+};
+
+class Page: public Content
+{
+private:
 		Rect media_box, crop_box;
-    
-    // graphics state
-    GraphicsState * gs;
-    std::stack<GraphicsState *> gstack;
-    
-    std::vector<Operator *> operators;
-    std::map<std::string,Font *> fonts;
     int m_debug;
 		unsigned int m_operators_number_limit;
+		PageResourceProvider resources;
   public:
     Page();
     ~Page();
@@ -57,7 +54,6 @@ class Page
     std::string dump() const;
     bool load(OH pagenode);
 //    bool load(std::istream & pagestream);
-    bool parse(const std::vector<char> & data);
 	const Rect& get_meadia_box() const { return media_box; }
 	const Rect& get_crop_box() const { return crop_box; }
     void draw(Media * m);
@@ -65,39 +61,37 @@ class Page
 		 * debugging purposes */
 		void set_operators_number_limit(unsigned int n) { m_operators_number_limit = n; }
 		unsigned int get_operators_number_limit() const { return m_operators_number_limit; }
-		size_t get_operators_count() const { return operators.size(); }
-		std::streamoff get_operator_offset(unsigned int n) const;
 };
 
-class Page::Operator
+
+class XObject
 {
-  private:
-    std::streamoff m_offset;
-    std::string m_name;
-    std::vector<Object *> * m_args;
-  public:
-    Operator(std::streamoff offset, std::string op, std::vector<Object *>* a):m_offset(offset),m_name(op),m_args(a) {}
-    ~Operator()
-    {
-      if(!m_args) return;
-      for(std::vector<Object *>::iterator it=m_args->begin(); it!= m_args->end(); it++) delete *it;
-      delete m_args;
-    }
-    std::string name() const { return m_name; }
-    std::streamoff offset() const { return m_offset; }
-		bool operator == (const char * cmp) { return m_name == cmp; }
-    const Object * arg(unsigned int i) const { return i>=m_args->size()?NULL:m_args->at(i); }
-		const Object * operator[](unsigned int i) const { return arg(i); }
-    double number(unsigned int i) const;
-    Point point(unsigned int i) const
-    {
-      return Point(number(i), number(i+1));
-    }
-		CTM matrix() const
-		{
-			return CTM(number(0), number(1), number(2), number(3), number(4), number(5));
-		}
-    std::string dump() const;
+private:
+	XObject();
+	XObject(const XObject&);
+protected:
+	XObject(std::string name): m_name(name) { }
+public:
+	virtual ~XObject() { }
+	static XObject* create(std::string name, OH definition);
+	const std::string& name() const { return m_name; }
+	virtual void update_ctm(CTM& ctm) { }
+	virtual void draw(GraphicsStateStack& gs, Content::ResourceProvider& res, Media& m, Content::Render& r) = 0;
+private:
+	std::string m_name;
+};
+
+class FormXObject : public XObject, public Content
+{
+private:
+	Rect bbox;
+	CTM xobjctm;
+	PageResourceProvider resources;
+public:
+	FormXObject(std::string name);
+	void load(OH dic);
+	virtual void update_ctm(CTM& ctm) { ctm *= xobjctm; }
+	virtual void draw(GraphicsStateStack& gs, Content::ResourceProvider& res, Media& m, Content::Render& r);
 };
 
 

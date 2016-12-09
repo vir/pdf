@@ -1,11 +1,11 @@
-#include "Page_TextObject.h"
+#include "Content_TextObject.hpp"
 #include "Font.hpp"
 #include "Media.hpp"
 #include <assert.h>
 
 #define DRAW_CHAR_BY_CHAR 0
 
-void PDF::Page::TextObject::Append( const String * str )
+void PDF::Content::TextObject::Append( const PDF::String * str )
 {
 	unsigned int pos = 0;
 	wchar_t nextchar;
@@ -37,7 +37,7 @@ void PDF::Page::TextObject::Append( const String * str )
 	}
 }
 
-void PDF::Page::TextObject::Kerning( double k )
+void PDF::Content::TextObject::Kerning( double k )
 {
 	// offset next char back by k glyph space units
 	if(k > kerning_too_big || k < -kerning_too_big || accumulated_text.empty()) { // XXX TODO caompare with avg charwidth or so
@@ -49,7 +49,7 @@ void PDF::Page::TextObject::Kerning( double k )
 	}
 }
 
-void PDF::Page::TextObject::Flush()
+void PDF::Content::TextObject::Flush()
 {
 	if(accumulated_text.empty()) return;
 	CTM m(abs(gs->text_state.Tfs) * gs->text_state.Th/100.0, 0, 0, abs(gs->text_state.Tfs), 0, gs->text_state.Trise);

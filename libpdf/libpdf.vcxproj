@@ -109,6 +109,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="AES.c" />
+    <ClCompile Include="Content.cxx" />
     <ClCompile Include="Crypto.cxx" />
     <ClCompile Include="Document.cxx" />
     <ClCompile Include="File.cxx" />
@@ -121,16 +122,19 @@
     <ClCompile Include="Font_Encoding.cxx" />
     <ClCompile Include="Font_Metrics.cxx" />
     <ClCompile Include="Font_StdFonts.cxx" />
+    <ClCompile Include="GraphicsState.cxx" />
     <ClCompile Include="Object.cxx" />
     <ClCompile Include="ObjectsCache.cxx" />
     <ClCompile Include="ObjStrm.cxx" />
     <ClCompile Include="Page.cxx" />
-    <ClCompile Include="Page_Path.cxx" />
-    <ClCompile Include="Page_TextObject.cxx" />
+    <ClCompile Include="Path.cxx" />
+    <ClCompile Include="Content_Render.cxx" />
+    <ClCompile Include="Content_TextObject.cxx" />
     <ClCompile Include="SecHandler.cxx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AES.h" />
+    <ClInclude Include="Content.hpp" />
     <ClInclude Include="Crypto.hpp" />
     <ClInclude Include="Ctm.hpp" />
     <ClInclude Include="Document.hpp" />
@@ -149,8 +153,8 @@
     <ClInclude Include="ObjStrm.hpp" />
     <ClInclude Include="OH.hpp" />
     <ClInclude Include="Page.hpp" />
-    <ClInclude Include="Page_Path.hpp" />
-    <ClInclude Include="Page_TextObject.h" />
+    <ClInclude Include="Path.hpp" />
+    <ClInclude Include="Content_TextObject.hpp" />
     <ClInclude Include="Point.hpp" />
     <ClInclude Include="Rect.hpp" />
     <ClInclude Include="SecHandler.hpp" />
