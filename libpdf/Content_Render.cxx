@@ -73,16 +73,17 @@ bool Content::Render::draw_page_mode(const Content::Operator& op)
 		if(!n)
 			throw WrongPageException("XObject id is not a name");
 		XObject* x = res.get_xobject(n->value());
-		if(! x)
-			throw UnimplementedException("XXX may be this xobject was not loaded");
+		if(!x)
+			return false;
+			//throw UnimplementedException("XXX may be this xobject was not loaded");
 		// 1. Saves the current graphics state, as if by invoking the q operator
 		gs.push();
 		// 2. Concatenates the matrix from the form dictionary’s Matrix entry with the current transformation matrix (CTM)
 		x->update_ctm(gs->ctm);
 		// 3. Clips according to the form dictionary’s BBox entry
-		x->draw(gs, res, m, *this);
 		// XXX
 		// 4. Paints the graphics objects specified in the form’s content stream
+		x->draw(gs, res, m, *this);
 		// 5. Restores the saved graphics state, as if by invoking the Q operator
 		gs.pop();
 		return true;
