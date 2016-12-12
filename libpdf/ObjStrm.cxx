@@ -243,7 +243,9 @@ Object * ObjIStream::read_delimited(const ObjId * decrypt_info)
  */
 std::vector<char> ObjIStream::read_o_string()
 {
-  std::vector<char> s; char c; bool escape=false;
+	std::vector<char> s; char c; bool escape=false;
+	if(f->peek() == ')') // some perverts are drawing empty strings
+		return s;
 	int plevel = 0;
 	do {
 		c = f->get();
