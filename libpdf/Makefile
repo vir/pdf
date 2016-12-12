@@ -4,7 +4,9 @@
 SOURCES = \
 	File.cxx Object.cxx Document.cxx ObjectsCache.cxx \
 	Filter.cxx Filter_Flate.cxx Filter_Base85.cxx \
-	Page.cxx Page_Path.cxx Page_TextObject.cxx \
+	Page.cxx Path.cxx Content.cxx \
+	GraphicsState.cxx Font_Metrics.cxx \
+	Content_Render.cxx Content_TextObject.cxx \
 	Font.cxx Font_Encoding.cxx Font_CMap.cxx \
 	Font_StdFonts.cxx SecHandler.cxx Crypto.cxx \
 	ObjStrm.cxx AES.c Filter_AESV2.cxx

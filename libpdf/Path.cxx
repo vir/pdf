@@ -2,6 +2,7 @@
 #include "Exceptions.hpp"
 #include <limits>
 #include <cassert>
+#include <cmath>
 
 std::string PDF::Path::dump() const
 {
