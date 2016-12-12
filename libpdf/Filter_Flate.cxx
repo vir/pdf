@@ -2,6 +2,7 @@
 #include <zlib.h>
 #include <vector>
 #include <string>
+#include <cstddef>
 #include "Exceptions.hpp"
 #include "Filter.hpp"
 #include "Object.hpp"
@@ -18,7 +19,7 @@ private:
 	DataVector m_prev_row;
 public:
 	PredictorPNG(unsigned int ncols, unsigned int colors, unsigned int bpc)
-		: m_ncols(ncols), m_colors(colors), m_bpc(bpc)
+		: m_bpc(bpc), m_colors(colors), m_ncols(ncols)
 	{
 		m_bpp = 1 + ((m_bpc * m_colors - 1) / 8); // bytes per point
 		m_bpr = m_bpp * m_ncols;
@@ -46,7 +47,7 @@ void PredictorPNG::Remove(std::vector<char> & data)
 	DataVector::const_iterator r = data.begin();
 	DataVector::iterator w = data.begin();
 	m_prev_row.resize(m_bpr, 0);
-	int col = -1;
+	//int col = -1;
 	while(r != data.end()) {
 		int predictor = *r++;
 		if (std::distance(r, static_cast<DataVector::const_iterator>(data.end())) < static_cast<ptrdiff_t>(m_bpr))
