@@ -22,11 +22,13 @@ Font::Font(std::string name)
 	,fontname(name)
 	,fontflags(0)
 	,charbytes(1)
+	,metrics(NULL)
 {
 }
 
 Font::~Font()
 {
+	delete metrics;
 	delete to_unicode_map;
 	delete encoding;
 }

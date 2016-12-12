@@ -168,18 +168,17 @@ bool FlateFilter::Decode(const std::vector<char> & src, std::vector<char> & dst)
 		if(r!=Z_STREAM_END)
 			throw std::string("Zlib error: ") + zs.msg;
 		dst.resize((char*)zs.next_out-&dst[0]); // adjust output object size
-		r=inflateEnd(&zs);
-		if(r!=Z_OK)
-			throw std::string("Zlib error: ") + zs.msg;
-		if(m_predictor)
-			m_predictor->Remove(dst);
 	}
 	catch(...) {
 		inflateEnd(&zs);
 		throw;
 	}
-  
-  return true;
+	r = inflateEnd(&zs);
+	if(r != Z_OK)
+		throw std::string("Zlib error: ") + zs.msg;
+	if(m_predictor)
+		m_predictor->Remove(dst);
+	return true;
 }
 
 

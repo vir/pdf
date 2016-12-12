@@ -100,7 +100,7 @@ unsigned int Font::CMap::load_codespacerange(ObjIStream & s)
 	while((o = s.read_direct_object()))
 	{
 		Keyword * kw=dynamic_cast<Keyword *>(o);
-		if(kw && kw->value()=="endcodespacerange") { break; }
+		if(kw && kw->value() == "endcodespacerange") { delete o;  break; }
 
 		str=dynamic_cast<String *>(o);
 		if(!str) { std::cerr << "Found non-string in codespacerange" << std::endl; break; }

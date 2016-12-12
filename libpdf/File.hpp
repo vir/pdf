@@ -95,13 +95,15 @@ class ObjectStreamsCache
 		{
 			ObjectStream * s;
 			Entry(ObjectStream * strm):s(strm) { }
+			//~Entry() { delete s; } // breaks (ptr copy on return cached obj)
 		};
 		std::map<long, Entry> m_stash;
 		File & m_file;
 	public:
 		ObjectStreamsCache(File & f):m_file(f) { }
+		~ObjectStreamsCache() { flush(); }
 		Object * load_object(long obj_stream_num, unsigned int obj_stream_index);
-		void flush() { m_stash.clear(); }
+		void flush() { for(std::map<long, Entry>::iterator it = m_stash.begin(); it != m_stash.end(); ++it) delete it->second.s; m_stash.clear(); }
 };
 
 /** \brief Represents pdf file

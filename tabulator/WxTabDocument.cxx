@@ -19,7 +19,9 @@ WxErrorReporter * theReporter = NULL;
 //===========================================================
 
 WxTabDocument::WxTabDocument()
-	:doc(NULL),page(NULL),m_rotation(0),m_scale(1.0),m_cur_page_num(0),m_error_handler(NULL)
+	:doc(NULL),page(NULL)
+	,m_rotation(0),m_scale(1.0),m_cur_page_num(0)
+	,m_error_handler(NULL)
 {
 	theReporter = new WxErrorReporter;
 }
@@ -27,6 +29,7 @@ WxTabDocument::WxTabDocument()
 WxTabDocument::~WxTabDocument()
 {
 	delete page;
+	delete doc;
 	delete theReporter;
 }
 

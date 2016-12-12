@@ -107,9 +107,8 @@ bool Stream::get_data(std::vector<char> & buf)
 	}
 
 	// pass data through all filters
+	std::vector<char> *s = NULL, *d = NULL;
 	try {
-		std::vector<char> *s, *d;
-		s = NULL;
 		unsigned int i;
 		for(i = 0; i < filters.size(); i++)
 		{
@@ -134,10 +133,23 @@ bool Stream::get_data(std::vector<char> & buf)
 
 		return true;
 	}
-	catch(std::string s) {
+	catch(std::string& str) {
+		delete s;
 		for(unsigned int i = 0; i < filters.size(); i++)
 			delete filters[i]; 
-		throw FormatException(s, soffset);
+		throw FormatException(str, soffset);
+	}
+	catch(std::exception& e) {
+		delete s;
+		for(unsigned int i = 0; i < filters.size(); i++)
+			delete filters[i];
+		throw FormatException(e.what(), soffset);
+	}
+	catch(...) {
+		delete s;
+		for(unsigned int i = 0; i < filters.size(); i++)
+			delete filters[i];
+		throw;
 	}
 }
 
