@@ -1,5 +1,6 @@
 *.o
 libpdf/*.d
+libpdf/FontMetrics/*
 Debug
 Release
 OutputDebug
