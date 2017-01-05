@@ -75,14 +75,27 @@ public:
 	void dump(std::ostream & strm = std::clog) const;
 	void insert_normal(const ObjId & objid, std::streamoff offset)
 	{
+		/*
+		 * Temp. worakaround a bug in some pdf updaters, which do not properly
+		 * inctrmrnt object generation upon update, but overwrite the same object
+		 * instead.
+		 * As older revisions are parsed later, we do not update object offset if
+		 * it is already known.
+		 */
+		if(m_table.find(objid) != m_table.end())
+			return; // XXX
 		m_table[objid] = Entry(offset);
 	}
 	void insert_empty(const ObjId & objid, unsigned long offset)
 	{
+		if(m_table.find(objid) != m_table.end())
+			return; // XXX
 		m_table[objid] = Entry();
 	}
 	void insert_compressed(const ObjId & objid, unsigned long stream_id, unsigned int index)
 	{
+		if(m_table.find(objid) != m_table.end())
+			return; // XXX
 		m_table[objid] = Entry(stream_id, index);
 	}
 	void clear();
