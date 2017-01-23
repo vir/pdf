@@ -286,6 +286,31 @@ bool File::read_xref_table_part(bool try_recover)
 	int objnum=atoi(s.substr(0,sep).c_str());
 	sep=s.find_first_not_of(" \t", sep);
 	int count=atoi(s.substr(sep).c_str());
+	if(objnum != 0 && xref_table.empty()) // that is strange, looks like another bug in creator
+	{
+		/* Check first normal object reference to see if referenced object have valid object id */
+		std::streamoff save = file.tellg();
+		int num = objnum;
+		for(;;) {
+			getline(s);
+			int pos = s.find('n');
+			if(pos != std::string::npos)
+				break;
+			++num;
+		}
+		unsigned long offset = atol(s.substr(0, 10).c_str());
+		unsigned long gen = atol(s.substr(11, 5).c_str());
+
+		file.seekg(offset);
+		unsigned int x_num, x_gen;
+		std::string x_obj;
+		file >> x_num >> x_gen >> x_obj;
+		if(x_gen != gen || x_obj != "obj")
+			throw FormatException("First xref table entry references wrong object", save);
+		/* workaround: some pdf writers put 1 in first object num where should be 0 */
+		objnum -= num - x_num;
+		file.seekg(save);
+	}
 	//  std::clog << "First object in this table: " << objnum << ", number of objects: " << count << std::endl;
 	for(; count>0 && !file.eof(); count--, objnum++)
 	{

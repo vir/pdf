@@ -98,6 +98,7 @@ public:
 			return; // XXX
 		m_table[objid] = Entry(stream_id, index);
 	}
+	bool empty() const { return m_table.empty(); }
 	void clear();
 };
 
