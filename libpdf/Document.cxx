@@ -82,7 +82,7 @@ void Document::parse_pages_tree(OH pagenode_h)
 			parse_pages_tree(kids_h[i]);
 	} else if(n->value() == "Page") {
 //		std::clog << "Found page: " << pagenode_h.obj()->dump() << ")" << std::endl;
-		all_pages.push_back(pagenode_h.id()); // insert reference of page node
+		all_pages.push_back(pagenode_h); // insert reference of page node
 	} else
 		throw DocumentStructureException("Unknown pages tree node type");
 }
@@ -123,10 +123,10 @@ PDF::OH Document::build_pages_tree()
 	d->set("Type", new Name("Pages"));
 	OH r = new_indirect_object(d);
 	PDF::Array * pages_array = new PDF::Array;
-	for(std::vector<ObjId>::iterator it = all_pages.begin(); it != all_pages.end(); ++it) {
-		pages_array->push(new PDF::ObjRef(*it));
+	for(std::vector<OH>::iterator it = all_pages.begin(); it != all_pages.end(); ++it) {
+		pages_array->push(new PDF::ObjRef(it->id()));
 		Dictionary * d;
-		get_object(*it).put(d, "Page object is not a Dictionary?");
+		get_object(it->id()).put(d, "Page object is not a Dictionary?");
 		d->set("Parent", new ObjRef(r->m_id));
 	}
 	d->set("Count", new PDF::Integer(pages_array->size()));
@@ -142,7 +142,7 @@ PDF::OH Document::add_page()
 	d->set("Rotate", new PDF::Integer(0));
 	//d->set("Content", new PDF::ObjRef(page_content_id));
 	OH h = new_indirect_object(d);
-	all_pages.push_back(h->m_id);
+	all_pages.push_back(h);
 	return h;
 }
 

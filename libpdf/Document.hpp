@@ -36,7 +36,7 @@ class Document
     OH doc_root;
     
     /// identifiers of all page nodes
-    std::vector<ObjId> all_pages;
+    std::vector<OH> all_pages;
 
 		/// next free object id
 		ObjId next_free_object_id;
@@ -53,8 +53,7 @@ class Document
     /// sets debug level, returns previous debug level
     int debug(int d) { int t=m_debug; m_debug=d; return t; }
 
-		const ObjId & get_page_objid(long pagenum) { return all_pages[pagenum]; }
-		OH get_page_node(long pagenum) { return get_object(get_page_objid(pagenum)); }
+		OH get_page_node(long pagenum) { all_pages[pagenum].expand();  return all_pages[pagenum]; }
 		unsigned int get_pages_count() const { return all_pages.size(); }
 		OH add_page();
 
@@ -67,7 +66,7 @@ class Document
       ss << "Pages directory:" << std::endl << "\tPage\tObject" << std::endl;
       for(unsigned int i=0;i<all_pages.size();i++)
       {
-        ss << "\t" << i << "\t" << all_pages[i].num << "," << all_pages[i].gen << std::endl;
+        ss << "\t" << i << "\t" << all_pages[i].id().num << "," << all_pages[i].id().gen << std::endl;
       }
       return ss.str();
     }
