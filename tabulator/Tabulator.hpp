@@ -44,6 +44,12 @@ class Tabulator
 					if(d1-delta > d2) return +1;
 					return 0;
 				}
+				inline void update(double nv)
+				{
+					assert(0 == compare(v, nv));
+					v += nv;
+					v /= 2;
+				}
 		};
 		class TextBlock
 		{
@@ -75,13 +81,15 @@ class Tabulator
 				PDF::Rect myarea;
 				double page_height;
 			public:
-				typedef	std::multimap<Coord, std::pair<Coord, Coord> > LineMap;
+				typedef std::multimap<Coord, std::pair<Coord, Coord> > LineMap;
 				typedef std::set<TextBlock> TextMap;
 
 				Metafile():rotation(0),myarea(0,0,10000,10000) {}
 				LineMap h_lines, v_lines;
 				TextMap all_text;
 				virtual void Text(PDF::Rect pos, double angle, std::wstring text, bool visible, const PDF::GraphicsState& gs);
+				virtual void DrawPath(const PDF::Path& path, PathFillMode fill, bool stroke, const PDF::GraphicsState& gs);;
+
 				virtual void Line(const PDF::Point & p1, const PDF::Point & p2, const PDF::GraphicsState& gs);
 				virtual const PDF::CTM & Matrix() { return matrix; }
 				virtual void Size(PDF::Point size);

@@ -86,6 +86,24 @@ bool PDF::Path::clip(Rect& r) const
 	return false;
 }
 
+PDF::Rect PDF::Path::bbox() const
+{
+	if(empty())
+		return Rect();
+	double x1, y1, x2, y2;
+	const_iterator p = begin();
+	x1 = x2 = p->x;
+	y1 = y2 = p->y;
+	for(++p; p != end(); ++p)
+	{
+		if(p->x < x1) x1 = p->x;
+		if(p->x > x2) x2 = p->x;
+		if(p->y < y1) y1 = p->y;
+		if(p->y > y2) y2 = p->y;
+	}
+	return Rect(x1, y1, x2, y2);
+}
+
 /* Determines whether a given point is inside a path using
  * a "Nonzero Winding Number Rule"
  *

@@ -1,3 +1,17 @@
+#ifdef _MSC_VER
+# pragma warning(disable : 4786) // get rid of "identifier was truncated to '255' characters..."
+# ifdef _DEBUG
+#  ifdef _CRTDBG_MAP_ALLOC
+#   include <stdlib.h>  
+#   include <crtdbg.h>  
+#   ifndef DBG_NEW
+#    define DBG_NEW new ( _NORMAL_BLOCK , __FILE__ , __LINE__ )
+#    define new DBG_NEW
+#   endif
+#  endif
+# endif // _DEBUG
+#endif
+
 #include "Content_TextObject.hpp"
 #include "Exceptions.hpp"
 #include "Media.hpp"
@@ -156,25 +170,42 @@ bool Content::Render::draw_path_mode(const Content::Operator& op)
 		mode = M_PAGE;
 		return true;
 	}
-	if(op.name() == "s" || op.name() == "S"
-		|| op.name() == "f" || op.name() == "F" || op.name() == "f*"
+	if(op.name() == "s" || op.name() == "S" // stroke path
+		|| op.name() == "f" || op.name() == "F" || op.name() == "f*" // fill path 
 		|| op.name() == "B" || op.name() == "B*"
 		|| op.name() == "b" || op.name() == "b*")
 	{
 		if(curpath) {
+			if(op.name() == "s" || op.name() == "b" || op.name() == "b*")
+				curpath->push_back(curpath->at(0));
+			Media::PathFillMode fm = Media::PATH_NO_FILL;
+			bool stroke = false;
+			// fill
+			if(op.name() == "f" || op.name() == "F" || op.name() == "b" || op.name() == "B")
+				fm = Media::PATH_FILL_NZWNR;
+			else if(op.name() == "f*" || op.name() == "b*" || op.name() == "B*")
+				fm = Media::PATH_FILL_EOR;
+			//stroke
+			if(op.name() == "s" || op.name() == "S" || op.name() == "b" || op.name() == "b*" || op.name() == "B" || op.name() == "B*")
+				stroke = true;
+			m.DrawPath(*curpath, fm, stroke, gs);
+
 			/* paint path */
 			for(unsigned int i = 0; i<curpath->size() - 1; i++)
 			{
 				m.Line(gs->ctm.translate(curpath->at(i)), gs->ctm.translate(curpath->at(i + 1)), gs);
 			}
-			if(op.name() == "s" || op.name() == "f")
-				m.Line(gs->ctm.translate(curpath->at(curpath->size() - 1)), gs->ctm.translate(curpath->at(0)), gs);
 			delete curpath; curpath = NULL;
 		}
 		else {
 			std::cerr << "Attempted to draw (" << op.dump() << ") non-existent path" << std::endl;
 		}
 		mode = M_PAGE;
+		return true;
+	}
+	if(op.name() == "w")
+	{
+		gs->line_width = op.number(0);
 		return true;
 	}
 	return false;

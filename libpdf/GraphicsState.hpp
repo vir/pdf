@@ -31,7 +31,7 @@ public:
 		TextState():Tc(0),Tw(0),Th(100),Tl(0),Tf(NULL),Tfs(1),Trise(0) {}
 		void dump(std::ostream & s) const;
 	} text_state;
-	// line_width // set with 'w'
+	double line_width; // set with 'w'
 	// line_cap // set with 'J'
 	// line_join // set with 'j'
 	// miter_limit // set with 'M'

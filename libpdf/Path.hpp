@@ -20,6 +20,7 @@ public:
 	{
 		return (x1 * y2 - y1 * x2);
 	}
+	Rect bbox() const;
 protected:
 	bool is_inside_n0wnr(const Point& pt) const;
 	bool is_inside_eor(const Point& pt) const;
