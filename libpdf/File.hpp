@@ -31,8 +31,8 @@ public: // types
 		std::streamoff offset;
 		unsigned int obj_stream_index;
 		enum { Normal, Compressed, Free } type;
-		bool compressed() const { return type == Compressed; };
-		bool free() const { return type == Free; };
+		bool is_compressed() const { return type == Compressed; };
+		bool is_free() const { return type == Free; };
 		explicit Entry(): offset(0), obj_stream_index(0), type(Free) { }
 		Entry(std::streamoff off):offset(off), obj_stream_index(0), type(Normal) { }
 		Entry(unsigned long objnum, unsigned int index):offset(objnum), obj_stream_index(index), type(Compressed) { }
@@ -66,9 +66,9 @@ public:
 		const Entry * e = find(oid);
 		if(!e)
 			return 0; // XXX may be throw somthing?
-		if(e->free())
+		if(e->is_free())
 			throw FreeObjectUsageException(oid.dump().c_str());
-		if(e->compressed())
+		if(e->is_compressed())
 			throw UnimplementedException("Compressed objects streams");
 		return e->offset;
 	}

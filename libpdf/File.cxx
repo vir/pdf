@@ -121,7 +121,8 @@ bool File::open(std::wstring fn, OpenMode mode)
 
 bool File::close()
 {
-	m_streams->flush();
+	if(m_streams)
+		m_streams->flush();
 	if(open_mode == MODE_CREATE || open_mode == MODE_UPDATE) {
 		file.seekg(0, std::ios_base::end);
 		std::streamoff offs = write_xref_table();
@@ -140,6 +141,8 @@ bool File::close()
 	ostrm = NULL;
 	root_refs.clear();
 	xref_table.clear();
+	delete m_streams;
+	m_streams = NULL;
 	file.close();
 	filename.clear();
 	pdf_version = 0;
@@ -179,13 +182,13 @@ Object * File::load_object(const ObjId & oi, bool decrypt)
 	if(m_debug>1) std::clog << "Loading object " << oi.dump() << std::endl;
 	const XRefTable::Entry * xe = xref_table.find(oi);
 
-	if(!xe)
+	if(!xe)		
 		return new MissingObjectPlaceholder;
 
-	if(xe->free())
+	if(xe->is_free())
 		return new FreeObjectPlaceholder;
 
-	if(xe->compressed())
+	if(xe->is_compressed())
 		return m_streams->load_object((long)xe->offset, xe->obj_stream_index);
 
 	std::streamoff offset = xe->offset;
@@ -286,7 +289,7 @@ bool File::read_xref_table_part(bool try_recover)
 	int objnum=atoi(s.substr(0,sep).c_str());
 	sep=s.find_first_not_of(" \t", sep);
 	int count=atoi(s.substr(sep).c_str());
-	if(objnum != 0 && xref_table.empty()) // that is strange, looks like another bug in creator
+	if(objnum != 0 && xref_table.empty()) // that is strange, looks like a bug in creator
 	{
 		/* Check first normal object reference to see if referenced object have valid object id */
 		std::streamoff save = file.tellg();
@@ -355,7 +358,7 @@ std::streamoff File::write_xref_table()
 	file << "xref\r\n0 " << 1 + xref_table.count() << "\r\n";
 	file << "0000000000 65535 f\r\n";
 	while(iter) {
-		char ot = iter->second.free() ? 'f' : 'n';
+		char ot = iter->second.is_free() ? 'f' : 'n';
 		file << std::setw(10) << std::setfill('0') << iter->second.offset << " " << std::setw(5) << std::setfill('0') << iter->first.gen << " " << ot << "\r\n";
 		iter = xref_table.get_next(false);
 	}
