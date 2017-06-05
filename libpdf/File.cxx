@@ -1,7 +1,15 @@
-
-// get rid of "identifier was truncated to '255' characters..."
 #ifdef _MSC_VER
-# pragma warning(disable : 4786)
+# pragma warning(disable : 4786) // get rid of "identifier was truncated to '255' characters..."
+# ifdef _DEBUG
+#  ifdef _CRTDBG_MAP_ALLOC
+#   include <stdlib.h>  
+#   include <crtdbg.h>  
+#   ifndef DBG_NEW
+#    define DBG_NEW new ( _NORMAL_BLOCK , __FILE__ , __LINE__ )
+#    define new DBG_NEW
+#   endif
+#  endif
+# endif // _DEBUG
 #endif
 
 #include <fstream>
