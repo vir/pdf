@@ -9,52 +9,12 @@ class PageNumCtrl:public wxTextCtrl
 		long num;
 		long min, max;
 	public:
-		PageNumCtrl(wxWindow* parent, wxWindowID id, const wxString& value = _T(""), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxTE_CENTRE|wxTE_PROCESS_ENTER, const wxString& name = wxTextCtrlNameStr):wxTextCtrl(parent, id, value, pos, size, style, wxDefaultValidator, name),num(0),min(0),max(10000)
-		{
-		}
-		void OnChar( wxKeyEvent & event )
-		{
-#if 1
-			wxString backup = wxTextCtrl::GetValue();
-			long tmp;
-			if( event.GetKeyCode() < 32 || event.GetKeyCode() == 127 || event.GetKeyCode() > 256) event.Skip();
-			if( event.GetKeyCode() > 255 || !isdigit( event.GetKeyCode() ) ) return;
-//			EmulateKeyPress(event); // causes infinite recursion on win32
-			event.Skip();
-			wxString newval = wxTextCtrl::GetValue();
-			if( !newval.ToLong(&tmp) || tmp<min || tmp>max ) {
-				wxTextCtrl::SetValue(backup);
-				wxBell();
-			} else {
-				num = tmp;
-			}
-#else
-			event.Skip();
-#endif
-		}
-		void OnSetFocus( wxFocusEvent & event )
-		{
-			wxTextCtrl::SetSelection(-1, -1);
-		}
-		void SetRange(int r1, int r2)
-		{
-			min = r1;
-			max = r2;
-		}
-		void SetValue(int i)
-		{
-			num = i;
-			wxTextCtrl::SetValue(wxString::Format(_T("%d"), i));
-		}
-		int GetValue()
-		{
-			long tmp;
-			wxString newval = wxTextCtrl::GetValue();
-			if( newval.ToLong(&tmp) || tmp<min || tmp>max ) {
-				num = tmp;
-			}
-			return num;
-		}
+		PageNumCtrl(wxWindow* parent, wxWindowID id, const wxString& value = _T(""), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxTE_CENTRE | wxTE_PROCESS_ENTER, const wxString& name = wxTextCtrlNameStr);
+		void OnChar(wxKeyEvent & event);
+		void OnSetFocus(wxFocusEvent & event);
+		void SetRange(int r1, int r2);
+		void SetValue(int i);
+		int GetValue();
     DECLARE_EVENT_TABLE()
 };
 
