@@ -22,10 +22,12 @@ int main(int argc, char * argv[])
 	char format = 'c';
 	int tmp;
 	int debug = 0;
+	std::streambuf *coutbuf = NULL;
 
 	Tabulator t;
 	const char * expparams = NULL;
 	// t.set_tolerance(5.0, 5.0);
+	std::ofstream outfile;
 
 #if 0
 	std::locale loc("");
@@ -40,7 +42,7 @@ int main(int argc, char * argv[])
 	while(1)
 	{
 		int c;
-		c = getopt(argc, argv, "hd:p:r:c:R:S:f:PE:J");
+		c = getopt(argc, argv, "hd:p:r:c:R:S:f:PE:Jo:");
 		if(c == -1) break;
 		switch(c)
 		{
@@ -82,6 +84,14 @@ int main(int argc, char * argv[])
 				break;
 			case 'J':
 				t.options.find_joined_cells = false;
+				break;
+			case 'o':
+				outfile.open(optarg);
+				if(!outfile.is_open()) {
+					std::cerr << "Can't open file " << optarg << " for writing" << std::endl;
+					exit(2);
+				}
+				coutbuf = std::cout.rdbuf(outfile.rdbuf());
 				break;
 			case 'c':
 			default:
