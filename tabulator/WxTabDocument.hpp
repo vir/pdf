@@ -26,8 +26,8 @@ class WxTabDocument: public wxDocument
 		void SetErrorHandler(ErrorReporter * e) { m_error_handler = e; }
 		bool LoadFile(const wxString & fname);
 		bool LoadPage(int num);
-		void Draw(PDF::Media * mf);
-		void Draw(wxDC * dc);
+		void DrawPage(PDF::Media * mf);
+		void DrawGrid(wxDC * dc);
 		void ExportPage(int pagenum, Tabulator::Table::Exporter * exporter);
 		wxString GetName() const { return filename; }
 		int GetPagesNum() const { return doc?doc->get_pages_count():0; }

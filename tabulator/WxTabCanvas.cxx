@@ -28,7 +28,7 @@ void WxTabCanvas::OnPaint(wxPaintEvent &WXUNUSED(event))
 	if(theDocument) {
 		PagePaintHelper m(dc, theDocument->Rotation(), theDocument->Scale()/100.0);
 		theDocument->GetPageObject()->draw(&m);
-		theDocument->Draw(&dc);
+		theDocument->DrawGrid(&dc);
 	}
 }
 

@@ -75,12 +75,12 @@ bool WxTabDocument::LoadFile(const wxString & fn)
 		tabulator.options.reset();
 		return true;
 	}
-	catch(std::string s) {
+	catch(std::string& s) {
 		std::cerr << "Some strange exception: " << s << std::endl;
 		if(m_error_handler)
 			m_error_handler->ReportError("Some strange exception", s.c_str());
 	}
-	catch(std::exception & e) {
+	catch(std::exception& e) {
 		std::cerr << "Unknown exception:\n  " << e.what() << std::endl;
 		if(m_error_handler)
 			m_error_handler->ReportError("Unknown exception", e.what());
@@ -132,15 +132,13 @@ bool WxTabDocument::LoadPage(int num)
 	return false;
 }
 
-void WxTabDocument::Draw(PDF::Media * mf)
+void WxTabDocument::DrawPage(PDF::Media * mf)
 {
 	page->draw(mf);
 }
 
-void WxTabDocument::Draw(wxDC * dc)
+void WxTabDocument::DrawGrid(wxDC * dc)
 {
-	//PagePaintHelper mf(*dc, m_rotation, m_scale);
-	//page->draw(&mf);
 	tabulator.Draw(dc, m_scale);
 }
 
