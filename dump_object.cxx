@@ -85,7 +85,7 @@ void help(const char * myname)
 long get_page_descriptor_object(PDF::File & pf, long pagenum)
 {
 	PDF::Document doc(pf, 5);
-	PDF::ObjId id = doc.get_page_objid(pagenum-1);
+	PDF::ObjId id = doc.get_page_node(pagenum-1).id();
 	return id.num;
 }
 
