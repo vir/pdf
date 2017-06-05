@@ -184,6 +184,8 @@ public:
 	/** Removes first and last intervals if they are unused */
 	void trim()
 	{
+		if(m_space.empty())
+			return;
 		if(! m_space.begin()->second)
 			m_space.erase(m_space.begin());
 		std::map<double, unsigned int>::iterator it = m_space.end();
@@ -222,10 +224,15 @@ bool Tabulator::Grid::auto_split_column(unsigned int col, const Tabulator::Metaf
 	KnotsIterator kit;
 	double x1, x2;
 	kit = h_knots.begin();
-	for(unsigned int i = 0; i < col - 1; i++)
+	for(unsigned int i = 0; i < col - 1; i++) {
 		kit++;
+		if(kit == h_knots.end())
+			return false;
+	}
 	x1 = kit->first;
 	kit++; /* pointer to second verical line */
+	if(kit == h_knots.end())
+		return false; // XXX XXX XXX should find right border
 	x2 = kit->first;
 	if(debug)
 		std::clog << "Splitting " << col << "th column (between " << x1 << " and " << x2 << ")" << std::endl;
