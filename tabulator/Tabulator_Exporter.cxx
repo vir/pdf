@@ -127,6 +127,7 @@ void ExporterHTML::table_end()
 }
 
 #ifdef _WIN32 /*======= Excel =================================================*/
+#include <codecvt>
 
 bool ExporterExcel::set_params(std::string pstr)
 {
@@ -169,9 +170,9 @@ void ExporterExcel::table_end()
 void ExporterExcel::page_begin(std::string fname, unsigned int pnum)
 {
 	if(insert_page_numbers) {
-		std::wstring wfn(fname.begin(), fname.end());
+		std::wstring_convert<std::codecvt_utf8<wchar_t>> myconv;
 		std::wostringstream ss;
-		ss << wfn << " page " << pnum;
+		ss << myconv.from_bytes(fname) << " page " << pnum;
 		set_cell_value(ss.str());
 		move_cursor(0, 1);
 	}
