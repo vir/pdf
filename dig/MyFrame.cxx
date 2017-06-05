@@ -49,10 +49,9 @@ MyFrame::MyFrame(wxDocManager *manager, wxFrame *frame, wxWindowID id, const wxS
 	menuFile->Append(wxID_OPEN, _T("&Open..."));
 	menuFile->Append(wxID_CLOSE, _T("&Close"));
 	menuFile->AppendSeparator();
-	menuFile->Append(File_About, _T("&About...\tCtrl-A"), _T("Show about dialog"));
-	menuFile->AppendSeparator();
 	menuFile->Append(File_Quit, _T("E&xit\tAlt-X"), _T("Quit this program"));
-	//m_docManager->FileHistoryUseMenu(menuFile);
+	m_docManager->FileHistoryUseMenu(menuFile);
+	m_docManager->FileHistoryAddFilesToMenu();
 
 	menuView = new wxMenu;
 	menuView->Append(View_SaveStream, _T("Save Stream\tF2"), _T("Save stream object content into file"));
@@ -64,9 +63,13 @@ MyFrame::MyFrame(wxDocManager *manager, wxFrame *frame, wxWindowID id, const wxS
 	menuView->AppendCheckItem(View_SaveLog, _T("Save log to file...\tF11"), _T("Save log to specified file"));
 #endif
 
+	wxMenu *help = new wxMenu;
+	help->Append(wxID_ABOUT);
+
 	wxMenuBar *menuBar = new wxMenuBar;
-	menuBar->Append(menuFile, _T("&File"));
+	menuBar->Append(menuFile, wxGetStockLabel(wxID_FILE));
 	menuBar->Append(menuView, _T("&View"));
+	menuBar->Append(help, wxGetStockLabel(wxID_HELP));
 	SetMenuBar(menuBar);
 
 	toolBar = CreateToolBar(wxTB_FLAT/* | wxTB_DOCKABLE*/ | wxTB_HORIZONTAL | wxTB_TEXT | wxTB_NOICONS, ID_TOOLBAR);
@@ -165,15 +168,19 @@ public:
 	LogWindow():wxFrame(NULL, wxID_ANY, _T("Log"))
 	{
 		text = new wxTextCtrl(this, wxID_ANY, _T(""), wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE|wxTE_READONLY|wxTE_DONTWRAP|wxTE_NOHIDESEL);
-		redir = new wxStreamToTextRedirector(text);
+		redir1 = new wxStreamToTextRedirector(text, &std::cout);
+		redir2 = new wxStreamToTextRedirector(text, &std::cerr);
+		redir3 = new wxStreamToTextRedirector(text, &std::clog);
 	}
 	~LogWindow()
 	{
-		delete redir;
+		delete redir1, redir2, redir3;
 		delete text;
 	}
 	wxTextCtrl* text;
-	wxStreamToTextRedirector* redir;
+	wxStreamToTextRedirector* redir1;
+	wxStreamToTextRedirector* redir2;
+	wxStreamToTextRedirector* redir3;
 };
 #endif
 
@@ -182,6 +189,7 @@ void MyFrame::OnLogWindow(wxCommandEvent& event)
 #if wxHAS_TEXT_WINDOW_STREAM
 	if(event.IsChecked()) {
 		logWindow = new LogWindow;
+		logWindow->Show(true);
 	} else {
 		delete logWindow;
 		logWindow = NULL;
