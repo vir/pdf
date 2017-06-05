@@ -79,6 +79,16 @@ WxTabBatchExportDialog::~WxTabBatchExportDialog()
 {
 }
 
+void WxTabBatchExportDialog::SetPages(int first, int last, int in_row /* = 1 */)
+{
+	page1->SetValue(first);
+	page2->SetValue(last);
+#ifdef _WIN32
+	excel_pages_in_row->SetValue(in_row);
+#endif
+
+}
+
 BEGIN_EVENT_TABLE(WxTabBatchExportDialog, wxDialog)
 EVT_BUTTON(ID_StartExport, WxTabBatchExportDialog::OnStartExport)
 EVT_RADIOBOX(ID_ExportSwitch, WxTabBatchExportDialog::OnExportSwitchChanged)

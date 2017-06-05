@@ -17,6 +17,7 @@
 # include "excel16.xpm"
 #endif
 #include "book16.xpm"
+#include "thispage.xpm"
 
 
 enum {
@@ -47,7 +48,15 @@ enum {
 	MenuExport_First,
 	Export_CSV = MenuExport_First, Export_HTML, Export_EXCEL,
 	MenuExport_Last = Export_EXCEL,
+
 	Export_Batch,
+
+	Batch_First,
+	Batch_ThisIsFirstPage = Batch_First,
+	Batch_ThisIsLastPage,
+	Batch_StartExport,
+	Batch_Last,
+
 };
 
 const int ID_TOOLBAR = 500;
@@ -68,10 +77,12 @@ BEGIN_EVENT_TABLE(WxTabFrame, wxFrame)
 	EVT_SPINCTRL  (ID_SPIN_OPLIMIT, WxTabFrame::OnOplimitSpinCtrl)
 #endif
 	EVT_TEXT_ENTER(ID_PAGENUM,    WxTabFrame::OnPageNumChanged)
+	EVT_MENU_RANGE(Batch_First, Batch_Last, WxTabFrame::OnBatchCmd)
 END_EVENT_TABLE()
 
 WxTabFrame::WxTabFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
 	: wxFrame((wxFrame *)NULL, wxID_ANY, title, pos, size, wxDEFAULT_FRAME_STYLE | wxNO_FULL_REPAINT_ON_RESIZE)
+	, m_batch_export(NULL)
 //	, m_mgr(this, wxAUI_MGR_DEFAULT | wxAUI_MGR_ALLOW_FLOATING)
 {
 	m_mgr.SetManagedWindow(this);
@@ -82,9 +93,6 @@ WxTabFrame::WxTabFrame(const wxString& title, const wxPoint& pos, const wxSize& 
 		| wxAUI_MGR_HINT_FADE
 		| wxAUI_MGR_TRANSPARENT_HINT
 	);
-
-//	m_oplimitspin = NULL;
-//	m_pagenum = NULL;
 
 	/* Add Menu */
 	wxMenu * menuDocument = new wxMenu;
@@ -132,33 +140,19 @@ WxTabFrame::WxTabFrame(const wxString& title, const wxPoint& pos, const wxSize& 
 
 	/* Add Toolbar */
 	wxAuiToolBar *toolBar;
-//	toolBar	= new wxToolBar(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTB_FLAT | wxTB_NODIVIDER | wxTB_HORZ_TEXT | wxTB_NOICONS);
 	toolBar	= new wxAuiToolBar(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_TB_DEFAULT_STYLE /*| wxAUI_TB_TEXT | wxAUI_TB_HORZ_TEXT*/);
 	toolBar->SetToolBitmapSize(wxSize(16,16));
-//    wxBitmap tb4_bmp1 = wxArtProvider::GetBitmap(wxART_NORMAL_FILE, wxART_OTHER, wxSize(16,16));
 
 	// Populate Document Toolbar
 	toolBar->AddTool(wxID_OPEN, _T("Open"), wxArtProvider::GetBitmap(wxART_FILE_OPEN, wxART_TOOLBAR, wxSize(16,16)), _T("Open file"));
-//	toolBar->AddTool(Go_First, _T("<<"), wxArtProvider::GetBitmap(wxART_GO_BEGIN, wxART_TOOLBAR, wxSize(16,16)), _T("Go to the first page"));
 	toolBar->AddTool(Go_Prev, _T("<"), wxArtProvider::GetBitmap(wxART_GO_BACK, wxART_TOOLBAR, wxSize(16,16)), _T("Go to the previous page"));
-
 	m_pagenum = new PageNumCtrl(toolBar, ID_PAGENUM, _T(""));
 	if(theDocument) {
 		m_pagenum->SetRange(1, theDocument->GetPagesNum());
 		m_pagenum->SetValue(theDocument->GetPageNum());
 	}
 	toolBar->AddControl(m_pagenum);
-
 	toolBar->AddTool(Go_Next, _T(">"), wxArtProvider::GetBitmap(wxART_GO_FORWARD, wxART_TOOLBAR, wxSize(16,16)), _T("Go to the next page"));
-//	toolBar->AddTool(Go_Last, _T(">>"), wxArtProvider::GetBitmap(wxART_GO_END, wxART_TOOLBAR, wxSize(16,16)), _T("Go to the last page"));
-
-//	toolBar->AddTool(wxID_EXIT, _T("Exit"), wxBitmap(), _T("Exit application"));
-#if 0 // Debugging option!
-	m_oplimitspin = new wxSpinCtrl( toolBar, ID_SPIN_OPLIMIT, _T("")/*, wxDefaultPosition, wxSize(40,wxDefaultCoord)*/ );
-	m_oplimitspin->SetRange(0, 10000);
-	m_oplimitspin->SetValue(0);
-	toolBar->AddControl(m_oplimitspin);
-#endif
 	toolBar->Realize();
 	m_mgr.AddPane(toolBar, wxAuiPaneInfo().
 		Name(wxT("Toolbar1")).Caption(wxT("Document Tools")).ToolbarPane().Top().
@@ -168,7 +162,7 @@ WxTabFrame::WxTabFrame(const wxString& title, const wxPoint& pos, const wxSize& 
 	toolBar	= new wxAuiToolBar(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_TB_DEFAULT_STYLE | wxAUI_TB_TEXT | wxAUI_TB_HORZ_TEXT);
 	toolBar->SetToolBitmapSize(wxSize(16,16));
 
-	// 	Populate Table Toolbar
+	// Populate Table Toolbar
 	toolBar->AddTool(File_ShowTabulatorOptions, _T("Options"), wxBitmap(options16_xpm), _T("Show Tabulator options dialog"));
 	toolBar->AddTool(Export_CSV, _T("CSV"), wxBitmap(csv16_xpm), _T("Export current table as CSV"));
 	toolBar->AddTool(Export_HTML, _T("XML"), wxBitmap(xml16_xpm), _T("Export current table as XML table"));
@@ -183,11 +177,17 @@ WxTabFrame::WxTabFrame(const wxString& title, const wxPoint& pos, const wxSize& 
 		Name(wxT("Toolbar2")).Caption(wxT("Second Toolbar")).ToolbarPane().Top().Position(1).
 		LeftDockable(false).RightDockable(false));
 
+	// batch export toolbar
+	m_batch_export = new BatchExport(this);
+	toolBar = m_batch_export->CreateToolBar();
+	toolBar->Realize();
+	m_mgr.AddPane(toolBar, wxAuiPaneInfo().Name(wxT("BatchExport")).Caption(wxT("Batch Export")).ToolbarPane().Top().Row(1).LeftDockable(false).RightDockable(false));
+
 	/* Add Status Bar */
 	CreateStatusBar(1);
 	SetStatusText(_T("Welcome to wxWidgets!"));
 
-	/* And finally owr main widget */
+	/* And finally our main widget */
 	m_canvas = new WxTabCanvas( this );
 	m_canvas->SetScrollbars( 10, 10, 100, 240 );
 	//m_canvas->SetScrollRate(10, 10);
@@ -199,6 +199,7 @@ WxTabFrame::WxTabFrame(const wxString& title, const wxPoint& pos, const wxSize& 
 
 WxTabFrame::~WxTabFrame()
 {
+	delete m_batch_export;
 	delete theDocument;
 	theDocument = NULL;
 	m_mgr.UnInit();
@@ -316,6 +317,12 @@ void WxTabFrame::OnPageNumChanged(wxCommandEvent &event)
 	m_canvas->Refresh();
 }
 
+void WxTabFrame::OnBatchCmd(wxCommandEvent & event)
+{
+	if(m_batch_export)
+		m_batch_export->OnCmd(event);
+}
+
 void WxTabFrame::OnShowTabulatorOptions(wxCommandEvent& event)
 {
 	if(theDocument) {
@@ -375,4 +382,61 @@ void WxTabFrame::ReportError(const char * prefix, const char * msg)
 	wxMessageBox(wxString(msg, wxConvUTF8), wxString(prefix, wxConvUTF8), wxOK|wxCENTRE, this);
 }
 
+inline void BatchExport::OnCmd(wxCommandEvent & event)
+{
+	int pn = theDocument->GetPageNum();
+	switch(event.GetId()) {
+	case Batch_ThisIsFirstPage:
+		m_firstpage->SetValue(pn);
+		break;
+	case Batch_ThisIsLastPage:
+		m_lastpage->SetValue(pn);
+		break;
+	case Batch_StartExport:
+		if(theDocument) {
+			WxTabBatchExportDialog dlg(m_parent, theDocument);
+			dlg.SetPages(m_firstpage->GetValue(), m_lastpage->GetValue(), m_pages_in_row->GetValue());
+			dlg.ShowModal();
+		}
+		break;
+	default:
+		std::cerr << "Unhandled Batch_* Event! " << event.GetId() << std::endl;
+		break;
+	}
+}
 
+wxAuiToolBar* BatchExport::CreateToolBar()
+{
+	wxAuiToolBar* toolBar = new wxAuiToolBar(m_parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_TB_DEFAULT_STYLE | wxAUI_TB_TEXT | wxAUI_TB_HORZ_TEXT);
+	toolBar->SetToolBitmapSize(wxSize(16, 16));
+	m_firstpage = new PageNumCtrl(toolBar, ID_PAGENUM, _T(""), wxDefaultPosition, wxSize(50, -1));
+	m_lastpage = new PageNumCtrl(toolBar, ID_PAGENUM, _T(""), wxDefaultPosition, wxSize(50, -1));
+	if(theDocument) {
+		m_firstpage->SetRange(1, theDocument->GetPagesNum());
+		m_lastpage->SetRange(1, theDocument->GetPagesNum());
+	}
+	toolBar->AddLabel(Batch_ThisIsFirstPage, _T("First"));
+	toolBar->AddTool(Batch_ThisIsFirstPage, _T(""), wxBitmap(thispage_xpm), _T("Use current page as first page"));
+	toolBar->AddControl(m_firstpage);
+	toolBar->AddLabel(Batch_ThisIsLastPage, _T("Last"));
+	toolBar->AddTool(Batch_ThisIsLastPage, _T(""), wxBitmap(thispage_xpm), _T("Use current page as last page"));
+	toolBar->AddControl(m_lastpage);
+	m_pages_in_row = new wxSpinCtrl(toolBar, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize(65, -1));
+	m_pages_in_row->SetMin(1);
+	if(theDocument)
+		m_pages_in_row->SetMax(theDocument->GetPagesNum());
+	toolBar->AddLabel(Batch_ThisIsLastPage, _T("In row"));
+	toolBar->AddControl(m_pages_in_row);
+
+	toolBar->AddSeparator();
+	
+	toolBar->AddTool(Export_CSV, wxEmptyString, wxBitmap(csv16_xpm), _T("CSV"), wxITEM_RADIO);
+	toolBar->AddTool(Export_HTML, wxEmptyString, wxBitmap(xml16_xpm), _T("XML"), wxITEM_RADIO);
+#ifdef _WIN32
+	toolBar->AddTool(Export_EXCEL, wxEmptyString, wxBitmap(excel16_xpm), _T("Microsoft Excel"), wxITEM_RADIO);
+#endif
+	toolBar->AddSeparator();
+
+	toolBar->AddTool(Batch_StartExport, _T("Start"), wxBitmap(), _T("Start batch export"));
+	return toolBar;
+}

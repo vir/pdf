@@ -12,6 +12,7 @@ class WxTabBatchExportDialog:public wxDialog
 public:
 	WxTabBatchExportDialog(wxWindow * parent, WxTabDocument * document);
 	~WxTabBatchExportDialog();
+	void SetPages(int first, int last, int in_row = 1);
 	void OnStartExport(wxCommandEvent &event);
 	void OnExportSwitchChanged(wxCommandEvent &event);
 	void SetCurPage(int num);

@@ -7,6 +7,18 @@
 
 class WxTabCanvas;
 class PageNumCtrl;
+class WxTabDocument;
+struct BatchExport
+{
+	BatchExport(wxWindow* parent): m_parent(parent), m_firstpage(NULL), m_lastpage(NULL), m_pages_in_row(NULL) { }
+	wxAuiToolBar* CreateToolBar();
+	void OnCmd(wxCommandEvent &event);
+	wxWindow * m_parent;
+	PageNumCtrl * m_firstpage;
+	PageNumCtrl * m_lastpage;
+	wxSpinCtrl* m_pages_in_row;
+	wxAuiToolBar* CreateToolBar(wxWindow * parent, WxTabDocument * doc);
+};
 class WxTabFrame : public wxFrame, public ErrorReporter
 {
 	public:
@@ -27,12 +39,14 @@ class WxTabFrame : public wxFrame, public ErrorReporter
 		void OnBatchExport(wxCommandEvent &event);
 		void OnOplimitSpinCtrl(wxSpinEvent & event);
 		void OnPageNumChanged(wxCommandEvent &event);
+		void OnBatchCmd(wxCommandEvent & event);
 	public: // ErrorReporter
 		virtual void ReportError(const char * prefix, const char * msg);
 	private:
 		wxAuiManager m_mgr;
 //		wxSpinCtrl * m_oplimitspin;
 		PageNumCtrl * m_pagenum;
+		BatchExport * m_batch_export;
 		DECLARE_EVENT_TABLE()
 };
 
