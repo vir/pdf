@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?define ProductName="PDF Tools"?>
+<?define Manufacturer="VIR"?>
+<?define ProductVersion="1.0.0.0"?>
+<?define UpgradeCode="bd50c0a6-7add-4509-b46b-c5dfd3992bba"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+	<Product Id="*" Name="$(var.ProductName)" Language="1049" Codepage="1251" Version="$(var.ProductVersion)" Manufacturer="$(var.Manufacturer)" UpgradeCode="$(var.UpgradeCode)">
+		<Package InstallerVersion="200" Compressed="yes" SummaryCodepage="1251" />
+		<Property Id="ALLUSERS"><![CDATA[1]]></Property>
+		<Upgrade Id="$(var.UpgradeCode)">
+			<UpgradeVersion Minimum="$(var.ProductVersion)" IncludeMinimum="no" OnlyDetect="yes" Language="1049" Property="NEWPRODUCTFOUND" />
+			<UpgradeVersion Minimum="0.0.0.1" IncludeMinimum="yes" Maximum="$(var.ProductVersion)" IncludeMaximum="no" Language="1049" Property="UPGRADEFOUND" />
+		</Upgrade>
+		<InstallExecuteSequence>
+			<RemoveExistingProducts After="InstallInitialize" />
+		</InstallExecuteSequence>
+		<MediaTemplate EmbedCab="yes" />
+		<Directory Id="TARGETDIR" Name="SourceDir">
+			<Directory Id="ProgramFilesFolder">
+				<Directory Id="INSTALLFOLDER" Name="$(var.ProductName)" />
+			</Directory>
+			<Directory Id="ProgramMenuFolder">
+				<Directory Id="ApplicationProgramsFolder" Name="$(var.ProductName)" />
+			</Directory>
+		</Directory>
+		<ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+			<Component Id="WxTab.exe" Guid="B84CC46E-E33C-4D03-91FD-57D65C515F4A">
+				<File Id="WxTab.exe" Source="$(var.OutputDir)\wxtab.exe" KeyPath="yes">
+					<Shortcut Directory="ApplicationProgramsFolder" Id="WXTabShortcut" Name="WXTab" Description="Tabulator graphical user interface" WorkingDirectory="INSTALLLOCATION" Advertise="yes" />
+				</File>
+				<RemoveFolder Id="RemoveApplicationProgramsFolder" Directory="ApplicationProgramsFolder" On="uninstall"/>
+			</Component>
+			<Component Id="Tabulator.exe" Guid="5FC2DC6A-6064-402D-BD8F-31A2E126DC41">
+				<File Id="Tabulator.exe" Source="$(var.OutputDir)\tabulator.exe" KeyPath="yes" />
+				<Environment Id="PATH" Name="PATH" Value="[INSTALLDIR]" Part="last" Action="set" System="yes" />
+			</Component>
+			<Component Id="PdfDig.exe" Guid="E189175F-AB77-4B20-BA32-18EEFFC40D6C">
+				<File Id="PdfDig.exe" Source="$(var.OutputDir)\pdfdig.exe" KeyPath="yes">
+					<Shortcut Directory="ApplicationProgramsFolder" Id="PdfDigShortcut" Name="PdfDig" Description="PDF file internal structure explorer" WorkingDirectory="INSTALLLOCATION" Advertise="yes" />
+				</File>
+			</Component>
+			<Component Id="ZLib1.dll" Guid="613EBD76-38AB-404C-9E6E-3B88342790D0">
+				<File Id="ZLib1.dll" Source="$(var.OutputDir)\zlib1.dll" KeyPath="yes" />
+			</Component>
+		</ComponentGroup>
+		<Feature Id="ProductFeature" Title="$(var.ProductName)" Level="1">
+			<ComponentGroupRef Id="ProductComponents" />
+		</Feature>
+	</Product>
+</Wix>

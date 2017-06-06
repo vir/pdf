@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.40629.0
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dump_object", "dump_object.vcxproj", "{40F396D2-88CB-4F69-88E0-8B44023AFB04}"
 EndProject
@@ -24,6 +24,12 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "creator", "creator\creator.vcxproj", "{FE726B0A-99DD-4DD3-A6B1-D1A7DCC5B15D}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "testCrypto", "libpdf\testCrypto.vcxproj", "{634760DE-1A23-4842-9766-5F75AA9EECA5}"
+EndProject
+Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "WixSetup", "win32\WixSetup\WixSetup.wixproj", "{E576E3A9-FC45-429C-B87D-95AC27C5E216}"
+	ProjectSection(ProjectDependencies) = postProject
+		{09AE9E10-57F2-409A-B1E6-56D5B8B30490} = {09AE9E10-57F2-409A-B1E6-56D5B8B30490}
+		{BE204369-D826-4896-85CD-BEF2E11789B1} = {BE204369-D826-4896-85CD-BEF2E11789B1}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -73,6 +79,9 @@ Global
 		{634760DE-1A23-4842-9766-5F75AA9EECA5}.Debug|Win32.ActiveCfg = Debug|Win32
 		{634760DE-1A23-4842-9766-5F75AA9EECA5}.Debug|Win32.Build.0 = Debug|Win32
 		{634760DE-1A23-4842-9766-5F75AA9EECA5}.Release|Win32.ActiveCfg = Debug|Win32
+		{E576E3A9-FC45-429C-B87D-95AC27C5E216}.Debug|Win32.ActiveCfg = Debug|x86
+		{E576E3A9-FC45-429C-B87D-95AC27C5E216}.Release|Win32.ActiveCfg = Release|x86
+		{E576E3A9-FC45-429C-B87D-95AC27C5E216}.Release|Win32.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
