@@ -5,7 +5,7 @@
 <?define UpgradeCode="bd50c0a6-7add-4509-b46b-c5dfd3992bba"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
 	<Product Id="*" Name="$(var.ProductName)" Language="1049" Codepage="1251" Version="$(var.ProductVersion)" Manufacturer="$(var.Manufacturer)" UpgradeCode="$(var.UpgradeCode)">
-		<Package InstallerVersion="200" Compressed="yes" SummaryCodepage="1251" />
+		<Package InstallerVersion="301" Compressed="yes" SummaryCodepage="1251" />
 		<Property Id="ALLUSERS"><![CDATA[1]]></Property>
 		<Upgrade Id="$(var.UpgradeCode)">
 			<UpgradeVersion Minimum="$(var.ProductVersion)" IncludeMinimum="no" OnlyDetect="yes" Language="1049" Property="NEWPRODUCTFOUND" />
@@ -22,6 +22,7 @@
 			<Directory Id="ProgramMenuFolder">
 				<Directory Id="ApplicationProgramsFolder" Name="$(var.ProductName)" />
 			</Directory>
+			<Merge Id="VCRedist" SourceFile="C:\Program Files (x86)\Common Files\Merge Modules\Microsoft_VC140_CRT_x86.msm" Language="0" DiskId="1" />
 		</Directory>
 		<ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
 			<Component Id="WxTab.exe" Guid="B84CC46E-E33C-4D03-91FD-57D65C515F4A">
@@ -45,6 +46,9 @@
 		</ComponentGroup>
 		<Feature Id="ProductFeature" Title="$(var.ProductName)" Level="1">
 			<ComponentGroupRef Id="ProductComponents" />
+		</Feature>
+		<Feature Id="VCRedist" Title="Visual C++ 14.0 Runtime" AllowAdvertise="no" Display="hidden" Level="1">
+			<MergeRef Id="VCRedist"/>
 		</Feature>
 	</Product>
 </Wix>
