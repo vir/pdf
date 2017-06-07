@@ -153,6 +153,7 @@
     <ClCompile Include="WxTabTabulator.cxx" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\dig\LogWindow.hpp" />
     <ClInclude Include="..\wxview\MyCanvas.hpp" />
     <ClInclude Include="..\wxview\PagePaintHelper.h" />
     <ClInclude Include="ErrorReporterInterface.hpp" />

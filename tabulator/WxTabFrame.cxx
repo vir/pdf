@@ -10,6 +10,7 @@
 #include "Tabulator_Exporter.hpp"
 #include "PageNumCtrl.hpp"
 #include "WxTabBatchExportDlg.hpp"
+#include "../dig/LogWindow.hpp"
 #include "options16.xpm"
 #include "csv16.xpm"
 #include "xml16.xpm"
@@ -40,6 +41,7 @@ enum {
 	Zoom_400,
 	Zoom_500,
 	MenuZoom_Last = Zoom_500,
+	View_LogWindow,
 
 	MenuGo_First,
 	Go_First = MenuGo_First, Go_Prev, Go_Next, Go_Last,
@@ -73,6 +75,7 @@ BEGIN_EVENT_TABLE(WxTabFrame, wxFrame)
 	EVT_MENU_RANGE(MenuZoom_First,     MenuZoom_Last,     WxTabFrame::OnZoom)
 	EVT_MENU_RANGE(MenuExport_First,   MenuExport_Last,   WxTabFrame::OnMenuExport)
 	EVT_MENU      (Export_Batch,  WxTabFrame::OnBatchExport)
+	EVT_MENU      (View_LogWindow, WxTabFrame::OnLogWindow)
 #if 0
 	EVT_SPINCTRL  (ID_SPIN_OPLIMIT, WxTabFrame::OnOplimitSpinCtrl)
 #endif
@@ -114,6 +117,10 @@ WxTabFrame::WxTabFrame(const wxString& title, const wxPoint& pos, const wxSize& 
 	menuView->AppendRadioItem(Zoom_300, _T("Scale &300%\tc"));
 	menuView->AppendRadioItem(Zoom_400, _T("Scale &400%\tv"));
 	menuView->AppendRadioItem(Zoom_500, _T("Scale &500%\tb"));
+#if wxHAS_TEXT_WINDOW_STREAM
+	menuView->AppendSeparator();
+	menuView->AppendCheckItem(View_LogWindow, _T("View log window\tF9"), _T("Show or hide log window"));
+#endif
 
 	wxMenu * menuGo = new wxMenu;
 	menuGo->Append(Go_First, _T("First page\tHome"));
@@ -380,6 +387,20 @@ void WxTabFrame::OnBatchExport(wxCommandEvent &event)
 void WxTabFrame::ReportError(const char * prefix, const char * msg)
 {
 	wxMessageBox(wxString(msg, wxConvUTF8), wxString(prefix, wxConvUTF8), wxOK|wxCENTRE, this);
+}
+
+void WxTabFrame::OnLogWindow(wxCommandEvent& event)
+{
+#if wxHAS_TEXT_WINDOW_STREAM
+	if(event.IsChecked()) {
+		logWindow = new LogWindow;
+		logWindow->Show(true);
+	}
+	else {
+		delete logWindow;
+		logWindow = NULL;
+	}
+#endif
 }
 
 inline void BatchExport::OnCmd(wxCommandEvent & event)

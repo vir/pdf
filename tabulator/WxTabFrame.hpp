@@ -40,13 +40,15 @@ class WxTabFrame : public wxFrame, public ErrorReporter
 		void OnOplimitSpinCtrl(wxSpinEvent & event);
 		void OnPageNumChanged(wxCommandEvent &event);
 		void OnBatchCmd(wxCommandEvent & event);
-	public: // ErrorReporter
+		void OnLogWindow(wxCommandEvent& event);
+public: // ErrorReporter
 		virtual void ReportError(const char * prefix, const char * msg);
 	private:
 		wxAuiManager m_mgr;
 //		wxSpinCtrl * m_oplimitspin;
 		PageNumCtrl * m_pagenum;
 		BatchExport * m_batch_export;
+		wxFrame * logWindow;
 		DECLARE_EVENT_TABLE()
 };
 
