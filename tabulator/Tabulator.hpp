@@ -22,6 +22,21 @@ class Tabulator
 		public:
 			TabulatorException(const char* msg): std::runtime_error(std::string("TabulatorException: ") + msg) { }
 		};
+		struct Options {
+			bool find_table_header;
+			int find_more_rows_column;
+			bool postprocess;
+			bool find_joined_cells;
+			std::vector<int> split_columns;
+			Options() { reset(); }
+			void reset()
+			{
+				find_table_header = true;
+				find_more_rows_column = 0;
+				postprocess = false;
+				find_joined_cells = true;
+			}
+		};
 		/** Coordinate which compares with a specified tolerance */
 		class Coord {
 			private:
@@ -116,15 +131,17 @@ class Tabulator
 						}
 						std::string dump() const;
 				};
+				typedef std::map< Coord, Line > KnotsMap;
+				typedef KnotsMap::const_iterator KnotsIterator;
+			public:
 				struct {
 					double bottom;
 				} margins;
-				typedef std::map< Coord, Line > KnotsMap;
-				typedef KnotsMap::const_iterator KnotsIterator;
 				KnotsMap h_knots, v_knots;
 				double headers_end; /**< y coord of line, dividing headers and body */
+			public:
 				Grid():headers_end(-1E10) {}
-				void build(const Metafile * mf);
+				void build(const Metafile& metafile, const Options& options);
 				int find_col(double x) const;
 				int find_row(double y) const;
 				std::string dump() const;
@@ -139,7 +156,6 @@ class Tabulator
 				{
 					KnotsMap::iterator iit = v_knots.insert(KnotsMap::value_type(y, Line(h_knots.size()-1, true))).first;
 				}
-
 		};
 		/** Table of cells */
 		class Table
@@ -212,21 +228,6 @@ class Tabulator
 				bool empty() const { return all_cells.empty(); }
 				std::string dump() const;
 		};
-		struct Options {
-			bool find_table_header;
-			int find_more_rows_column;
-			bool postprocess;
-			bool find_joined_cells;
-			std::vector<int> split_columns;
-			Options() { reset(); }
-			void reset()
-			{
-				find_table_header = true;
-				find_more_rows_column = 0;
-				postprocess = false;
-				find_joined_cells = true;
-			}
-		};
 	public:
 		Metafile metafile;
 		Grid grid;
@@ -235,7 +236,6 @@ class Tabulator
 		void set_tolerance(double tx, double ty);
 		void flush() { metafile.Clear(); grid.clear(); table.clear(); }
 		void load_page(PDF::Page * page);
-		void build_grid();
 		void prepare_table();
 		void fill_table_with_text();
 		void full_process(PDF::Page * page);
