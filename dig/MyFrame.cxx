@@ -2,6 +2,7 @@
 #include "pdfdig.hpp"
 #include "PdfExplorerView.hpp" // need to pass event there
 #include "pdfglass.xpm"
+#include "LogWindow.hpp"
 #include <wx/textctrl.h>
 
 enum {
@@ -160,29 +161,6 @@ void MyFrame::OnSaveStream(wxCommandEvent& event)
 		OpenDialog->Destroy();
 	}
 }
-
-#if wxHAS_TEXT_WINDOW_STREAM
-class LogWindow: public wxFrame
-{
-public:
-	LogWindow():wxFrame(NULL, wxID_ANY, _T("Log"))
-	{
-		text = new wxTextCtrl(this, wxID_ANY, _T(""), wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE|wxTE_READONLY|wxTE_DONTWRAP|wxTE_NOHIDESEL);
-		redir1 = new wxStreamToTextRedirector(text, &std::cout);
-		redir2 = new wxStreamToTextRedirector(text, &std::cerr);
-		redir3 = new wxStreamToTextRedirector(text, &std::clog);
-	}
-	~LogWindow()
-	{
-		delete redir1, redir2, redir3;
-		delete text;
-	}
-	wxTextCtrl* text;
-	wxStreamToTextRedirector* redir1;
-	wxStreamToTextRedirector* redir2;
-	wxStreamToTextRedirector* redir3;
-};
-#endif
 
 void MyFrame::OnLogWindow(wxCommandEvent& event)
 {

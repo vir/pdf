@@ -107,6 +107,7 @@
   <ItemGroup>
     <ClInclude Include="..\wxview\MyCanvas.hpp" />
     <ClInclude Include="..\wxview\PagePaintHelper.h" />
+    <ClInclude Include="LogWindow.hpp" />
     <ClInclude Include="MyFrame.hpp" />
     <ClInclude Include="MyStreamViewer.hpp" />
     <ClInclude Include="MyTree.hpp" />
