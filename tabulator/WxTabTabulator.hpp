@@ -11,6 +11,10 @@ class WxTabTabulator:public Tabulator
 		void Draw(wxDC * dc, double sc=1.0);
 		void ShowOptionsDialog(wxWindow * parent);
 		bool ok() const { return (table.ncols() && table.nrows()); }
+	protected:
+		void DrawGrid(wxDC * dc, double sc = 1.0);
+		void DrawTable(wxDC * dc, double sc = 1.0);
+
 };
 
 //extern WxTabTabulator * theTabulator;

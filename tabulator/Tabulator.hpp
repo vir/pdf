@@ -159,6 +159,8 @@ class Tabulator
 						void addtext(const TextBlock & b) { text.insert(b); }
 						std::wstring celltext() const;
 						void set_spans(unsigned int cs, unsigned int rs) { colspan = cs; rowspan = rs; }
+						unsigned int hspan() const { return colspan; }
+						unsigned int vspan() const { return rowspan; }
 				};
 				/** Table exporter interface */
 				class Exporter
@@ -207,6 +209,7 @@ class Tabulator
 				void postprocess();
 				void output(Exporter * ex) const;
 				void clear();
+				bool empty() const { return all_cells.empty(); }
 				std::string dump() const;
 		};
 		struct Options {

@@ -25,6 +25,11 @@ class WxTabOptionsDialog:public wxDialog
 
 void WxTabTabulator::Draw(wxDC * dc, double scale)
 {
+	DrawGrid(dc, scale);
+	DrawTable(dc, scale);
+}
+void WxTabTabulator::DrawGrid(wxDC * dc, double scale)
+{
 	wxSize cs = dc->GetSize();
 
 	// Draw grid
@@ -40,8 +45,40 @@ void WxTabTabulator::Draw(wxDC * dc, double scale)
 		dc->SetPen(wxPen(*wxGREEN, 3, wxPENSTYLE_SHORT_DASH));
 		dc->DrawLine(0, wxCoord(grid.headers_end) * scale, cs.GetWidth() * scale, wxCoord(grid.headers_end) * scale);
 	}
-
+}
+void WxTabTabulator::DrawTable(wxDC * dc, double scale)
+{
+	if(table.empty())
+		return;
+	Grid::KnotsIterator vkit, hkit;
+	unsigned int trow, tcol;
 	// Draw cells
+	dc->SetPen(wxPen(*wxBLUE, 1, wxPENSTYLE_SOLID));
+	for(vkit = grid.v_knots.begin(), trow = 0; trow < table.nrows() && vkit != grid.v_knots.end(); ++vkit, ++trow) {
+		for(hkit = grid.h_knots.begin(), tcol = 0; tcol < table.ncols() && hkit != grid.h_knots.end(); ++hkit, ++tcol) {
+			if(table.is_hidden(tcol, trow))
+				continue;
+			Tabulator::Table::Cell* c = table.cell(tcol, trow, false);
+			if(!c)
+				continue;
+			Grid::KnotsIterator vnext = vkit;
+			for(unsigned int i = 0; i < c->hspan() && vnext != grid.v_knots.end(); ++i)
+				++vnext;
+			Grid::KnotsIterator hnext = hkit;
+			for(unsigned int i = 0; i < c->vspan() && hnext != grid.h_knots.end(); ++i)
+				++hnext;
+			if(hnext == grid.h_knots.end() || vnext == grid.v_knots.end())
+				continue;
+			wxCoord x1 = wxCoord(hkit->first)  * scale + 1;
+			wxCoord y1 = wxCoord(vkit->first)  * scale + 1;
+			wxCoord x2 = wxCoord(hnext->first) * scale - 1;
+			wxCoord y2 = wxCoord(vnext->first) * scale - 1;
+			dc->DrawLine(x1, y1, x2, y1);
+			dc->DrawLine(x1, y2, x2, y2);
+			dc->DrawLine(x1, y1, x1, y2);
+			dc->DrawLine(x2, y1, x2, y2);
+		}
+	}
 }
 
 void WxTabTabulator::ShowOptionsDialog(wxWindow * parent)
