@@ -49,6 +49,7 @@ class WxTabDocument: public wxDocument
 		void retab() { tabulator.full_process(page); }
 		bool export_ok() const { return tabulator.ok(); }
 		bool Open(const wxString & fn, unsigned int page = 1);
+		void DumpDebugInfo();
 };
 
 extern WxTabDocument * theDocument;

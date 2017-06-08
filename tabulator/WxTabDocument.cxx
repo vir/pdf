@@ -150,6 +150,11 @@ bool WxTabDocument::Open(const wxString & fn, unsigned int page)
 	return true;
 }
 
+void WxTabDocument::DumpDebugInfo()
+{
+	tabulator.dump();
+}
+
 void WxTabDocument::ExportPage( int pagenum, Tabulator::Table::Exporter * exporter )
 {
 	PDF::Page * p=new PDF::Page();

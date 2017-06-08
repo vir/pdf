@@ -41,7 +41,6 @@ enum {
 	Zoom_400,
 	Zoom_500,
 	MenuZoom_Last = Zoom_500,
-	View_LogWindow,
 
 	MenuGo_First,
 	Go_First = MenuGo_First, Go_Prev, Go_Next, Go_Last,
@@ -59,6 +58,8 @@ enum {
 	Batch_StartExport,
 	Batch_Last,
 
+	Debug_LogWindow,
+	Debug_DumpInfo,
 };
 
 const int ID_TOOLBAR = 500;
@@ -75,17 +76,19 @@ BEGIN_EVENT_TABLE(WxTabFrame, wxFrame)
 	EVT_MENU_RANGE(MenuZoom_First,     MenuZoom_Last,     WxTabFrame::OnZoom)
 	EVT_MENU_RANGE(MenuExport_First,   MenuExport_Last,   WxTabFrame::OnMenuExport)
 	EVT_MENU      (Export_Batch,  WxTabFrame::OnBatchExport)
-	EVT_MENU      (View_LogWindow, WxTabFrame::OnLogWindow)
 #if 0
 	EVT_SPINCTRL  (ID_SPIN_OPLIMIT, WxTabFrame::OnOplimitSpinCtrl)
 #endif
 	EVT_TEXT_ENTER(ID_PAGENUM,    WxTabFrame::OnPageNumChanged)
 	EVT_MENU_RANGE(Batch_First, Batch_Last, WxTabFrame::OnBatchCmd)
+	EVT_MENU      (Debug_LogWindow, WxTabFrame::OnLogWindow)
+	EVT_MENU      (Debug_DumpInfo, WxTabFrame::OnDebugDumpInfo)
 END_EVENT_TABLE()
 
 WxTabFrame::WxTabFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
 	: wxFrame((wxFrame *)NULL, wxID_ANY, title, pos, size, wxDEFAULT_FRAME_STYLE | wxNO_FULL_REPAINT_ON_RESIZE)
 	, m_batch_export(NULL)
+	, m_logWindow(NULL)
 //	, m_mgr(this, wxAUI_MGR_DEFAULT | wxAUI_MGR_ALLOW_FLOATING)
 {
 	m_mgr.SetManagedWindow(this);
@@ -117,10 +120,6 @@ WxTabFrame::WxTabFrame(const wxString& title, const wxPoint& pos, const wxSize& 
 	menuView->AppendRadioItem(Zoom_300, _T("Scale &300%\tc"));
 	menuView->AppendRadioItem(Zoom_400, _T("Scale &400%\tv"));
 	menuView->AppendRadioItem(Zoom_500, _T("Scale &500%\tb"));
-#if wxHAS_TEXT_WINDOW_STREAM
-	menuView->AppendSeparator();
-	menuView->AppendCheckItem(View_LogWindow, _T("View log window\tF9"), _T("Show or hide log window"));
-#endif
 
 	wxMenu * menuGo = new wxMenu;
 	menuGo->Append(Go_First, _T("First page\tHome"));
@@ -137,11 +136,18 @@ WxTabFrame::WxTabFrame(const wxString& title, const wxPoint& pos, const wxSize& 
 	menuExport->AppendSeparator();
 	menuExport->Append(Export_Batch, _T("Batch export..."));
 
+	wxMenu *menuDebug = new wxMenu;
+#if wxHAS_TEXT_WINDOW_STREAM
+	menuDebug->AppendCheckItem(Debug_LogWindow, _T("View log window\tF9"), _T("Show or hide log window"));
+	menuDebug->Append(Debug_DumpInfo, _T("Dump debug info\tF8"));
+#endif
+
 	wxMenuBar *menuBar = new wxMenuBar;
 	menuBar->Append(menuDocument, _T("&Document"));
 	menuBar->Append(menuView, _T("&View"));
 	menuBar->Append(menuGo, _T("&Go"));
 	menuBar->Append(menuExport, _T("&Export"));
+	menuBar->Append(menuDebug, _T("&Debug"));
 
 	SetMenuBar(menuBar);
 
@@ -206,6 +212,7 @@ WxTabFrame::WxTabFrame(const wxString& title, const wxPoint& pos, const wxSize& 
 
 WxTabFrame::~WxTabFrame()
 {
+	delete m_logWindow;
 	delete m_batch_export;
 	delete theDocument;
 	theDocument = NULL;
@@ -393,12 +400,12 @@ void WxTabFrame::OnLogWindow(wxCommandEvent& event)
 {
 #if wxHAS_TEXT_WINDOW_STREAM
 	if(event.IsChecked()) {
-		logWindow = new LogWindow;
-		logWindow->Show(true);
+		m_logWindow = new LogWindow;
+		m_logWindow->Show(true);
 	}
 	else {
-		delete logWindow;
-		logWindow = NULL;
+		delete m_logWindow;
+		m_logWindow = NULL;
 	}
 #endif
 }
@@ -460,4 +467,9 @@ wxAuiToolBar* BatchExport::CreateToolBar()
 
 	toolBar->AddTool(Batch_StartExport, _T("Start"), wxBitmap(), _T("Start batch export"));
 	return toolBar;
+}
+
+void WxTabFrame::OnDebugDumpInfo(wxCommandEvent & event)
+{
+	theDocument->DumpDebugInfo();
 }
