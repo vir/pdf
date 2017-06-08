@@ -204,6 +204,8 @@ class Tabulator
 						CellPtr & operator=(Cell * c) { m_ptr = c; return *this; }
 						Cell & operator*() { return *m_ptr; }
 						Cell * operator->() { return m_ptr; }
+						bool operator ! () { return !m_ptr; }
+						operator bool() { return m_ptr != NULL; }
 						Cell * get() { return m_ptr; }
 						void hide() { m_hidden = true; }
 						void unhide() { m_hidden = false; }

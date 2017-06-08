@@ -140,8 +140,8 @@ void Tabulator::Table::output(Tabulator::Table::Exporter * ex) const
 
 void Tabulator::Table::clear()
 {
-	cells.resize(0);
-	all_cells.resize(0);
+	cells.clear();
+	all_cells.clear();
 }
 
 std::string Tabulator::Table::dump() const
@@ -149,6 +149,19 @@ std::string Tabulator::Table::dump() const
 	std::stringstream ss;
 	unsigned int nrows = cells.size();
 	ss << "Table " << (nrows?cells[0].size():0) << 'x' << nrows << ", " << all_cells.size() << " cells total" << std::endl;
+	for(auto row : cells) {
+		void* prev = NULL;
+		for(auto cell : row) {
+			if(!cell)
+				ss << "  .";
+			else if(cell.get() == prev)
+				ss << "--<";
+			else
+				ss << std::setw(3) << cell->colspan;
+			prev = cell.get();
+		}
+		ss << std::endl;
+	}
 	return ss.str();
 }
 

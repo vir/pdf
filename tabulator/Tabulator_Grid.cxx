@@ -362,13 +362,13 @@ std::string Tabulator::Grid::dump() const
 	std::stringstream ss;
 	KnotsIterator it;
 	ss << "Grid: " << h_knots.size() << " h-knots, " << v_knots.size() << " v-knots" << std::endl;
-	ss << " H-knots is at";
+	ss << " H-knots (vertical lines) is at:" << std::endl;
 	for(it = h_knots.begin(); it != h_knots.end(); it++)
-		ss << ' ' << (double)it->first << "(" << it->second.dump() << ")";
+		ss << "  " << std::setw(6) << std::fixed << std::setprecision(1) << (double)it->first << "(" << it->second.dump() << ")" << std::endl;
 	ss << std::endl;
-	ss << " V-knots is at";
+	ss << " V-knots (horizontal lines) is at:" << std::endl;
 	for(it = v_knots.begin(); it != v_knots.end(); it++)
-		ss << ' ' << (double)it->first << "(" << it->second.dump() << ")";
+		ss << "  " << std::setw(6) << std::fixed << std::setprecision(1) << (double)it->first << "(" << it->second.dump() << ")" << std::endl;
 	ss << std::endl;
 	return ss.str();
 }
