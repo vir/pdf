@@ -131,6 +131,8 @@ void MyCanvas::OnMouse(wxMouseEvent &event)
 
 	if(m_frame)
 	{
+		x /= m_scale;
+		y /= m_scale;
 		wxString str;
 		str.Printf( wxT("Current mouse position: %d,%d "), (int)x, (int)y );
 		if(m_scrolling)
