@@ -15,7 +15,7 @@ SOURCES_WXTAB = \
 	../wxview/MyCanvas.cxx ../wxview/PagePaintHelper.cxx
 OBJS_WXTAB = $(SOURCES_WXTAB:.cxx=.o)
 
-CXXFLAGS = -Wall -Wno-write-strings -pipe -g -I.. `wx-config --cxxflags`
+CXXFLAGS = -std=c++11 -Wall -Wno-write-strings -pipe -g -I.. `wx-config --cxxflags`
 #	$(CXX) -Wall -pipe -g -c -I${LIBPDFDIR}  -o $*.o $<
 
 all: libtab.a tabulator wxtab
@@ -30,7 +30,7 @@ tabulator: $(OBJS_TABULATOR) ../libpdf/libpdf.a libtab.a
 	$(LINK.cpp) -lz  -o $@ $^
 
 wxtab: $(OBJS_WXTAB) ../libpdf/libpdf.a libtab.a
-	$(LINK.cpp) `wx-config --libs` -lz  -o $@ $^
+	$(LINK.cpp) `wx-config --libs core,base,aui` -lz  -o $@ $^
 
 %.o: %.cxx
 	$(COMPILE.cpp) $<

@@ -450,9 +450,11 @@ wxAuiToolBar* BatchExport::CreateToolBar()
 	toolBar->AddTool(Batch_ThisIsLastPage, _T(""), wxBitmap(thispage_xpm), _T("Use current page as last page"));
 	toolBar->AddControl(m_lastpage);
 	m_pages_in_row = new wxSpinCtrl(toolBar, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize(65, -1));
+#if 0 // XXX stramge spin ctrl on gentoo
 	m_pages_in_row->SetMin(1);
 	if(theDocument)
 		m_pages_in_row->SetMax(theDocument->GetPagesNum());
+#endif
 	toolBar->AddLabel(Batch_ThisIsLastPage, _T("In row"));
 	toolBar->AddControl(m_pages_in_row);
 
