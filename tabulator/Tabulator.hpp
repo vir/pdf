@@ -240,6 +240,7 @@ class Tabulator
 		void flush() { metafile.Clear(); grid.clear(); table.clear(); }
 		void load_page(PDF::Page * page);
 		void prepare_table();
+		void find_joined_cells();
 		void fill_table_with_text();
 		void full_process(PDF::Page * page);
 		void dump() const;

@@ -66,6 +66,25 @@ void Tabulator::prepare_table()
 			} // col
 		} // row
 	}
+	else
+		find_joined_cells();
+}
+
+void Tabulator::find_joined_cells()
+{
+	for(auto tit: metafile.all_text) {
+		int row = grid.find_row(tit.pos.y);
+		int col1 = grid.find_col(tit.pos.x);
+		int col2 = grid.find_col(tit.pos.x + tit.width);
+		if(row < 0 || col1 < 0 || col2 < 0)
+			continue;
+		if(col2 == col1)
+			continue;
+		int span = 1 + col2 - col1;
+		Tabulator::Table::Cell* c = table.cell(col1, row, true);
+		if(span > c->hspan())
+			table.span(col1, row, span, 1);
+	}
 }
 
 void Tabulator::fill_table_with_text()
