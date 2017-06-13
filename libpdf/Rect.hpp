@@ -29,8 +29,10 @@ class Rect
 		bool normalized() const { return x2 >= x1 && y2 >= y1; }
 		double width() const { return size().x; }
 		double height() const { return size().y; }
-
-//    bool operator < (const Point & p) const { return (y == p.y)?x<p.x:y<p.y; }
+		void grow(double amount) { x1 -= amount; y1 -= amount; x2 += amount; y2 += amount; normalize(); }
+		inline Rect& operator += (double amount) { grow(amount); return *this; }
+		Rect operator + (const Rect& oth) { return Rect(std::min(x1, oth.x1), std::min(y1, oth.y1), std::max(x2, oth.x2), std::max(y2, oth.y2)); } // union
+		Rect& operator *= (double scale) { x1 *= scale; x2 *= scale; y1 *= scale; y2 *= scale; return *this; }
 };
   
 };

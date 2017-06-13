@@ -144,6 +144,7 @@ class Tabulator
 				void build(const Metafile& metafile, const Options& options);
 				int find_col(double x) const;
 				int find_row(double y) const;
+				bool get_rect(int row, int col, PDF::Rect& rect) const;
 				std::string dump() const;
 				void clear() {
 					h_knots.clear();

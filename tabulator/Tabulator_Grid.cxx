@@ -50,6 +50,38 @@ int Tabulator::Grid::find_row(double y) const
 	return -1;
 }
 
+bool Tabulator::Grid::get_rect(int row, int col, PDF::Rect & rect) const
+{
+	// TODO: Cache map iterators in vector, indexed by row/col number
+	// or maybe replace map with vector
+	KnotsIterator it;
+	it = v_knots.begin();
+	while(row--)
+		if(it != v_knots.end())
+			++it;
+	if(it == v_knots.end())
+		return false;
+	rect.y1 = it->first;
+	++it;
+	if(it == v_knots.end())
+		return false;
+	rect.y2 = it->first;
+
+	it = h_knots.begin();
+	while(col--)
+		if(it != h_knots.end())
+			++it;
+	if(it == h_knots.end())
+		return false;
+	rect.x1 = it->first;
+	++it;
+	if(it == h_knots.end())
+		return false;
+	rect.x2 = it->first;
+
+	return true;
+}
+
 void Tabulator::Grid::split_column(unsigned int col, double x)
 {
 	KnotsMap::iterator iit = h_knots.insert(KnotsMap::value_type(x, Line(v_knots.size()-1, true))).first;
