@@ -14,7 +14,7 @@ END_EVENT_TABLE()
 
 PdfExplorerView::PdfExplorerView()
 	: m_splitter(NULL), m_tree(NULL), m_right(NULL), m_frame(NULL)
-	, m_stream_handle(NULL), m_stream_parent_handle(NULL)
+	, m_stream_handle(NULL), m_page_handle(NULL)
 {
 	m_mainframe = static_cast<MyApp*>(wxTheApp)->GetMainFrame();
 }
@@ -22,7 +22,7 @@ PdfExplorerView::PdfExplorerView()
 PdfExplorerView::~PdfExplorerView()
 {
 	delete m_stream_handle;
-	delete m_stream_parent_handle;
+	delete m_page_handle;
 	delete m_right;
 	delete m_tree;
 	delete m_splitter;
@@ -92,30 +92,48 @@ void PdfExplorerView::SelectedNothing()
 	m_mainframe->ViewStreamEnable(false);
 	delete m_stream_handle;
 	m_stream_handle = NULL;
-	delete m_stream_parent_handle;
-	m_stream_parent_handle = NULL;
+	delete m_page_handle;
+	m_page_handle = NULL;
 }
 
 void PdfExplorerView::SelectedObject(PDF::OH h, PDF::OH parent)
 {
 	wxString s(h->dump().c_str(), wxConvUTF8);
 	m_right->SetValue(s);
+
 	bool is_a_stream = h->type() == "Stream";
+
 	m_mainframe->ViewStreamEnable(is_a_stream);
+
 	delete m_stream_handle;
 	m_stream_handle = NULL;
-	delete m_stream_parent_handle;
-	m_stream_parent_handle = NULL;
+	delete m_page_handle;
+	m_page_handle = NULL;
+
 	if(is_a_stream) {
 		m_right->AppendText(_T("\n\n*** Hit F3 to view stream data or F2 to save it! ***\n"));
 		m_stream_handle = new PDF::OH(h);
-		m_stream_parent_handle = new PDF::OH(parent);
+		return;
+	}
+
+	bool is_a_page = false;
+	PDF::Dictionary* d = h.cast<PDF::Dictionary*>();
+	if(d) {
+		PDF::Name* t = dynamic_cast<PDF::Name*>(d->find("Type"));
+		is_a_page = t && t->value() == "Page";
+	}
+	m_mainframe->ViewPageEnable(is_a_page);
+	if(is_a_page)
+	{
+		m_page_handle = new PDF::OH(h);
+		return;
 	}
 }
 
 void PdfExplorerView::ViewStreamData()
 {
 	wxASSERT(m_stream_handle);
+	PDF::OH* m_stream_parent_handle = m_stream_handle; // XXX temp hack to fix build!!!
 	wxFrame * f = new MyStreamViewer(this, *m_stream_handle, *m_stream_parent_handle);
 	f->Show();
 }
@@ -132,5 +150,12 @@ void PdfExplorerView::SaveStreamData(std::ostream& ostr)
 	ostr.write(&*buf.begin(), buf.size());
 }
 
+void PdfExplorerView::ViewPage()
+{
+	wxASSERT(m_page_handle);
+	PDF::OH content_stream = m_page_handle->find("Contents");
+	wxFrame * f = new MyStreamViewer(this, content_stream, *m_page_handle);
+	f->Show();
+}
 
 

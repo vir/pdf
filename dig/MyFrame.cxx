@@ -10,6 +10,7 @@ enum {
 	File_About = wxID_ABOUT,
 	View_ViewStream = wxID_HIGHEST + 1,
 	View_SaveStream,
+	View_ViewPage,
 	View_LogWindow,
 	View_SaveLog,
 };
@@ -23,6 +24,7 @@ BEGIN_EVENT_TABLE(MyFrame, wxDocMDIParentFrame)
 	EVT_MENU      (File_About,    MyFrame::OnAbout)
 	EVT_MENU      (View_ViewStream, MyFrame::OnViewStream)
 	EVT_MENU      (View_SaveStream, MyFrame::OnSaveStream)
+	EVT_MENU      (View_ViewPage, MyFrame::OnViewPage)
 	EVT_MENU      (View_LogWindow, MyFrame::OnLogWindow)
 	EVT_MENU      (View_SaveLog, MyFrame::OnSaveLog)
 END_EVENT_TABLE()
@@ -57,6 +59,7 @@ MyFrame::MyFrame(wxDocManager *manager, wxFrame *frame, wxWindowID id, const wxS
 	menuView = new wxMenu;
 	menuView->Append(View_SaveStream, _T("Save Stream\tF2"), _T("Save stream object content into file"));
 	menuView->Append(View_ViewStream, _T("View Stream\tF3"), _T("View stream object content"));
+	menuView->Append(View_ViewPage, _T("View Page\tF4"), _T("View page content"));
 	menuView->AppendSeparator();
 #if wxHAS_TEXT_WINDOW_STREAM
 	menuView->AppendCheckItem(View_LogWindow, _T("View log window\tF9"), _T("Show or hide log window"));
@@ -83,6 +86,7 @@ MyFrame::MyFrame(wxDocManager *manager, wxFrame *frame, wxWindowID id, const wxS
 #endif
 	toolBar->AddTool(View_SaveStream, _T("SaveStream"), wxBitmap(), _T("Save stream object content"));
 	toolBar->AddTool(View_ViewStream, _T("ViewStream"), wxBitmap(), _T("View stream object content"));
+	toolBar->AddTool(View_ViewPage, _T("ViewPage"), wxBitmap(), _T("View page content"));
 	toolBar->Realize();
 
 	CreateStatusBar(2);
@@ -90,6 +94,7 @@ MyFrame::MyFrame(wxDocManager *manager, wxFrame *frame, wxWindowID id, const wxS
 
 	SetMinSize(wxSize(400,300));
 	ViewStreamEnable(false);
+	ViewPageEnable(false);
 }
 
 MyFrame::~MyFrame()
@@ -126,6 +131,25 @@ void MyFrame::OnViewStream(wxCommandEvent& event)
 		wxMessageBox(wxString(e.what(), wxConvUTF8), _T("std::exception"), wxOK | wxICON_INFORMATION, this);
 	}
 	catch (...) {
+		wxMessageBox(_T("Unknown Exception"), _T("Exception!"), wxOK | wxICON_INFORMATION, this);
+	}
+}
+
+void MyFrame::OnViewPage(wxCommandEvent& event)
+{
+	try
+	{
+		wxView* curview = static_cast<MyApp*>(wxTheApp)->GetDocManager()->GetCurrentView();
+		if(curview)
+			static_cast<PdfExplorerView*>(curview)->ViewPage();
+	}
+	catch(PDF::FormatException & e) {
+		wxMessageBox(wxString(e.what(), wxConvUTF8), _T("PDF::FormatException"), wxOK | wxICON_INFORMATION, this);
+	}
+	catch(std::exception & e) {
+		wxMessageBox(wxString(e.what(), wxConvUTF8), _T("std::exception"), wxOK | wxICON_INFORMATION, this);
+	}
+	catch(...) {
 		wxMessageBox(_T("Unknown Exception"), _T("Exception!"), wxOK | wxICON_INFORMATION, this);
 	}
 }
@@ -181,6 +205,12 @@ void MyFrame::ViewStreamEnable(bool enable)
 	toolBar->EnableTool(View_ViewStream, enable);
 	menuView->Enable(View_SaveStream, enable);
 	toolBar->EnableTool(View_SaveStream, enable);
+}
+
+void MyFrame::ViewPageEnable(bool enable)
+{
+	menuView->Enable(View_ViewPage, enable);
+	toolBar->EnableTool(View_ViewPage, enable);
 }
 
 void MyFrame::OnSaveLog(wxCommandEvent& event)

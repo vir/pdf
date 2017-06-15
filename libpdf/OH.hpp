@@ -65,7 +65,7 @@ class OH
     /// \todo XXX remove it asap! XXX
     OH dig(Object * o) const { return OH(m_cache, o); }
     /// returns object id
-    ObjId id() const { return m_ptr->indirect?m_ptr->m_id:ObjId(); }
+    ObjId id() const { return ((m_ptr && m_ptr->indirect)?m_ptr->m_id:ObjId()); }
     /// returns Object pointer
     Object * obj() { return m_ptr; }
     const Object * obj() const { return m_ptr; }

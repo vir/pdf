@@ -39,22 +39,14 @@ public:
 
 	void SelectOperator( unsigned int lim );
 
-	unsigned int CountMissedCRChars( unsigned int lim );
+	int GetOffsetCorrection( unsigned int lim );
 
 private:
 	void DumpObject();
+	void DumpObject(PDF::Stream* s);
 	inline bool is_ok(char c)
 	{
-		switch(c) {
-		case 0x0D:
-		case 0x0A:
-			break;
-		default:
-			if(c < 0x20 || c >= 0x7F)
-				return false;
-			break;
-		}
-		return true;
+		return (c >= 0x20 && c < 0x7F) || c == 0x0A || c == 0x0D;
 	}
 	wxSplitterWindow * m_split_log;
 	wxSplitterWindow * m_splitter;

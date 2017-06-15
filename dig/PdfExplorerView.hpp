@@ -16,14 +16,15 @@ class PdfExplorerView:public wxView, public MyTreeEventsHandler
 		wxTextCtrl * m_right;
 		wxFrame * m_frame;
 		MyFrame * m_mainframe;
-		PDF::OH * m_stream_handle, * m_stream_parent_handle;
+		PDF::OH * m_stream_handle, * m_page_handle;
 	public: // MyTreeEventHandler
 		virtual void SelectedNothing();
 		virtual void SelectedObject(PDF::OH h, PDF::OH parent);
 	public:
 		void ViewStreamData();
 		void SaveStreamData(std::ostream& ostr);
-	public:
+		void ViewPage();
+public:
 		PdfExplorerView();
 		~PdfExplorerView();
 		bool OnCreate(wxDocument *doc, long flags);

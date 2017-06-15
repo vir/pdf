@@ -15,10 +15,12 @@ class MyFrame:public wxDocMDIParentFrame
 		void OnAbout(wxCommandEvent& event);
 		void OnViewStream(wxCommandEvent& event);
 		void OnSaveStream(wxCommandEvent& event);
+		void OnViewPage(wxCommandEvent& event);
 		void OnLogWindow(wxCommandEvent& event);
 		void OnSaveLog(wxCommandEvent& event);
 		void ViewStreamEnable(bool enable);
-	private:
+		void ViewPageEnable(bool enable);
+private:
 		wxMenu *menuView;
 		wxToolBarBase *toolBar;
 		wxFrame * logWindow;

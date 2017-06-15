@@ -63,19 +63,40 @@ MyStreamViewer::MyStreamViewer(wxView* view, PDF::OH& h, PDF::OH& parenth)
 
 void MyStreamViewer::DumpObject()
 {
+	m_buf.clear();
+	m_text->Clear();
+
 	PDF::Stream * s = NULL;
-	m_oh.put(s);
-	wxASSERT(s);
-	s->get_data(m_buf);
+	// check for array page content
+	if(m_oh->type() == "Array") {
+		for(unsigned int i = 0; i < m_oh.size(); ++i) {
+			PDF::OH el = m_oh[i];
+			el.expand();
+			el.put(s);
+			if(s)
+				DumpObject(s);
+		}
+	} else {
+		m_oh.put(s);
+		if(s)
+			DumpObject(s);
+	}
 	wxString txt;
 	txt.Alloc(m_buf.size());
 	for(size_t i = 0; i < m_buf.size(); ++i) {
 		char c = m_buf[i];
-		if(! is_ok(c))
+		if(!is_ok(c))
 			c = '?';
 		txt.Append(c);
 	}
 	m_text->SetValue(txt);
+}
+void MyStreamViewer::DumpObject(PDF::Stream* s)
+{
+	wxASSERT(s);
+	std::vector<char> buf;
+	s->get_data(buf);
+	m_buf.insert(m_buf.end(), buf.begin(), buf.end());
 }
 
 BEGIN_EVENT_TABLE(MyStreamViewer, wxFrame)
@@ -156,8 +177,8 @@ void MyStreamViewer::SelectOperator(unsigned int lim)
 	 */
 	size_t begin = m_page->get_operator_offset(lim - 1);
 	size_t end = m_page->get_operator_offset(lim);
-	begin += CountMissedCRChars(begin);
-	end += CountMissedCRChars(end);
+	begin += GetOffsetCorrection(begin);
+	end += GetOffsetCorrection(end);
 	m_text->SetSelection(begin, end);
 }
 
@@ -193,13 +214,22 @@ bool MyStreamViewer::ParsePage()
 	return false;
 }
 
-unsigned int MyStreamViewer::CountMissedCRChars(unsigned int lim)
+int MyStreamViewer::GetOffsetCorrection(unsigned int lim)
 {
 	size_t crcnt = 0;
-	for(size_t i = 0; i < lim; ++i)
-		if((m_buf[i] == '\n' && (i == 0 || m_buf[i - 1] != '\r'))
-			|| (m_buf[i] == '\r' && (i >= lim -1 || m_buf[i + 1] != '\n')))
+	for(size_t i = 0; i < lim; ++i) {
+		switch(m_buf[i]) {
+		case '\r':
+			if(i + 1 < lim && m_buf[i + 1] == '\n') {
+				++i;
+				break;
+			}
+			// else fall thrugh!
+		case '\n':
 			++crcnt;
+			break;
+		}
+	}
 	return crcnt;
 }
 
