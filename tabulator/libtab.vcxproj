@@ -121,6 +121,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Excel.hpp" />
+    <ClInclude Include="Tabulator_Table.hpp" />
     <ClInclude Include="Tabulator.hpp" />
     <ClInclude Include="Tabulator_Exporter.hpp" />
   </ItemGroup>

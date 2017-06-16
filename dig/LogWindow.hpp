@@ -18,7 +18,9 @@ public:
 	}
 	~LogWindow()
 	{
-		delete redir1, redir2, redir3;
+		delete redir3;
+		delete redir2;
+		delete redir1;
 		delete text;
 		delete fixedFont;
 	}

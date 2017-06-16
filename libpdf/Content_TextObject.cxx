@@ -75,11 +75,17 @@ void PDF::Content::TextObject::Flush()
 		is_visible,
 		*gs
 	);
-#if 0 // draw clipping path
-	for(Path::const_iterator it = result_clip.begin(); it != result_clip.end(); ++it)
+#if 1 // draw clipping path
+	if(result_clip.size())
 	{
-		media->Line(tmp_point, *it);
-		tmp_point = *it;
+		Path::const_iterator pit = result_clip.begin();
+		Point tmp_point = *pit;
+		++pit;
+		for(; pit != result_clip.end(); ++pit)
+		{
+			media->Line(tmp_point, *pit, *gs);
+			tmp_point = *pit;
+		}
 	}
 #endif
 	double offset = total_width * abs(gs->text_state.Tfs) * gs->text_state.Th/100.0;

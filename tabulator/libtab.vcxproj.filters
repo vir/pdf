@@ -43,5 +43,8 @@
     <ClInclude Include="Tabulator_Exporter.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Tabulator_Table.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
