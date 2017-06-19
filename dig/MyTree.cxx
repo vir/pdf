@@ -275,24 +275,10 @@ void MyTree::OnSelChanged(wxTreeEvent& event)
 		}
 		id = pid;
 	}
-#if 0
-	if(!d) {
-		if(m_details) {
-			PdfDoc * doc = static_cast<PdfDoc *>(m_view->GetDocument());
-			m_details->SetValue(doc->get_file_brief());
-		}
-		return;
-	}
-	wxString s(d->h->dump().c_str(), wxConvUTF8);
-	if(m_details)
-		m_details->SetValue(s);
-	static_cast<MyApp*>(wxTheApp)->GetMainFrame()->ViewStreamEnable(d->h->type() == "Stream");
-#else
 	if(d)
 		m_handler->SelectedObject(d->h, parent);
 	else
 		m_handler->SelectedNothing();
-#endif
 }
 
 
