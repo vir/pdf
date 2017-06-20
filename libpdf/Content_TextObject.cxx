@@ -60,6 +60,9 @@ void PDF::Content::TextObject::Flush()
 	}
 
 	Rect result_rect(Trm.translate(Point(0,0)), total_width*Trm.get_scale_h(), Trm.get_scale_v());
+	// Calculate text matrix displacemant before applying clipping path
+	double offset = total_width * abs(gs->text_state.Tfs) * gs->text_state.Th/100.0;
+	// Apply clipping path to determint actual text size
 	bool is_visible = gs->clipping_path.clip(result_rect);
 	//assert(is_visible);
 
@@ -98,7 +101,6 @@ void PDF::Content::TextObject::Flush()
 # endif
 	}
 #endif
-	double offset = total_width * abs(gs->text_state.Tfs) * gs->text_state.Th/100.0;
 	tm.offset_unscaled(offset, 0);
 	accumulated_text.resize(0);
 	total_width = 0;
