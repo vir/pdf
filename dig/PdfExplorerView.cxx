@@ -23,10 +23,6 @@ PdfExplorerView::~PdfExplorerView()
 {
 	delete m_stream_handle;
 	delete m_stream_parent_handle;
-	delete m_right;
-	delete m_tree;
-	delete m_splitter;
-	delete m_frame;
 }
 
 // What to do when a view is created.
@@ -35,22 +31,21 @@ bool PdfExplorerView::OnCreate(wxDocument *doc, long WXUNUSED(flags) )
 	wxTrace("PdfExplorerView::OnCreate");
 
 	//// Make a child frame
-	wxFrame* subframe = subframe = new wxDocMDIChildFrame(doc, this, wxStaticCast(wxGetApp().GetTopWindow(), wxDocMDIParentFrame),
+	m_frame = new wxDocMDIChildFrame(doc, this, wxStaticCast(wxGetApp().GetTopWindow(), wxDocMDIParentFrame),
 		wxID_ANY, "Child Frame", wxDefaultPosition, wxSize(300, 300));
-	wxASSERT(subframe == GetFrame());
-	subframe->Centre(wxBOTH);
-	m_frame = subframe;
+	wxASSERT(m_frame == GetFrame());
+	m_frame->Centre(wxBOTH);
 	//SetFrame(m_frame);
 	m_splitter = new wxSplitterWindow(m_frame, wxID_ANY, wxDefaultPosition, wxDefaultSize,
 		wxSP_3D | wxSP_LIVE_UPDATE | wxCLIP_CHILDREN /* | wxSP_NO_XP_THEME */);
 	m_splitter->SetSashGravity(1.0);
 
 	m_tree = new MyTree(this, m_splitter, this);
-	m_right = new wxTextCtrl(m_splitter, wxID_ANY, _T("second text"), wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE | wxTE_READONLY | wxTE_DONTWRAP);
+	m_right = new wxTextCtrl(m_splitter, wxID_ANY, _T("second text"), wxDefaultPosition, wxDefaultSize,
+		wxTE_MULTILINE | wxTE_READONLY | wxTE_DONTWRAP);
 
-	subframe->Maximize();
+	m_frame->Maximize();
 	m_splitter->SplitVertically(m_tree, m_right, 300);
-
 
 	m_frame->Show(true);
 	//Activate(true);
