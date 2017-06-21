@@ -107,9 +107,13 @@ void MyTree::Update()
 	s = doc->GetUserReadableName();
 	SetItemText(rootId, s);
 //	SetItemData(NULL);
-	if(catalogId)
-		Delete(catalogId);
-	catalogId = AppendChild(rootId, wxT("Catalog"), doc->get_object( doc->get_root(0) ) );
+	DeleteChildren(rootId);
+//	catalogId = AppendChild(rootId, wxT("Catalog"), doc->get_object( doc->get_root(0) ) );
+	for(long i = 0; i < doc->generations_num(); ++i) {
+		wxString label;
+		label.Printf(wxT("Catalog %d"), i);
+		AppendChild(rootId, label, doc->get_object( doc->get_root(i) ) );
+	}
 //	SetItemData(rootId, new MyTreeItemData( doc->get_object( doc->get_root(0) ) ));
 #if 0
 	wxString text;
@@ -119,7 +123,7 @@ void MyTree::Update()
 	AppendItem(/*GetRootItem()*/ rootId, text /*, MyTreeCtrl::TreeCtrlIcon_File */ );
 #endif
 //	wxTreeItemId id = AppendItem(idParent, str, image, imageSel, new MyTreeItemData(str));
-	Expand(rootId);
+//	Expand(rootId);
 	SelectItem(rootId);
 }
 
