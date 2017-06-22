@@ -22,7 +22,7 @@ PdfExplorerView::PdfExplorerView()
 PdfExplorerView::~PdfExplorerView()
 {
 	delete m_stream_handle;
-	delete m_stream_parent_handle;
+	delete m_page_handle;
 }
 
 // What to do when a view is created.
@@ -128,8 +128,8 @@ void PdfExplorerView::SelectedObject(PDF::OH h, PDF::OH parent)
 void PdfExplorerView::ViewStreamData()
 {
 	wxASSERT(m_stream_handle);
-	PDF::OH* m_stream_parent_handle = m_stream_handle; // XXX temp hack to fix build!!!
-	wxFrame * f = new MyStreamViewer(this, *m_stream_handle, *m_stream_parent_handle);
+	PDF::OH* stream_parent_handle = m_stream_handle; // XXX temp hack to fix build!!!
+	wxFrame * f = new MyStreamViewer(this, *m_stream_handle, *stream_parent_handle);
 	f->Show();
 }
 
