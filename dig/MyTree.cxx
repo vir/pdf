@@ -102,6 +102,8 @@ MyTree::MyTree(wxView * view, wxWindow *parent, MyTreeEventsHandler *handler)
 
 void MyTree::Update()
 {
+	if(HasChildren(rootId))
+		return;
 	wxString s;
 	PdfDoc * doc = static_cast<PdfDoc*>(m_view->GetDocument());
 	s = doc->GetUserReadableName();
@@ -113,6 +115,14 @@ void MyTree::Update()
 		wxString label;
 		label.Printf(wxT("Catalog %d"), i);
 		AppendChild(rootId, label, doc->get_object( doc->get_root(i) ) );
+	}
+	if(doc->get_pages_count()) {
+		wxTreeItemId pagesId = AppendItem(rootId, wxT("Pages"), -1, -1, NULL);
+		for(unsigned long i = 0; i < doc->get_pages_count(); ++i) {
+			wxString label;
+			label.Printf(wxT("Page %d"), i);
+			AppendChild(pagesId, label, doc->get_page_node(i) );
+		}
 	}
 //	SetItemData(rootId, new MyTreeItemData( doc->get_object( doc->get_root(0) ) ));
 #if 0

@@ -5,11 +5,19 @@ wxIMPLEMENT_DYNAMIC_CLASS(PdfDoc, wxDocument)
 
 PdfDoc::PdfDoc()
 	:cache(file)
+	,document(NULL)
 {
+}
+
+PdfDoc::~PdfDoc()
+{
+	delete document;
 }
 
 bool PdfDoc::DoOpenDocument(const wxString& filename)
 {
+	delete document;
+	document = NULL;
 	cache.flush();
 #ifdef _MSC_VER
 	if(! file.open(filename.wc_str(), PDF::File::MODE_READ))
@@ -33,6 +41,12 @@ bool PdfDoc::DoOpenDocument(const wxString& filename)
 	catch(...) {
 		wxMessageBox(wxT("Something strange"), wxT("Exception"));
 		return false;
+	}
+	try {
+		document = new PDF::Document(file);
+	}
+	catch(...) {
+		wxMessageBox(wxT("Error loading document structure"), wxT("Exception"));
 	}
 
 	//SetFilename(filename, true);
