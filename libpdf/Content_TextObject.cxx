@@ -59,13 +59,11 @@ void PDF::Content::TextObject::Flush()
 		update_font = false;
 	}
 
-	// build translated clipping path
-	Path result_clip;
-	for(Path::const_iterator it = gs->clipping_path.begin(); it != gs->clipping_path.end(); ++it)
-		result_clip.push_back(gs->ctm.translate(*it));
-
 	Rect result_rect(Trm.translate(Point(0,0)), total_width*Trm.get_scale_h(), Trm.get_scale_v());
-	bool is_visible = result_clip.clip(result_rect);
+	// Calculate text matrix displacemant before applying clipping path
+	double offset = total_width * abs(gs->text_state.Tfs) * gs->text_state.Th/100.0;
+	// Apply clipping path to determint actual text size
+	bool is_visible = gs->clipping_path.clip(result_rect);
 	//assert(is_visible);
 
 	media->Text(
@@ -75,9 +73,23 @@ void PDF::Content::TextObject::Flush()
 		is_visible,
 		*gs
 	);
-#if 1 // draw clipping path
+#if 0 // draw clipping path
 	if(result_clip.size())
 	{
+		std::clog << "TEXT at";
+		std::clog << result_rect.dump();
+		std::clog << "\tCLIP ";
+//		std::clog << result_clip.dump();
+		std::clog << gs->clipping_path.dump();
+		std::clog << "\t: ";
+		std::wclog << accumulated_text;
+		std::wclog << std::endl;
+# if 0
+		std::clog << gs->ctm.dump();
+		std::clog << Trm.dump();
+		std::clog << m.dump();
+# endif
+# if 0
 		Path::const_iterator pit = result_clip.begin();
 		Point tmp_point = *pit;
 		++pit;
@@ -86,9 +98,9 @@ void PDF::Content::TextObject::Flush()
 			media->Line(tmp_point, *pit, *gs);
 			tmp_point = *pit;
 		}
+# endif
 	}
 #endif
-	double offset = total_width * abs(gs->text_state.Tfs) * gs->text_state.Th/100.0;
 	tm.offset_unscaled(offset, 0);
 	accumulated_text.resize(0);
 	total_width = 0;

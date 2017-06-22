@@ -51,11 +51,8 @@ public:
 	// halftone
 	// flatness // set with 'i'
 	// smothness
-	void modify_clipping_path(const Path* p)
-	{
-		// XXX just replace for now, sorry
-		clipping_path = *p;
-	}
+	void modify_clipping_path(const Path* p);
+	Path translate_path(const Path& p) const;
 	void dump(std::ostream & s) const
 	{
 		s << "CTM:" << std::endl << ctm.dump();

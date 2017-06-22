@@ -1,5 +1,24 @@
 #include "GraphicsState.hpp"
 
+void PDF::GraphicsState::modify_clipping_path(const Path* p)
+{
+	PDF::Path n = translate_path(*p);
+#if 0
+	std::cerr << "modify_clipping_path(" << n.dump() << "), current state: " << std::endl;
+	dump(std::cerr);
+#endif
+	// XXX just replace for now, sorry
+	clipping_path = n;
+}
+
+PDF::Path PDF::GraphicsState::translate_path(const PDF::Path& p) const
+{
+	PDF::Path r;
+	for(Path::const_iterator it = p.begin(); it != p.end(); ++it) 
+		r.push_back(ctm.translate(*it));
+	return r;
+}
+
 PDF::GraphicsStateStack::GraphicsStateStack()
 {
 	gs = new GraphicsState();
