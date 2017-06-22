@@ -217,6 +217,7 @@ bool MyStreamViewer::ParsePage()
 int MyStreamViewer::GetOffsetCorrection(unsigned int lim)
 {
 	size_t crcnt = 0;
+#ifdef __WINDOWS__
 	for(size_t i = 0; i < lim; ++i) {
 		switch(m_buf[i]) {
 		case '\r':
@@ -230,6 +231,7 @@ int MyStreamViewer::GetOffsetCorrection(unsigned int lim)
 			break;
 		}
 	}
+#endif /* __WINDOWS__ */
 	return crcnt;
 }
 
