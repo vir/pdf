@@ -102,6 +102,8 @@ MyTree::MyTree(wxView * view, wxWindow *parent, MyTreeEventsHandler *handler)
 
 void MyTree::Update()
 {
+	if(HasChildren(rootId))
+		return;
 	wxString s;
 	PdfDoc * doc = static_cast<PdfDoc*>(m_view->GetDocument());
 	s = doc->GetUserReadableName();
