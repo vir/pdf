@@ -14,8 +14,10 @@ class PdfDoc:public wxDocument
 		PDF::ObjectsCache cache;
 		/// Document Catalog dictionary
 		PDF::OH doc_root;
+		PDF::Document* document;
 	public:
 		PdfDoc();
+		~PdfDoc();
 		virtual bool DoOpenDocument(const wxString& filename);
 		virtual bool OnSaveDocument(const wxString& filename);
 		virtual bool OnCloseDocument();
@@ -25,6 +27,9 @@ class PdfDoc:public wxDocument
 		const long generations_num() const { return file.generations_num(); }
 		PDF::OH get_object(const PDF::ObjId & id);
 		wxString get_file_brief() const;
+		/// Pages shortcuts
+		PDF::OH get_page_node(long pagenum) { return document ? document->get_page_node(pagenum) : PDF::OH(); }
+		unsigned int get_pages_count() const { return document ? document->get_pages_count() : 0; }
 };
 
 #endif /* PDFDOC_HPP_INCLUDED */
