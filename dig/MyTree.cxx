@@ -120,7 +120,7 @@ void MyTree::Update()
 		wxTreeItemId pagesId = AppendItem(rootId, wxT("Pages"), -1, -1, NULL);
 		for(unsigned long i = 0; i < doc->get_pages_count(); ++i) {
 			wxString label;
-			label.Printf(wxT("Page %d"), i);
+			label.Printf(wxT("Page %d"), i+1);
 			AppendChild(pagesId, label, doc->get_page_node(i) );
 		}
 	}
@@ -133,7 +133,7 @@ void MyTree::Update()
 	AppendItem(/*GetRootItem()*/ rootId, text /*, MyTreeCtrl::TreeCtrlIcon_File */ );
 #endif
 //	wxTreeItemId id = AppendItem(idParent, str, image, imageSel, new MyTreeItemData(str));
-//	Expand(rootId);
+	Expand(rootId);
 	SelectItem(rootId);
 }
 
