@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?define ProductName="PDF Tools"?>
 <?define Manufacturer="VIR"?>
-<?define ProductVersion="1.0.0.0"?>
+<?define ProductVersion="1.0.1.0"?>
 <?define UpgradeCode="bd50c0a6-7add-4509-b46b-c5dfd3992bba"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
 	<Product Id="*" Name="$(var.ProductName)" Language="1049" Codepage="1251" Version="$(var.ProductVersion)" Manufacturer="$(var.Manufacturer)" UpgradeCode="$(var.UpgradeCode)">
