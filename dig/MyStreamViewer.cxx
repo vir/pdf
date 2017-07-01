@@ -61,6 +61,13 @@ MyStreamViewer::MyStreamViewer(wxView* view, PDF::OH& h, PDF::OH& parenth)
 	DumpObject();
 }
 
+MyStreamViewer::~MyStreamViewer()
+{
+	delete m_canvas;
+	delete m_page;
+	delete m_logwin;
+}
+
 void MyStreamViewer::DumpObject()
 {
 	m_buf.clear();

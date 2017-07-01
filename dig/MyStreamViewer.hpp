@@ -28,6 +28,7 @@ class MyStreamViewer: public wxFrame
 {
 public:
 	MyStreamViewer(wxView* view, PDF::OH& h, PDF::OH& parenth);
+	~MyStreamViewer();
 	void OnSave(wxCommandEvent& event);
 	void OnDebug(wxCommandEvent& WXUNUSED(event));
 	void OnLog(wxCommandEvent& event);
