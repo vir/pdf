@@ -71,6 +71,7 @@ bool PdfExplorerView::OnClose(bool deleteWindow)
 	if (!wxView::OnClose(deleteWindow))
 		return false;
 
+	m_tree->DeleteAllItems(); // Release all PDF::OH before ObjectsCache is destroyed
 	Activate(false);
 	if (deleteWindow)
 	{
