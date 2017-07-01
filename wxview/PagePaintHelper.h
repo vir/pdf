@@ -29,6 +29,7 @@ public:
 	virtual void Line(const PDF::Point & p1, const PDF::Point & p2, const PDF::GraphicsState& gs);
 	virtual void Size(PDF::Point size);
 	virtual void Debug(unsigned int opnum, std::string s, const PDF::GraphicsState& gs);
+	virtual void Image(const PDF::Rect & rect, const PDF::Stream & strm, const PDF::GraphicsState& gs);
 };
 
 

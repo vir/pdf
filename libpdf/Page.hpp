@@ -17,6 +17,7 @@
 #include <cmath>
 
 #include "Content.hpp"
+#include "OH.hpp"
 
 namespace PDF {
 
@@ -25,6 +26,7 @@ class OH;
 class GraphicsState;
 class Font;
 class XObject;
+class Stream;
 
 class PageResourceProvider : public Content::ResourceProvider
 {
@@ -36,7 +38,7 @@ public:
 	void dump(std::ostream& ss) const;
 private:
 	std::map<std::string, Font *> fonts;
-	std::map<std::string, XObject *> xobjects;
+	std::map<std::string, OH> xobjects;
 };
 
 class Page: public Content
@@ -94,6 +96,16 @@ public:
 	virtual void draw(GraphicsStateStack& gs, Content::ResourceProvider& res, Media& m, Content::Render& r);
 };
 
+class ImageXObject : public XObject
+{
+private:
+	OH def;
+public:
+	ImageXObject(std::string name);
+	void load(OH dic);
+	virtual void update_ctm(CTM& ctm) { }
+	virtual void draw(GraphicsStateStack& gs, Content::ResourceProvider& res, Media& m, Content::Render& r);
+};
 
 }; // namespace PDF
 

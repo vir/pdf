@@ -26,8 +26,7 @@ PageResourceProvider::~PageResourceProvider()
 {
 	// delete all fonts
 	for(std::map<std::string, Font *>::iterator it = fonts.begin(); it != fonts.end(); it++) delete it->second;
-	// delete all xobjects
-	for(std::map<std::string, XObject *>::iterator it = xobjects.begin(); it != xobjects.end(); it++) delete it->second;
+	// xobjects will destroy itself
 }
 
 inline void PageResourceProvider::load(OH resources_h)
@@ -59,11 +58,7 @@ inline void PageResourceProvider::load(OH resources_h)
 		Dictionary * xobjs_d;
 		xobjs_h.put(xobjs_d, "XObject node is not a Dictionary but is a ");
 		for(Dictionary::Iterator it = xobjs_d->get_iterator(); xobjs_d->check_iterator(it); it++)
-		{
-			XObject * x = XObject::create(it->first, xobjs_h.dig(it->second));
-			if(x)
-				xobjects[it->first] = x;
-		}
+			xobjects[it->first] = xobjs_h.find(it->first);
 	}
 }
 
@@ -77,8 +72,10 @@ Font * PageResourceProvider::get_font(std::string name)
 
 XObject * PageResourceProvider::get_xobject(std::string name)
 {
-	std::map<std::string, XObject*>::const_iterator it = xobjects.find(name);
-	return it == xobjects.end() ? NULL : it->second;
+	std::map<std::string, OH>::const_iterator it = xobjects.find(name);
+	if(it == xobjects.end())
+		return NULL;
+	return XObject::create(it->first, it->second);
 }
 
 void PageResourceProvider::dump(std::ostream & ss) const
@@ -264,6 +261,12 @@ PDF::XObject* PDF::XObject::create(std::string name, OH definition)
 		f->load(definition);
 		return f;
 	}
+	if(subtype->value() == "Image")
+	{
+		ImageXObject* f = new ImageXObject(name);
+		f->load(definition);
+		return f;
+	}
 	return NULL;
 }
 
@@ -311,5 +314,24 @@ void PDF::FormXObject::draw(GraphicsStateStack& parentgs, Content::ResourceProvi
 {
 	gs.inherit(parentgs);
 	this->Content::draw(resources, m, get_operators_count());
+}
+
+PDF::ImageXObject::ImageXObject(std::string name)
+	: XObject(name)
+{
+}
+
+void PDF::ImageXObject::load(OH dic)
+{
+	def = dic;
+}
+
+void PDF::ImageXObject::draw(PDF::GraphicsStateStack & gs, PDF::Content::ResourceProvider & res, PDF::Media & m, PDF::Content::Render & r)
+{
+	PDF::CTM ctm(gs->ctm);
+	PDF::Rect rect(ctm.translate(PDF::Point(0.0, 0.0)), ctm.translate(PDF::Point(1.0, 1.0)));
+	PDF::Stream* strm;
+	def.put(strm);
+	m.Image(rect, *strm, gs);
 }
 

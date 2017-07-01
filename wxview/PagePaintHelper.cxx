@@ -1,5 +1,6 @@
 #include <wx/wx.h>
 #include "PagePaintHelper.h"
+#include "../libpdf/Object.hpp"
 
 PagePaintHelper::PagePaintHelper(wxDC & theDC, int r/*=0*/, double sc/*=1.0*/)
 	: dc(theDC)
@@ -78,6 +79,41 @@ void PagePaintHelper::Debug(unsigned int opnum, std::string s, const PDF::Graphi
 	if(m_break_op == opnum)
 		DebugBreak();
 #endif
+}
+
+void PagePaintHelper::Image(const PDF::Rect & rect, const PDF::Stream & strm, const PDF::GraphicsState & gs)
+{
+	std::stringstream ss;
+	ss << "Image";
+	try {
+		PDF::Integer *w = dynamic_cast<PDF::Integer*>(strm.dict()->find("Width"));
+		PDF::Integer *h = dynamic_cast<PDF::Integer*>(strm.dict()->find("Height"));
+		ss << " (" << w->value() << "x" << h->value() << ")";
+	}
+	catch(...) {
+	}
+
+	wxCoord x1(rect.x1);
+	wxCoord y1(m_page_height - rect.y1);
+	wxCoord x2(rect.x2);
+	wxCoord y2(m_page_height - rect.y2);
+	dc.SetPen(wxPen(*wxRED, 0, wxPENSTYLE_DOT));
+#if 1
+	dc.SetBrush(wxBrush(*wxYELLOW, wxBRUSHSTYLE_CROSSDIAG_HATCH));
+	wxRect wxr(wxPoint(x1, y1), wxPoint(x2, y2));
+	dc.DrawRectangle(wxr);
+#else
+	dc.DrawLine(x1, y1, x2, y1); //  ^^^  
+	dc.DrawLine(x1, y1, x1, y2); // |     
+	dc.DrawLine(x1, y1, x2, y2); //   /   
+	dc.DrawLine(x2, y1, x1, y2); //   \   
+	dc.DrawLine(x2, y1, x2, y2); //     | 
+	dc.DrawLine(x1, y2, x2, y2); //  ___  
+#endif
+	wxString text(ss.str().c_str(), wxConvUTF8);
+	dc.DrawLabel(text, wxr, wxALIGN_CENTER | wxALIGN_CENTRE);
+	if(m_draw_debug_stream)
+		*m_draw_debug_stream << "IMAGE " << rect.dump() << std::endl;
 }
 
 

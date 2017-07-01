@@ -100,6 +100,7 @@ bool Content::Render::draw_page_mode(const Content::Operator& op)
 		x->draw(gs, res, m, *this);
 		// 5. Restores the saved graphics state, as if by invoking the Q operator
 		gs.pop();
+		delete x;
 		return true;
 	}
 	if(op.name() == "sh") { /* ignore it */ return true; }

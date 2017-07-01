@@ -10,6 +10,7 @@
 namespace PDF {
 
 class Font;
+class Stream;
 
 /// Interface to draw on some media (i.e. paper).
 class Media
@@ -31,6 +32,7 @@ class Media
 				Line(gs.ctm.translate(path.at(i - 1)), gs.ctm.translate(path.at(i)), gs);
 		};
 		virtual void Line(const Point & p1, const Point & p2, const GraphicsState& gs) { };
+		virtual void Image(const Rect & rect, const Stream & strm, const GraphicsState& gs) { }
 };
 
 };
