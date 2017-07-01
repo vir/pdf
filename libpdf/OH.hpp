@@ -94,17 +94,21 @@ class OH
       else if(d) return d->size();
       else throw LogicException("Not a container --- no size()");
     }
-    /// Find object in dictionary
-    OH find(const std::string & s, bool autoexpand=true) const
-    {
-      Dictionary * d=dynamic_cast<Dictionary*>(m_ptr);
-			if(!d)
-				throw InvalidNodeTypeException("Can't 'find' - ") << m_ptr->type() << " is not a dictionary";
-      OH r(m_cache, d->find(s));
+		/// Find object in dictionary
+		OH find(const std::string & s, bool autoexpand=true) const
+		{
+			Dictionary * d=dynamic_cast<Dictionary*>(m_ptr);
+			if(!d) {
+				Stream* strm = dynamic_cast<Stream*>(m_ptr);
+				if(!strm)
+					throw InvalidNodeTypeException("Can't 'find' - ") << m_ptr->type() << " is not a dictionary";
+				d = strm->dict();
+			}
+			OH r(m_cache, d->find(s));
 			if(autoexpand)
 				r.expand();
 			return r;
-    }
+		}
 		/// Get array element by it's index
 		OH operator[](int index)
 		{
