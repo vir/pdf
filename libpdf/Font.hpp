@@ -9,6 +9,7 @@
 #include "OH.hpp"
 #include <iostream>
 #include <map>
+#include <limits.h>
 
 namespace PDF {
 
@@ -25,7 +26,13 @@ class Font
 		Metrics * metrics;
 		std::string fontname, fontobjid;
 		std::string fonttype, basefont;
+#if ULONG_MAX == 4294967295 // long is 32bit
 		long fontflags;
+#elif USHRT_MAX == 4294967295 // short is 32bit
+		short fontflags;
+#else
+# error Can't determine size of 32bit int!
+#endif
 		unsigned int charbytes;
 	protected:
 		bool load_type0_font_dic(OH fdic);

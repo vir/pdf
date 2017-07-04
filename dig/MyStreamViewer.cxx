@@ -202,16 +202,16 @@ bool MyStreamViewer::ParsePage()
 		// std::clog << page->dump() << std::endl;
 		return true;
 	}
-	catch(std::string s) {
+	catch(std::string& s) {
 		std::cerr << "!Exception: " << s << std::endl;
 	}
-	catch(PDF::DocumentStructureException e) {
+	catch(PDF::DocumentStructureException& e) {
 		std::cerr << "DocumentStructureException:\n  " << e.what() << std::endl;
 	}
-	catch(PDF::FormatException e) {
+	catch(PDF::FormatException& e) {
 		std::cerr << "Format excertion:\n  " << e.what() << std::endl;
 	}
-	catch(std::exception e) {
+	catch(std::exception& e) {
 		std::cerr << "Unknown exception:\n  " << e.what() << std::endl;
 	}
 	catch(...) {

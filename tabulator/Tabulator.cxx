@@ -80,7 +80,7 @@ void Tabulator::find_joined_cells()
 			continue;
 		if(col2 == col1)
 			continue;
-		int span = 1 + col2 - col1;
+		unsigned int span = 1 + col2 - col1;
 		Tabulator::Table::Cell* c = table.cell(col1, row, true);
 		if(span > c->hspan())
 			table.span(col1, row, span, 1);

@@ -232,7 +232,7 @@ std::string Font::dump() const
 		bool comma = false;
 		ss << " (";
 		for(unsigned int i = 0; i < 8*sizeof(fontflags); i++) {
-			if(fontflags & 1<<i) {
+			if(fontflags & (1<<i)) {
 				if(comma) ss << ',';
 				if(i < sizeof(ffl)/sizeof(ffl[0]) && ffl[i]) {
 					ss << ffl[i];
