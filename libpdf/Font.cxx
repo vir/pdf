@@ -19,10 +19,10 @@ namespace PDF {
 Font::Font(std::string name)
 	:encoding(NULL)
 	,to_unicode_map(NULL)
+	,metrics(NULL)
 	,fontname(name)
 	,fontflags(0)
 	,charbytes(1)
-	,metrics(NULL)
 {
 }
 

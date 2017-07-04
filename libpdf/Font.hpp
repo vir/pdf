@@ -33,7 +33,7 @@ class Font
 #elif USHRT_MAX == 4294967295UL // short is 32bit
 		short fontflags;
 #else
-# error Can't determine size of 32bit int!
+# error Can not determine size of 32bit int!
 #endif
 		unsigned int charbytes;
 	protected:

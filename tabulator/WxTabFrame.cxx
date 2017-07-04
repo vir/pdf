@@ -467,7 +467,7 @@ wxAuiToolBar* BatchExport::CreateToolBar()
 #endif
 	toolBar->AddSeparator();
 
-	toolBar->AddTool(Batch_StartExport, _T("Start"), wxBitmap(), _T("Start batch export"));
+	toolBar->AddTool(Batch_StartExport, _T("Start"), wxNullBitmap, _T("Start batch export"));
 	return toolBar;
 }
 
