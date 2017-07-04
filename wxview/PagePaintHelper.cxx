@@ -88,7 +88,11 @@ void PagePaintHelper::Image(const PDF::Rect & rect, const PDF::Stream & strm, co
 	try {
 		PDF::Integer *w = dynamic_cast<PDF::Integer*>(strm.dict()->find("Width"));
 		PDF::Integer *h = dynamic_cast<PDF::Integer*>(strm.dict()->find("Height"));
-		ss << " (" << w->value() << "x" << h->value() << ")";
+		if(w && h)
+			ss << "\n" << w->value() << "x" << h->value();
+		PDF::Name* n = dynamic_cast<PDF::Name*>(strm.dict()->find("Name"));
+		if(n)
+			ss << "\n" << n->value();
 	}
 	catch(...) {
 	}
@@ -97,19 +101,11 @@ void PagePaintHelper::Image(const PDF::Rect & rect, const PDF::Stream & strm, co
 	wxCoord y1(m_page_height - rect.y1);
 	wxCoord x2(rect.x2);
 	wxCoord y2(m_page_height - rect.y2);
-	dc.SetPen(wxPen(*wxRED, 0, wxPENSTYLE_DOT));
-#if 1
+	dc.SetPen(wxPen(*wxRED, 1, wxPENSTYLE_SOLID));
 	dc.SetBrush(wxBrush(*wxYELLOW, wxBRUSHSTYLE_CROSSDIAG_HATCH));
 	wxRect wxr(wxPoint(x1, y1), wxPoint(x2, y2));
 	dc.DrawRectangle(wxr);
-#else
-	dc.DrawLine(x1, y1, x2, y1); //  ^^^  
-	dc.DrawLine(x1, y1, x1, y2); // |     
-	dc.DrawLine(x1, y1, x2, y2); //   /   
-	dc.DrawLine(x2, y1, x1, y2); //   \   
-	dc.DrawLine(x2, y1, x2, y2); //     | 
-	dc.DrawLine(x1, y2, x2, y2); //  ___  
-#endif
+
 	wxString text(ss.str().c_str(), wxConvUTF8);
 	dc.DrawLabel(text, wxr, wxALIGN_CENTER | wxALIGN_CENTRE);
 	if(m_draw_debug_stream)
