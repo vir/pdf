@@ -26,9 +26,11 @@ class Font
 		Metrics * metrics;
 		std::string fontname, fontobjid;
 		std::string fonttype, basefont;
-#if ULONG_MAX == 4294967295 // long is 32bit
+#if ULONG_MAX == 4294967295UL // long is 32bit
 		long fontflags;
-#elif USHRT_MAX == 4294967295 // short is 32bit
+#elif UINT_MAX == 4294967295UL // int is 32bit
+		int fontflags;
+#elif USHRT_MAX == 4294967295UL // short is 32bit
 		short fontflags;
 #else
 # error Can't determine size of 32bit int!
