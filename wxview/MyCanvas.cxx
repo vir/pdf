@@ -90,7 +90,7 @@ public:
 	wxString dump()
 	{
 		wxString r;
-		r.Printf(wxT("start(%d, %d), view(%d, %d), scroll(%d,%d)"), mouse_start_x, mouse_start_y, view_start_x, view_start_y, vx, vy);
+		r.Printf(wxT("start(%ld, %ld), view(%d, %d), scroll(%d,%d)"), mouse_start_x, mouse_start_y, view_start_x, view_start_y, vx, vy);
 		return r;
 	}
 private:
