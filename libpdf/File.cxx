@@ -305,7 +305,7 @@ bool File::read_xref_table_part(bool try_recover)
 		int num = objnum;
 		for(;;) {
 			getline(s);
-			int pos = s.find('n');
+			unsigned int pos = s.find('n');
 			if(pos != std::string::npos)
 				break;
 			++num;

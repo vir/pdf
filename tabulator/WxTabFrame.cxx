@@ -115,6 +115,7 @@ WxTabFrame::WxTabFrame(const wxString& title, const wxPoint& pos, const wxSize& 
 	menuView->AppendRadioItem(Rotate_180, _T("Rotate &180 degree\tF3"));
 	menuView->AppendRadioItem(Rotate_270, _T("Rotate &270 degrees\tF4"));
 
+	menuView->AppendSeparator();
 	menuView->AppendRadioItem(Zoom_100, _T("Scale &100%\tz"));
 	menuView->AppendRadioItem(Zoom_200, _T("Scale &200%\tx"));
 	menuView->AppendRadioItem(Zoom_300, _T("Scale &300%\tc"));
@@ -449,12 +450,8 @@ wxAuiToolBar* BatchExport::CreateToolBar()
 	toolBar->AddLabel(Batch_ThisIsLastPage, _T("Last"));
 	toolBar->AddTool(Batch_ThisIsLastPage, _T(""), wxBitmap(thispage_xpm), _T("Use current page as last page"));
 	toolBar->AddControl(m_lastpage);
-	m_pages_in_row = new wxSpinCtrl(toolBar, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize(65, -1));
-#if 0 // XXX stramge spin ctrl on gentoo
-	m_pages_in_row->SetMin(1);
-	if(theDocument)
-		m_pages_in_row->SetMax(theDocument->GetPagesNum());
-#endif
+	int pagesnum = theDocument ? theDocument->GetPagesNum() : 100;
+	m_pages_in_row = new wxSpinCtrl(toolBar, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize(65, -1), wxSP_ARROW_KEYS, 1, pagesnum);
 	toolBar->AddLabel(Batch_ThisIsLastPage, _T("In row"));
 	toolBar->AddControl(m_pages_in_row);
 
@@ -467,7 +464,7 @@ wxAuiToolBar* BatchExport::CreateToolBar()
 #endif
 	toolBar->AddSeparator();
 
-	toolBar->AddTool(Batch_StartExport, _T("Start"), wxBitmap(), _T("Start batch export"));
+	toolBar->AddTool(Batch_StartExport, _T("Start"), wxArtProvider::GetBitmap(wxART_TICK_MARK, wxART_TOOLBAR, wxSize(16,16)), _T("Start batch export"));
 	return toolBar;
 }
 

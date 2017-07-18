@@ -52,7 +52,8 @@ void PDF::Content::TextObject::Kerning( double k )
 void PDF::Content::TextObject::Flush()
 {
 	if(accumulated_text.empty()) return;
-	CTM m(abs(gs->text_state.Tfs) * gs->text_state.Th/100.0, 0, 0, abs(gs->text_state.Tfs), 0, gs->text_state.Trise);
+	double font_size = std::abs(gs->text_state.Tfs); // Using std::abs() because simple abs() truncates fractional part (when built with gcc at least)
+	CTM m(font_size * gs->text_state.Th/100.0, 0, 0, font_size, 0, gs->text_state.Trise);
 	CTM Trm = m * tm * gs->ctm; // Construct text rendering matrix
 	if(update_font) {
 		media->SetFont(gs->text_state.Tf, Trm.get_scale_v());
@@ -61,7 +62,7 @@ void PDF::Content::TextObject::Flush()
 
 	Rect result_rect(Trm.translate(Point(0,0)), total_width*Trm.get_scale_h(), Trm.get_scale_v());
 	// Calculate text matrix displacemant before applying clipping path
-	double offset = total_width * abs(gs->text_state.Tfs) * gs->text_state.Th/100.0;
+	double offset = total_width * font_size * gs->text_state.Th/100.0;
 	// Apply clipping path to determint actual text size
 	bool is_visible = gs->clipping_path.clip(result_rect);
 	//assert(is_visible);
