@@ -12,7 +12,7 @@ class Font;
 
 class GraphicsState {
 public:
-	GraphicsState() {}
+	GraphicsState():line_width(0) {}
 	/*=== device-independent: ===*/
 	CTM ctm;
 	Path clipping_path;

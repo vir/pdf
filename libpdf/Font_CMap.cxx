@@ -195,7 +195,7 @@ std::string Font::CMap::dump() const
 	if(m_identity)
 		return "Identity";
 	std::stringstream ss;
-	for(std::map<long,wchar_t>::const_iterator it=charmap.begin(); it!=charmap.end(); it++)
+	for(std::map<long,wchar_t>::const_iterator it=charmap.begin(); it!=charmap.end(); ++it)
 	{
 //            ss << "Map " << it->first << " to " << it->second << std::endl;
 		char buf[1024];

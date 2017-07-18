@@ -57,6 +57,7 @@ void XRefTable::clear()
 /** Constructs PDF::File object */
 File::File(std::string fn, OpenMode mode)
 	: open_mode(MODE_READ)
+	, pdf_version(0.0)
 	, istrm(NULL), ostrm(NULL)
 	, m_debug(0)
 	, m_security(NULL), m_streams(NULL)

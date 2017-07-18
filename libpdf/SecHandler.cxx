@@ -35,6 +35,7 @@ namespace PDF {
  */
 struct CryptoFilterDefinition
 {
+	CryptoFilterDefinition(): Length(0) { }
 	std::string CFM, AuthEvent;
 	int Length;
 	bool is_aes() const { return CFM == "AESV2"; }
@@ -62,7 +63,7 @@ class StdSecHandler:public SecHandler
 		std::string compute_U_r3(const std::string & pw);
 		const CryptoFilterDefinition* get_filter_definition(SecHandler::ObjType ot) const;
 	public:
-		StdSecHandler(const File * file):f(file),R(0),P(0),Length(0) { }
+		StdSecHandler(const File * file):f(file),V(0),R(0),P(0),Length(0) { }
 		virtual ~StdSecHandler() { }
 		virtual bool set_password(const std::string & pw, int which = 0);
 		void init(const Dictionary * cryptodict);

@@ -17,11 +17,12 @@ class Rect
   public:
     double x1,y1,x2,y2;
     Rect():x1(0),y1(0),x2(0),y2(0) {}
+    Rect(const Rect & o) { x1=o.x1; y1=o.y1; x2=o.x2; y2=o.y2; }
+    Rect & operator =(const Rect & o) { x1=o.x1; y1=o.y1; x2=o.x2; y2=o.y2; return *this; }
     Rect(double a[4]):x1(a[0]),y1(a[1]),x2(a[2]),y2(a[3]) { normalize(); }
     Rect(double nx1, double ny1, double nx2, double ny2):x1(nx1),y1(ny1),x2(nx2),y2(ny2) { normalize(); }
     Rect(const Point & p1, const Point & p2):x1(p1.x),y1(p1.y),x2(p2.x),y2(p2.y) { normalize(); }
     Rect(const Point & p1, double w, double h):x1(p1.x),y1(p1.y),x2(p1.x + w),y2(p1.y + h) { normalize(); }
-    Rect & operator =(const Rect & o) { x1=o.x1; y1=o.y1; x2=o.x2; y2=o.y2; return *this; }
     std::string dump() const { std::stringstream ss; ss << "(" << x1 << "," << y1 << "," << x2 << "," << y2 << ")"; return ss.str(); }
 		Point offset() const { return Point(x1,y1); }
 		Point size() const { return Point(x2-x1, y2-y1); }

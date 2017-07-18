@@ -170,7 +170,7 @@ public:
 		std::ios_base::openmode open_prepare(std::string fname, OpenMode mode);
 	public:
 		File(std::string fn = "", OpenMode mode = MODE_CLOSED);
-		File(double pdf_version);
+		explicit File(double pdf_version);
 		~File();
 		std::string id(unsigned int n = 0) const { return (n >= m_file_ids.size())?"":m_file_ids[0]; }
     /// sets debug level, returns previous debug level

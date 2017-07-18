@@ -38,6 +38,14 @@ class ObjectsCache
         {
 //          std::clog << "Deleting CacheEntry" << this << std::endl;
         }
+        CacheEntry& operator = (const CacheEntry & x)
+        {
+            obj = x.obj;
+            usecount = x.usecount;
+            is_modified = x.is_modified;
+//          std::clog << "Assigning CacheEntry" << this << "(" << &x << ")" << std::endl;
+            return *this;
+        }
         void set_modified() { is_modified = true; }
         Object * obj;
         unsigned long usecount;

@@ -289,7 +289,7 @@ std::vector<char> ObjIStream::read_o_string()
 							}
 							buf[2] = f->get();
 							buf[3] = '\0';
-							int t;
+							unsigned int t;
 							sscanf(buf, "%o", &t);
 							c = (char)t;
 							break;
